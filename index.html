@@ -562,6 +562,33 @@
     .pending-date { font-size: 0.8rem; color: var(--text-muted); }
     .pending-actions { display: flex; gap: 8px; margin-top: 8px; }
 
+    /* ===== TASK TEMPLATE GRID ===== */
+    .task-template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .task-template-btn {
+      padding: 10px 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s;
+      line-height: 1.3;
+    }
+    .task-template-btn:hover { border-color: var(--primary-light); background: #f3f0ff; }
+    .task-template-btn.selected {
+      border-color: var(--primary);
+      background: #f3f0ff;
+      color: var(--primary);
+    }
+
     /* ===== FOOTER ===== */
     footer {
       text-align: center;
@@ -628,22 +655,46 @@
 
 <!-- ===== ADD TASK MODAL ===== -->
 <div id="modal-add-task" class="modal-overlay hidden">
-  <div class="modal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;">
     <div class="modal-title">Lisää tehtävä</div>
-    <div class="form-group">
-      <label class="input-label">Nimi</label>
-      <input type="text" id="new-task-name" class="input" placeholder="Esim. Tiskaus" />
+
+    <!-- Tab-palkki -->
+    <div class="tabs" style="margin-bottom:14px;">
+      <button class="tab-btn active" id="task-tab-btn-template" onclick="switchTaskModalTab('template', this)">Valmis lista</button>
+      <button class="tab-btn" id="task-tab-btn-custom" onclick="switchTaskModalTab('custom', this)">Oma tehtävä</button>
     </div>
+
+    <!-- TAB 1: Valmis lista -->
+    <div id="task-tab-template">
+      <div class="task-template-grid" id="task-template-grid"></div>
+    </div>
+
+    <!-- TAB 2: Oma tehtävä -->
+    <div id="task-tab-custom" style="display:none;">
+      <div class="form-group">
+        <label class="input-label">Tehtävän nimi</label>
+        <input type="text" id="new-task-custom-name" class="input" placeholder="Esim. Ikkunoiden pesu" />
+      </div>
+    </div>
+
+    <!-- Yhteiset kentät -->
+    <div class="divider"></div>
     <div class="form-group">
       <label class="input-label">Hinta (€)</label>
-      <input type="number" id="new-task-price" class="input" placeholder="1.00" min="0" step="0.10" />
+      <input type="number" id="new-task-price" class="input" placeholder="Syötä hinta" min="0" step="0.10" />
     </div>
     <div class="form-group">
       <label class="input-label">Tyyppi</label>
-      <select id="new-task-type" class="input" onchange="toggleAssignedTo()">
-        <option value="free">Vapaa tehtävä</option>
-        <option value="assigned">Oma tehtävä</option>
-      </select>
+      <div style="display:flex;gap:10px;">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-free-label">
+          <input type="radio" name="task-type" value="free" checked onchange="toggleAssignedTo()" style="accent-color:var(--primary);width:18px;height:18px;" />
+          <span style="font-weight:600;font-size:0.9rem;">Vapaa</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-assigned-label">
+          <input type="radio" name="task-type" value="assigned" onchange="toggleAssignedTo()" style="accent-color:var(--primary);width:18px;height:18px;" />
+          <span style="font-weight:600;font-size:0.9rem;">Oma</span>
+        </label>
+      </div>
     </div>
     <div class="form-group" id="assigned-to-group" style="display:none">
       <label class="input-label">Kenelle</label>
@@ -742,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.2</footer>
+  <footer>Homey v1.3</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -777,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.3</footer>
 </div>
 
 <script>
@@ -1366,7 +1417,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.2</footer>
+    <footer>Homey v1.3</footer>
   `;
 }
 
@@ -1621,30 +1672,75 @@ async function saveChild() {
 }
 
 // ===== ADD TASK =====
+const TASK_TEMPLATES = [
+  'Tiskien laitto koneeseen','Pölyn pyyhintä','Imurointi','Roskat ulos',
+  'Pyykin laitto','Pyykin viiklailu','Nurmikon leikkuu','Auton pesu',
+  'Lattian luominen','WC:n siivous','Kylpyhuoneen siivous','Tiskien käsinpesu',
+  'Koiran ulkoilutus','Kaupassa käynti','Lumityöt',
+];
+
+let taskModalTab = 'template';
+let selectedTemplateName = null;
+
 function openAddTaskModal() {
-  // populate children select
   const sel = document.getElementById('new-task-assigned');
   sel.innerHTML = state.children.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('new-task-name').value = '';
   document.getElementById('new-task-price').value = '';
-  document.getElementById('new-task-type').value = 'free';
+  document.getElementById('new-task-custom-name').value = '';
   document.getElementById('assigned-to-group').style.display = 'none';
+  document.querySelectorAll('input[name="task-type"]').forEach(r => { r.checked = r.value === 'free'; });
+  selectedTemplateName = null;
+  taskModalTab = 'template';
+  renderTaskTemplateGrid();
+  switchTaskModalTab('template', document.getElementById('task-tab-btn-template'));
   openModal('modal-add-task');
 }
 
+function renderTaskTemplateGrid() {
+  const grid = document.getElementById('task-template-grid');
+  grid.innerHTML = TASK_TEMPLATES.map(name => `
+    <button class="task-template-btn${selectedTemplateName === name ? ' selected' : ''}" onclick="selectTemplate('${name.replace(/'/g, "\\'")}')">${name}</button>
+  `).join('');
+}
+
+function selectTemplate(name) {
+  selectedTemplateName = name;
+  document.querySelectorAll('.task-template-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === name);
+  });
+}
+
+function switchTaskModalTab(tab, btn) {
+  taskModalTab = tab;
+  document.querySelectorAll('#modal-add-task .tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('task-tab-template').style.display = tab === 'template' ? 'block' : 'none';
+  document.getElementById('task-tab-custom').style.display = tab === 'custom' ? 'block' : 'none';
+  if (tab === 'template') { selectedTemplateName = null; renderTaskTemplateGrid(); }
+}
+
 function toggleAssignedTo() {
-  const type = document.getElementById('new-task-type').value;
+  const type = document.querySelector('input[name="task-type"]:checked')?.value;
   document.getElementById('assigned-to-group').style.display = type === 'assigned' ? 'block' : 'none';
 }
 
 async function saveTask() {
-  const name = document.getElementById('new-task-name').value.trim();
-  const price = parseFloat(document.getElementById('new-task-price').value);
-  const type = document.getElementById('new-task-type').value;
-  const assigned_to = type === 'assigned' ? parseInt(document.getElementById('new-task-assigned').value) : null;
+  let name = '';
+  if (taskModalTab === 'template') {
+    name = selectedTemplateName || '';
+    if (!name) { showToast('Valitse tehtävä listalta', 'error'); return; }
+  } else {
+    name = document.getElementById('new-task-custom-name').value.trim();
+    if (!name) { showToast('Syötä tehtävän nimi', 'error'); return; }
+  }
 
-  if (!name) { showToast('Syötä nimi', 'error'); return; }
-  if (isNaN(price) || price < 0) { showToast('Syötä hinta', 'error'); return; }
+  const priceVal = document.getElementById('new-task-price').value;
+  if (priceVal === '' || priceVal === null) { showToast('Syötä hinta', 'error'); return; }
+  const price = parseFloat(priceVal);
+  if (isNaN(price) || price < 0) { showToast('Syötä kelvollinen hinta', 'error'); return; }
+
+  const type = document.querySelector('input[name="task-type"]:checked')?.value || 'free';
+  const assigned_to = type === 'assigned' ? parseInt(document.getElementById('new-task-assigned').value) : null;
 
   const { error } = await sb.from('homey_tasks').insert({ name, price, type, assigned_to, active: true });
   if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
