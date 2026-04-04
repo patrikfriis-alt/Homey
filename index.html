@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.5</footer>
+  <footer>Homey v1.6</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.5</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.6</footer>
 </div>
 
 <script>
@@ -967,7 +967,7 @@ function renderChildGrid() {
     return;
   }
   grid.innerHTML = state.children.map(child => `
-    <button class="child-select-btn" onclick="selectChild(${child.id})">
+    <button class="child-select-btn" data-child-id="${child.id}" onclick="selectChild('${child.id}')">
       <div class="child-avatar" style="background:${childColor(child)}">${avatarInitial(child.name)}</div>
       <span>${child.name}</span>
     </button>
@@ -977,9 +977,10 @@ function renderChildGrid() {
 function selectChild(id) {
   state.selectedChildId = id;
   state.isAdminLogin = false;
-  document.querySelectorAll('.child-select-btn').forEach(b => b.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
-  const child = state.children.find(c => c.id === id);
+  document.querySelectorAll('.child-select-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.childId === String(id));
+  });
+  const child = state.children.find(c => String(c.id) === String(id));
   document.getElementById('pin-title').textContent = `Hei ${child.name}! Syötä PIN`;
   showPinStep();
 }
@@ -1195,7 +1196,7 @@ function renderAssignedTasks() {
       : '';
     const btn = doneTodayComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4">Tehty</button>`
-      : `<button class="btn btn-sm btn-primary" onclick="markDone(${task.id})">Merkitse tehdyksi</button>`;
+      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Merkitse tehdyksi</button>`;
     return `
       <div class="task-item">
         <div class="task-icon">✅</div>
@@ -1239,15 +1240,15 @@ function renderFreeTasks() {
       actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? 'Odottaa' : 'Hyväksytty'}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" onclick="markDone(${task.id})">Tehty</button>
-        <button class="btn btn-sm btn-outline" onclick="unreserveTask(${task.id})">Vapauta</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Tehty</button>
+        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}')">Vapauta</button>
       `;
     } else if (isReservedByOther) {
       actionsHtml = `<span class="badge badge-reserved">Varattu: ${reservedByChild?.name || '?'}</span>`;
     } else {
       actionsHtml = `
-        <button class="btn btn-sm btn-outline" onclick="reserveTask(${task.id})">Varaa</button>
-        <button class="btn btn-sm btn-primary" onclick="markDone(${task.id})">Tehty</button>
+        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}')">Varaa</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Tehty</button>
       `;
     }
 
@@ -1429,7 +1430,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.5</footer>
+    <footer>Homey v1.6</footer>
   `;
 }
 
@@ -1459,8 +1460,8 @@ function renderParentPending() {
           </div>
         </div>
         <div class="pending-actions">
-          <button class="btn btn-success btn-sm" onclick="approveComp(${comp.id})">✓ Hyväksy</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectComp(${comp.id})">✗ Hylkää</button>
+          <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}')">✓ Hyväksy</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}')">✗ Hylkää</button>
         </div>
       </div>
     `;
@@ -1508,7 +1509,7 @@ function renderParentPayments() {
           <div class="child-summary-name">${child.name}</div>
           <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="payChild(${child.id})">Maksa</button>
+        <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}')">Maksa</button>
       </div>
     `;
   }).filter(Boolean);
@@ -1602,7 +1603,7 @@ function renderParentManage() {
         <div class="task-name">${child.name}</div>
         <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ${child.pin}</div>
       </div>
-      <button class="btn btn-sm btn-danger" onclick="deleteChild(${child.id})">Poista</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
     </div>
   `).join('') || '<div class="empty-state"><div class="empty-icon">👶</div><p>Ei lapsia</p></div>';
 
@@ -1616,7 +1617,7 @@ function renderParentManage() {
           <div class="task-name">${task.name}</div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.price)} · ${task.type === 'free' ? 'Vapaa' : 'Oma'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})">Poista</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">Poista</button>
       </div>
     `;
   }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei tehtäviä</p></div>';
