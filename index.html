@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.6</footer>
+  <footer>Homey v1.7</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.6</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.7</footer>
 </div>
 
 <script>
@@ -967,11 +967,14 @@ function renderChildGrid() {
     return;
   }
   grid.innerHTML = state.children.map(child => `
-    <button class="child-select-btn" data-child-id="${child.id}" onclick="selectChild('${child.id}')">
+    <button class="child-select-btn" data-child-id="${child.id}">
       <div class="child-avatar" style="background:${childColor(child)}">${avatarInitial(child.name)}</div>
       <span>${child.name}</span>
     </button>
   `).join('');
+  grid.querySelectorAll('.child-select-btn').forEach(btn => {
+    btn.addEventListener('click', () => selectChild(btn.dataset.childId));
+  });
 }
 
 function selectChild(id) {
@@ -1196,7 +1199,7 @@ function renderAssignedTasks() {
       : '';
     const btn = doneTodayComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4">Tehty</button>`
-      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Merkitse tehdyksi</button>`;
+      : `<button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Merkitse tehdyksi</button>`;
     return `
       <div class="task-item">
         <div class="task-icon">✅</div>
@@ -1209,6 +1212,9 @@ function renderAssignedTasks() {
       </div>
     `;
   }).join('');
+  container.querySelectorAll('[data-action="markDone"]').forEach(btn => {
+    btn.addEventListener('click', () => markDone(btn.dataset.taskId));
+  });
 }
 
 function renderFreeTasks() {
@@ -1240,15 +1246,15 @@ function renderFreeTasks() {
       actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? 'Odottaa' : 'Hyväksytty'}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Tehty</button>
-        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}')">Vapauta</button>
+        <button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Tehty</button>
+        <button class="btn btn-sm btn-outline" data-action="unreserve" data-task-id="${task.id}">Vapauta</button>
       `;
     } else if (isReservedByOther) {
       actionsHtml = `<span class="badge badge-reserved">Varattu: ${reservedByChild?.name || '?'}</span>`;
     } else {
       actionsHtml = `
-        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}')">Varaa</button>
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}')">Tehty</button>
+        <button class="btn btn-sm btn-outline" data-action="reserve" data-task-id="${task.id}">Varaa</button>
+        <button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Tehty</button>
       `;
     }
 
@@ -1263,6 +1269,15 @@ function renderFreeTasks() {
       </div>
     `;
   }).join('');
+  container.querySelectorAll('[data-action="markDone"]').forEach(btn => {
+    btn.addEventListener('click', () => markDone(btn.dataset.taskId));
+  });
+  container.querySelectorAll('[data-action="reserve"]').forEach(btn => {
+    btn.addEventListener('click', () => reserveTask(btn.dataset.taskId));
+  });
+  container.querySelectorAll('[data-action="unreserve"]').forEach(btn => {
+    btn.addEventListener('click', () => unreserveTask(btn.dataset.taskId));
+  });
 }
 
 async function markDone(taskId) {
@@ -1430,7 +1445,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.6</footer>
+    <footer>Homey v1.7</footer>
   `;
 }
 
@@ -1460,8 +1475,8 @@ function renderParentPending() {
           </div>
         </div>
         <div class="pending-actions">
-          <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}')">✓ Hyväksy</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}')">✗ Hylkää</button>
+          <button class="btn btn-success btn-sm" data-action="approve" data-comp-id="${comp.id}">✓ Hyväksy</button>
+          <button class="btn btn-danger btn-sm" data-action="reject" data-comp-id="${comp.id}">✗ Hylkää</button>
         </div>
       </div>
     `;
@@ -1473,6 +1488,12 @@ function renderParentPending() {
       ${items}
     </div>
   `;
+  panel.querySelectorAll('[data-action="approve"]').forEach(btn => {
+    btn.addEventListener('click', () => approveComp(btn.dataset.compId));
+  });
+  panel.querySelectorAll('[data-action="reject"]').forEach(btn => {
+    btn.addEventListener('click', () => rejectComp(btn.dataset.compId));
+  });
 }
 
 async function approveComp(id) {
@@ -1509,7 +1530,7 @@ function renderParentPayments() {
           <div class="child-summary-name">${child.name}</div>
           <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}')">Maksa</button>
+        <button class="btn btn-primary btn-sm" data-action="payChild" data-child-id="${child.id}">Maksa</button>
       </div>
     `;
   }).filter(Boolean);
@@ -1552,6 +1573,9 @@ function renderParentPayments() {
       ${histItems}
     </div>` : ''}
   `;
+  panel.querySelectorAll('[data-action="payChild"]').forEach(btn => {
+    btn.addEventListener('click', () => payChild(btn.dataset.childId));
+  });
 }
 
 async function payChild(childId) {
@@ -1603,7 +1627,7 @@ function renderParentManage() {
         <div class="task-name">${child.name}</div>
         <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ${child.pin}</div>
       </div>
-      <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
+      <button class="btn btn-sm btn-danger" data-action="deleteChild" data-child-id="${child.id}">Poista</button>
     </div>
   `).join('') || '<div class="empty-state"><div class="empty-icon">👶</div><p>Ei lapsia</p></div>';
 
@@ -1617,7 +1641,7 @@ function renderParentManage() {
           <div class="task-name">${task.name}</div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.price)} · ${task.type === 'free' ? 'Vapaa' : 'Oma'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">Poista</button>
+        <button class="btn btn-sm btn-danger" data-action="deleteTask" data-task-id="${task.id}">Poista</button>
       </div>
     `;
   }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei tehtäviä</p></div>';
@@ -1638,6 +1662,12 @@ function renderParentManage() {
       ${taskItems}
     </div>
   `;
+  panel.querySelectorAll('[data-action="deleteChild"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteChild(btn.dataset.childId));
+  });
+  panel.querySelectorAll('[data-action="deleteTask"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
+  });
 }
 
 async function deleteChild(id) {
