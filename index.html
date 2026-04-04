@@ -764,7 +764,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.1</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.2</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -845,7 +845,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.1</footer>
+  <footer>Homey v2.2</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -870,7 +870,7 @@
   <!-- Bottom nav -->
   <nav class="parent-nav">
     <button class="parent-nav-btn active" onclick="switchParentTab('overview', this)">
-      <span class="nav-icon">🏠</span>Yhteenveto
+      <span class="nav-icon">🏠</span>Yleiskuva
     </button>
     <button class="parent-nav-btn" onclick="switchParentTab('pending', this)">
       <span class="nav-icon">⏳</span>Odottavat
@@ -883,7 +883,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.1</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.2</footer>
 </div>
 
 <script>
@@ -985,21 +985,19 @@ async function loadAll() {
 
 // ===== SALDO CALC =====
 function calcOpenSaldo(childId) {
-  // paid months for this child
-  const paidMonths = new Set(
-    state.payments
-      .filter(p => p.child_id === childId)
-      .map(p => p.month)
-  );
-  // sum approved completions not in a paid month
-  // use allTasks so deactivated tasks still contribute to saldo
-  return state.completions
+  // Total earned: all approved completions
+  const totalEarned = state.completions
     .filter(c => c.child_id === childId && c.status === 'approved')
-    .filter(c => !paidMonths.has(monthKey(c.completed_at)))
     .reduce((sum, c) => {
       const task = state.allTasks.find(t => t.id === c.task_id);
-      return sum + Number(task?.amount ?? c.task_price ?? 0);
+      const amount = task?.amount ?? c.task_price ?? 0;
+      return sum + Number(amount);
     }, 0);
+  // Total paid: all payment rows
+  const totalPaid = state.payments
+    .filter(p => p.child_id === childId)
+    .reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
+  return Math.max(0, totalEarned - totalPaid);
 }
 
 // ===== LOGIN =====
@@ -1510,7 +1508,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.1</footer>
+    <footer>Homey v2.2</footer>
   `;
 }
 
@@ -1525,17 +1523,21 @@ function renderParentPending() {
 
   const items = pending.map(comp => {
     const child = state.children.find(c => c.id === comp.child_id);
-    const task = state.tasks.find(t => t.id === comp.task_id);
+    const task = state.allTasks.find(t => t.id === comp.task_id);
     const d = new Date(comp.completed_at);
+    const amount = task?.amount ?? comp.task_price ?? 0;
     return `
       <div class="pending-item">
         <div class="pending-item-header">
-          <div>
-            <div class="pending-child-name" style="color:${childColor(child)}">${child?.name || '?'}</div>
-            <div class="pending-task-name">${task?.title || 'Tehtävä'}</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="child-avatar" style="background:${childColor(child)};width:38px;height:38px;font-size:1rem;flex-shrink:0;">${avatarInitial(child?.name)}</div>
+            <div>
+              <div class="pending-child-name" style="color:${childColor(child)}">${child?.name || '?'}</div>
+              <div class="pending-task-name">${task?.title || 'Tehtävä'}</div>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-weight:700;color:var(--success)">${fmt(task?.amount || comp.task_price || 0)}</div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-weight:700;color:var(--success);font-size:1rem;">${fmt(amount)}</div>
             <div class="pending-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
           </div>
         </div>
@@ -1629,7 +1631,7 @@ function renderParentPayments() {
       <div class="divider"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <strong>Yhteensä: ${fmt(totalOpen)}</strong>
-        <button class="btn btn-primary btn-sm" onclick="payAll()">Maksa kaikki</button>
+        <button class="btn btn-primary btn-sm" id="pay-all-btn">Maksa kaikki</button>
       </div>` : ''}
     </div>` : `<div class="card"><div class="empty-state"><div class="empty-icon">💶</div><p>Ei avoimia maksuja</p></div></div>`}
     ${histItems ? `
@@ -1641,6 +1643,8 @@ function renderParentPayments() {
   panel.querySelectorAll('[data-action="payChild"]').forEach(btn => {
     btn.addEventListener('click', () => payChild(btn.dataset.childId));
   });
+  const payAllBtn = panel.querySelector('#pay-all-btn');
+  if (payAllBtn) payAllBtn.addEventListener('click', payAll);
 }
 
 async function payChild(childId) {
@@ -1781,7 +1785,7 @@ async function saveChild() {
 
 // ===== ADD TASK =====
 const TASK_TEMPLATES = [
-  'Tiskien laitto koneeseen','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
+  'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
   'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
   'Nurmikon leikkuu','Lumityöt','Auton pesu','WC:n siivous',
   'Yläkerran WC:n siivous','Kylpyhuoneen siivous','Yläkerran lattiapesu',
