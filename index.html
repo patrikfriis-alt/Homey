@@ -692,7 +692,7 @@
         </label>
         <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-assigned-label">
           <input type="radio" name="task-type" value="assigned" onchange="toggleAssignedTo()" style="accent-color:var(--primary);width:18px;height:18px;" />
-          <span style="font-weight:600;font-size:0.9rem;">Oma</span>
+          <span style="font-weight:600;font-size:0.9rem;">Lapsi</span>
         </label>
       </div>
     </div>
@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.8</footer>
+  <footer>Homey v1.9</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.8</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.9</footer>
 </div>
 
 <script>
@@ -1445,7 +1445,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.8</footer>
+    <footer>Homey v1.9</footer>
   `;
 }
 
@@ -1639,7 +1639,7 @@ function renderParentManage() {
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
           <div class="task-name">${task.title}</div>
-          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Oma'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Lapsi'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
         </div>
         <button class="btn btn-sm btn-danger" data-action="deleteTask" data-task-id="${task.id}">Poista</button>
       </div>
@@ -1716,10 +1716,12 @@ async function saveChild() {
 
 // ===== ADD TASK =====
 const TASK_TEMPLATES = [
-  'Tiskien laitto koneeseen','Pölyn pyyhintä','Imurointi','Roskat ulos',
-  'Pyykin laitto','Pyykin viiklailu','Nurmikon leikkuu','Auton pesu',
-  'Lattian luominen','WC:n siivous','Kylpyhuoneen siivous','Tiskien käsinpesu',
-  'Koiran ulkoilutus','Kaupassa käynti','Lumityöt',
+  'Tiskien laitto koneeseen','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
+  'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
+  'Nurmikon leikkuu','Lumityöt','Auton pesu','WC:n siivous',
+  'Yläkerran WC:n siivous','Kylpyhuoneen siivous','Yläkerran lattiapesu',
+  'Koiran ulkoilutus','Kaupassa käynti','Ruoanlaiton avustaminen',
+  'Pöydän kattaminen','Tiskipöydän siivous',
 ];
 
 let taskModalTab = 'template';
