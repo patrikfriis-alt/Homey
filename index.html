@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.7</footer>
+  <footer>Homey v1.8</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.7</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.8</footer>
 </div>
 
 <script>
@@ -941,7 +941,7 @@ function calcOpenSaldo(childId) {
     .reduce((sum, c) => {
       const task = state.tasks.find(t => t.id === c.task_id) ||
                    { price: c.task_price || 0 };
-      return sum + Number(task.price || c.task_price || 0);
+      return sum + Number(task.amount || c.task_price || 0);
     }, 0);
 }
 
@@ -1125,14 +1125,14 @@ function showPaymentPopup(payment) {
   );
   const total = payment.amount || comps.reduce((s, c) => {
     const task = state.tasks.find(t => t.id === c.task_id);
-    return s + Number(task?.price || c.task_price || 0);
+    return s + Number(task?.amount || c.task_price || 0);
   }, 0);
 
   document.getElementById('popup-month').textContent = monthLabel(month);
   document.getElementById('popup-amount').textContent = fmt(total);
   document.getElementById('popup-tasks').innerHTML = comps.map(c => {
     const task = state.tasks.find(t => t.id === c.task_id);
-    return `<li><span>${task?.name || 'Tehtävä'}</span><span>${fmt(task?.price || c.task_price || 0)}</span></li>`;
+    return `<li><span>${task?.title || 'Tehtävä'}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
   }).join('');
   document.getElementById('payment-popup').classList.remove('hidden');
 }
@@ -1204,8 +1204,8 @@ function renderAssignedTasks() {
       <div class="task-item">
         <div class="task-icon">✅</div>
         <div class="task-info">
-          <div class="task-name">${task.name}</div>
-          <div class="task-price">${fmt(task.price)}</div>
+          <div class="task-name">${task.title}</div>
+          <div class="task-price">${fmt(task.amount)}</div>
           ${statusBadge ? '<div style="margin-top:4px">' + statusBadge + '</div>' : ''}
         </div>
         <div class="task-actions">${btn}</div>
@@ -1262,8 +1262,8 @@ function renderFreeTasks() {
       <div class="task-item">
         <div class="task-icon">🔓</div>
         <div class="task-info">
-          <div class="task-name">${task.name}</div>
-          <div class="task-price">${fmt(task.price)}</div>
+          <div class="task-name">${task.title}</div>
+          <div class="task-price">${fmt(task.amount)}</div>
         </div>
         <div class="task-actions" style="flex-wrap:wrap;justify-content:flex-end;gap:4px;">${actionsHtml}</div>
       </div>
@@ -1287,7 +1287,7 @@ async function markDone(taskId) {
     task_id: taskId,
     child_id: childId,
     status: 'pending',
-    task_price: task?.price || 0,
+    task_price: task?.amount || 0,
     completed_at: new Date().toISOString(),
   });
   if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
@@ -1342,7 +1342,7 @@ async function renderChildHistory() {
       .filter(c => c.status === 'approved')
       .reduce((s, c) => {
         const task = state.tasks.find(t => t.id === c.task_id);
-        return s + Number(task?.price || c.task_price || 0);
+        return s + Number(task?.amount || c.task_price || 0);
       }, 0);
     const isPaid = paidMonths.has(mk);
     const badge = isPaid
@@ -1355,11 +1355,11 @@ async function renderChildHistory() {
       return `
         <div class="completion-item">
           <div>
-            <div>${task?.name || 'Tehtävä'}</div>
+            <div>${task?.title || 'Tehtävä'}</div>
             <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-weight:700;color:var(--success)">${fmt(task?.price || c.task_price || 0)}</span>
+            <span style="font-weight:700;color:var(--success)">${fmt(task?.amount || c.task_price || 0)}</span>
             <span class="badge badge-${c.status}" style="font-size:0.7rem">${statusLabel(c.status)}</span>
           </div>
         </div>
@@ -1424,7 +1424,7 @@ function renderParentOverview() {
       .filter(c => c.child_id === child.id && c.status === 'approved')
       .reduce((s, c) => {
         const task = state.tasks.find(t => t.id === c.task_id);
-        return s + Number(task?.price || c.task_price || 0);
+        return s + Number(task?.amount || c.task_price || 0);
       }, 0);
     const pct = totalApproved > 0 ? Math.min(100, (saldo / Math.max(saldo, totalApproved)) * 100) : 0;
 
@@ -1445,7 +1445,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.7</footer>
+    <footer>Homey v1.8</footer>
   `;
 }
 
@@ -1467,10 +1467,10 @@ function renderParentPending() {
         <div class="pending-item-header">
           <div>
             <div class="pending-child-name" style="color:${childColor(child)}">${child?.name || '?'}</div>
-            <div class="pending-task-name">${task?.name || 'Tehtävä'}</div>
+            <div class="pending-task-name">${task?.title || 'Tehtävä'}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:700;color:var(--success)">${fmt(task?.price || comp.task_price || 0)}</div>
+            <div style="font-weight:700;color:var(--success)">${fmt(task?.amount || comp.task_price || 0)}</div>
             <div class="pending-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
           </div>
         </div>
@@ -1638,8 +1638,8 @@ function renderParentManage() {
       <div class="task-item">
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
-          <div class="task-name">${task.name}</div>
-          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.price)} · ${task.type === 'free' ? 'Vapaa' : 'Oma'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
+          <div class="task-name">${task.title}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Oma'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
         </div>
         <button class="btn btn-sm btn-danger" data-action="deleteTask" data-task-id="${task.id}">Poista</button>
       </div>
@@ -1790,7 +1790,13 @@ async function saveTask() {
   const type = document.querySelector('input[name="task-type"]:checked')?.value || 'free';
   const assigned_to = type === 'assigned' ? parseInt(document.getElementById('new-task-assigned').value) : null;
 
-  const { error } = await sb.from('homey_tasks').insert({ name, price, type, assigned_to, active: true });
+  const { error } = await sb.from('homey_tasks').insert({
+    title: name,
+    amount: Number(price),
+    type,
+    assigned_to: assigned_to || null,
+    active: true,
+  });
   if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
   showToast('Tehtävä lisätty! ✅', 'success');
   closeModal('modal-add-task');
