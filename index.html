@@ -764,7 +764,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.3</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -845,7 +845,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.2</footer>
+  <footer>Homey v2.3</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -883,7 +883,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.3</footer>
 </div>
 
 <script>
@@ -1508,7 +1508,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.2</footer>
+    <footer>Homey v2.3</footer>
   `;
 }
 
@@ -1859,16 +1859,13 @@ async function saveTask() {
   if (isNaN(price) || price < 0) { showToast('Syötä kelvollinen hinta', 'error'); return; }
 
   const type = document.querySelector('input[name="task-type"]:checked')?.value || 'free';
-  const assigned_to = type === 'assigned' ? parseInt(document.getElementById('new-task-assigned').value) : null;
+  const assignedRaw = document.getElementById('new-task-assigned').value;
+  const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
 
-  const { error } = await sb.from('homey_tasks').insert({
-    title: name,
-    amount: Number(price),
-    type,
-    assigned_to: assigned_to || null,
-    active: true,
-  });
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  const payload = { title: name, amount: Number(price), type, assigned_to, active: true };
+  console.log('Inserting task:', payload);
+  const { error } = await sb.from('homey_tasks').insert(payload);
+  if (error) { console.error('Task insert error:', error); showToast('Virhe: ' + error.message, 'error'); return; }
   showToast('Tehtävä lisätty! ✅', 'success');
   closeModal('modal-add-task');
   await loadAll();
