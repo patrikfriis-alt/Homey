@@ -713,7 +713,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v1.9</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.0</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -794,7 +794,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.9</footer>
+  <footer>Homey v2.0</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -829,7 +829,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.9</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.0</footer>
 </div>
 
 <script>
@@ -853,6 +853,7 @@ const state = {
   userRole: null,      // 'child' | 'parent'
   children: [],
   tasks: [],
+  allTasks: [],
   completions: [],
   payments: [],
   selectedChildId: null, // login step
@@ -918,8 +919,9 @@ async function loadAll() {
     if (t.data?.length) console.log('homey_tasks columns:', Object.keys(t.data[0]));
     if (c.data?.length) console.log('homey_children columns:', Object.keys(c.data[0]));
     state.children = c.data || [];
-    // filter active tasks in JS — works even if active column missing
-    state.tasks = (t.data || []).filter(task => task.active !== false);
+    state.allTasks = t.data || [];
+    // filter active tasks for UI rendering
+    state.tasks = state.allTasks.filter(task => task.active !== false);
     state.completions = co.data || [];
     state.payments = p.data || [];
   } catch (err) {
@@ -936,13 +938,13 @@ function calcOpenSaldo(childId) {
       .map(p => p.month)
   );
   // sum approved completions not in a paid month
+  // use allTasks so deactivated tasks still contribute to saldo
   return state.completions
     .filter(c => c.child_id === childId && c.status === 'approved')
     .filter(c => !paidMonths.has(monthKey(c.completed_at)))
     .reduce((sum, c) => {
-      const task = state.tasks.find(t => t.id === c.task_id) ||
-                   { price: c.task_price || 0 };
-      return sum + Number(task.amount || c.task_price || 0);
+      const task = state.allTasks.find(t => t.id === c.task_id);
+      return sum + Number(task?.amount ?? c.task_price ?? 0);
     }, 0);
 }
 
@@ -1443,11 +1445,15 @@ function renderParentOverview() {
 
   panel.innerHTML = `
     <div class="card">
-      <div class="card-title">Lapset</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0">Lapset</div>
+        <button class="btn btn-primary btn-sm" id="overview-add-task-btn">+ Lisää tehtävä</button>
+      </div>
       ${childCards}
     </div>
-    <footer>Homey v1.9</footer>
+    <footer>Homey v2.0</footer>
   `;
+  panel.querySelector('#overview-add-task-btn').addEventListener('click', openAddTaskModal);
 }
 
 function renderParentPending() {
