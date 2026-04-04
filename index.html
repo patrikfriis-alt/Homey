@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.4</footer>
+  <footer>Homey v1.5</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.4</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.5</footer>
 </div>
 
 <script>
@@ -905,7 +905,7 @@ async function loadAll() {
   try {
     const [c, t, co, p] = await Promise.all([
       sb.from('homey_children').select('*').order('name'),
-      sb.from('homey_tasks').select('*').order('name'),
+      sb.from('homey_tasks').select('*'),
       sb.from('homey_completions').select('*').order('completed_at', { ascending: false }),
       sb.from('homey_payments').select('*').order('paid_at', { ascending: false }),
     ]);
@@ -913,6 +913,9 @@ async function loadAll() {
     if (t.error) console.error('homey_tasks:', t.error.message);
     if (co.error) console.error('homey_completions:', co.error.message);
     if (p.error) console.error('homey_payments:', p.error.message);
+    // Debug: log table columns so we can see exact field names
+    if (t.data?.length) console.log('homey_tasks columns:', Object.keys(t.data[0]));
+    if (c.data?.length) console.log('homey_children columns:', Object.keys(c.data[0]));
     state.children = c.data || [];
     // filter active tasks in JS — works even if active column missing
     state.tasks = (t.data || []).filter(task => task.active !== false);
@@ -1426,7 +1429,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.4</footer>
+    <footer>Homey v1.5</footer>
   `;
 }
 
