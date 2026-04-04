@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Homey</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     /* ===== RESET & ROOT ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -793,7 +793,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v1.3</footer>
+  <footer>Homey v1.4</footer>
 </div>
 
 <!-- ===== VIEW: PARENT ===== -->
@@ -828,7 +828,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.3</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v1.4</footer>
 </div>
 
 <script>
@@ -902,16 +902,25 @@ function childColor(child) {
 
 // ===== LOAD DATA =====
 async function loadAll() {
-  const [c, t, co, p] = await Promise.all([
-    sb.from('homey_children').select('*').order('name'),
-    sb.from('homey_tasks').select('*').eq('active', true).order('name'),
-    sb.from('homey_completions').select('*').order('completed_at', { ascending: false }),
-    sb.from('homey_payments').select('*').order('paid_at', { ascending: false }),
-  ]);
-  state.children = c.data || [];
-  state.tasks = t.data || [];
-  state.completions = co.data || [];
-  state.payments = p.data || [];
+  try {
+    const [c, t, co, p] = await Promise.all([
+      sb.from('homey_children').select('*').order('name'),
+      sb.from('homey_tasks').select('*').order('name'),
+      sb.from('homey_completions').select('*').order('completed_at', { ascending: false }),
+      sb.from('homey_payments').select('*').order('paid_at', { ascending: false }),
+    ]);
+    if (c.error) console.error('homey_children:', c.error.message);
+    if (t.error) console.error('homey_tasks:', t.error.message);
+    if (co.error) console.error('homey_completions:', co.error.message);
+    if (p.error) console.error('homey_payments:', p.error.message);
+    state.children = c.data || [];
+    // filter active tasks in JS — works even if active column missing
+    state.tasks = (t.data || []).filter(task => task.active !== false);
+    state.completions = co.data || [];
+    state.payments = p.data || [];
+  } catch (err) {
+    console.error('loadAll error:', err);
+  }
 }
 
 // ===== SALDO CALC =====
@@ -1417,7 +1426,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v1.3</footer>
+    <footer>Homey v1.4</footer>
   `;
 }
 
@@ -1698,9 +1707,14 @@ function openAddTaskModal() {
 
 function renderTaskTemplateGrid() {
   const grid = document.getElementById('task-template-grid');
-  grid.innerHTML = TASK_TEMPLATES.map(name => `
-    <button class="task-template-btn${selectedTemplateName === name ? ' selected' : ''}" onclick="selectTemplate('${name.replace(/'/g, "\\'")}')">${name}</button>
-  `).join('');
+  grid.innerHTML = TASK_TEMPLATES.map(name => {
+    const sel = selectedTemplateName === name ? ' selected' : '';
+    const escaped = name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<button class="task-template-btn${sel}" data-name="${escaped}">${escaped}</button>`;
+  }).join('');
+  grid.querySelectorAll('.task-template-btn').forEach(btn => {
+    btn.addEventListener('click', () => selectTemplate(btn.dataset.name));
+  });
 }
 
 function selectTemplate(name) {
