@@ -617,6 +617,45 @@
       font-weight: 700;
     }
 
+    /* ===== IN-APP NOTIFICATION ===== */
+    .notif-bar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 0 16px;
+      max-width: calc(100vw - 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 9998;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      white-space: nowrap;
+      max-width: 420px;
+      width: calc(100vw - 32px);
+    }
+    .notif-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .notif-bar-close {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 0 0 8px;
+      flex-shrink: 0;
+      opacity: 0.8;
+      line-height: 1;
+    }
+
     /* ===== FAB ===== */
     .fab {
       position: fixed;
@@ -659,6 +698,12 @@
 
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast"></div>
+
+<!-- ===== IN-APP NOTIFICATION ===== -->
+<div id="notif-bar" class="notif-bar">
+  <span id="notif-text"></span>
+  <button class="notif-bar-close" id="notif-close">✕</button>
+</div>
 
 <!-- ===== PAYMENT POPUP ===== -->
 <div id="payment-popup" class="modal-overlay hidden">
@@ -764,7 +809,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.3</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.4</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -845,7 +890,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.3</footer>
+  <footer>Homey v2.4</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -883,7 +928,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.3</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.4</footer>
 </div>
 
 <script>
@@ -1134,36 +1179,77 @@ function logout() {
   initLogin();
 }
 
+// ===== IN-APP NOTIFICATION =====
+let notifTimer = null;
+function showNotif(msg) {
+  const bar = document.getElementById('notif-bar');
+  document.getElementById('notif-text').textContent = msg;
+  bar.classList.add('show');
+  if (notifTimer) clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => bar.classList.remove('show'), 4000);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('notif-close').addEventListener('click', () => {
+    document.getElementById('notif-bar').classList.remove('show');
+    if (notifTimer) clearTimeout(notifTimer);
+  });
+});
+
 // ===== REALTIME =====
 function setupRealtime() {
-  if (state.realtimeChannel) sb.removeChannel(state.realtimeChannel);
+  if (state.realtimeChannel) {
+    sb.removeChannel(state.realtimeChannel);
+    state.realtimeChannel = null;
+  }
 
   if (state.userRole === 'child') {
+    const childId = state.currentUser.id;
     state.realtimeChannel = sb
-      .channel('payments-for-child')
+      .channel('child-realtime-' + childId)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'homey_payments',
-        filter: `child_id=eq.${state.currentUser.id}`,
       }, async (payload) => {
+        if (payload.new.child_id !== childId) return;
         await loadAll();
         showPaymentPopup(payload.new);
         renderChildSaldo();
+        showNotif('Maksu vastaanotettu! ' + fmt(payload.new.amount));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'homey_completions',
+      }, async (payload) => {
+        if (payload.new.child_id !== childId) return;
+        await loadAll();
+        renderChildSaldo();
+        renderAssignedTasks();
+        renderFreeTasks();
+        const task = state.allTasks.find(t => t.id === payload.new.task_id);
+        if (payload.new.status === 'approved') {
+          showNotif('Tehtävä hyväksytty! +' + fmt(task?.amount ?? 0));
+        } else if (payload.new.status === 'rejected') {
+          showNotif('Tehtävä hylätty: ' + (task?.title || 'tehtävä'));
+        }
       })
       .subscribe();
   } else {
     state.realtimeChannel = sb
-      .channel('completions-for-parent')
+      .channel('parent-realtime')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'homey_completions',
-      }, async () => {
+      }, async (payload) => {
         await loadAll();
         renderParentPending();
         renderParentOverview();
         updatePendingBadge();
+        const child = state.children.find(c => c.id === payload.new.child_id);
+        const task = state.allTasks.find(t => t.id === payload.new.task_id);
+        showNotif((child?.name || 'Lapsi') + ' merkitsi tehdyksi: ' + (task?.title || 'tehtävä'));
       })
       .subscribe();
   }
@@ -1233,7 +1319,9 @@ function switchTaskTab(tab, btn) {
 
 function renderAssignedTasks() {
   const childId = state.currentUser.id;
-  const myTasks = state.tasks.filter(t => t.type === 'assigned' && t.assigned_to === childId);
+  console.log('renderAssignedTasks — childId:', childId, typeof childId);
+  console.log('all tasks assigned_to values:', state.tasks.filter(t => t.type === 'assigned').map(t => ({id: t.id, title: t.title, assigned_to: t.assigned_to, match: String(t.assigned_to) === String(childId)})));
+  const myTasks = state.tasks.filter(t => t.type === 'assigned' && String(t.assigned_to) === String(childId));
   const container = document.getElementById('assigned-tasks-list');
 
   if (!myTasks.length) {
@@ -1508,7 +1596,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.3</footer>
+    <footer>Homey v2.4</footer>
   `;
 }
 
