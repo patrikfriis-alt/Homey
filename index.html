@@ -9,21 +9,27 @@
     /* ===== RESET & ROOT ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #6C5CE7;
-      --primary-dark: #5649c0;
-      --primary-light: #a29bfe;
-      --bg: #f0eff5;
+      --primary: #F59C00;
+      --primary-light: #FFF9EE;
+      --primary-mid: #FAEEDA;
+      --primary-dark: #412402;
+      --primary-muted: #854F0B;
+      --dark-bg: #2C2C2A;
+      --dark-surface: #444441;
+      --dark-muted: #888780;
+      --bg: #F7F6F3;
       --card: #ffffff;
-      --text: #2d3436;
-      --text-muted: #636e72;
-      --border: #dfe6e9;
-      --success: #00b894;
-      --danger: #d63031;
-      --warning: #fdcb6e;
+      --text: #1A1A18;
+      --text-muted: #6B6B67;
+      --border: #E8E6E0;
+      --success: #2A9D5C;
+      --danger: #D63031;
+      --warning: #F59C00;
       --radius: 16px;
-      --radius-sm: 8px;
-      --shadow: 0 2px 16px rgba(108,92,231,0.10);
-      --shadow-lg: 0 8px 32px rgba(108,92,231,0.18);
+      --radius-sm: 10px;
+      --radius-pill: 20px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.14);
     }
     html, body {
       height: 100%;
@@ -36,25 +42,16 @@
 
     /* ===== UTILS ===== */
     .hidden { display: none !important; }
-    .flex { display: flex; }
-    .flex-col { flex-direction: column; }
-    .items-center { align-items: center; }
-    .justify-center { justify-content: center; }
-    .justify-between { justify-content: space-between; }
-    .gap-8 { gap: 8px; }
-    .gap-12 { gap: 12px; }
-    .gap-16 { gap: 16px; }
     .w-full { width: 100%; }
     .text-center { text-align: center; }
     .text-muted { color: var(--text-muted); font-size: 0.875rem; }
-    .bold { font-weight: 700; }
 
     /* ===== VIEWS ===== */
     .view { display: none; min-height: 100vh; }
     .view.active { display: flex; flex-direction: column; }
 
-    /* ===== APP HEADER ===== */
-    .app-header {
+    /* ===== APP HEADER — CHILD (warm orange) ===== */
+    #view-child .app-header {
       background: var(--primary);
       color: #fff;
       padding: 16px 20px;
@@ -64,26 +61,40 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(108,92,231,0.3);
+      box-shadow: 0 2px 8px rgba(245,156,0,0.25);
     }
-    .app-header h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; }
-    .app-header .subtitle { font-size: 0.75rem; opacity: 0.8; }
+
+    /* ===== APP HEADER — PARENT (dark) ===== */
+    #view-parent .app-header {
+      background: var(--dark-bg);
+      color: #fff;
+      padding: 20px 20px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-header .subtitle { font-size: 0.75rem; opacity: 0.6; margin-top: 2px; }
     .logout-btn {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.15);
       border: none;
       color: #fff;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.875rem;
+      padding: 7px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
       cursor: pointer;
       font-weight: 600;
+      letter-spacing: 0.01em;
     }
-    .logout-btn:hover { background: rgba(255,255,255,0.3); }
+    .logout-btn:hover { background: rgba(255,255,255,0.25); }
 
     /* ===== MAIN CONTENT ===== */
     .main-content {
       flex: 1;
-      padding: 20px 16px;
+      padding: 20px 16px 100px;
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
@@ -95,7 +106,7 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 20px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .card-title {
       font-size: 1rem;
@@ -110,29 +121,30 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 12px 20px;
-      border-radius: var(--radius-sm);
+      padding: 12px 22px;
+      border-radius: var(--radius-pill);
       border: none;
       font-size: 0.9rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
       text-decoration: none;
+      letter-spacing: 0.01em;
     }
     .btn:active { transform: scale(0.97); }
     .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:hover { opacity: 0.9; }
     .btn-success { background: var(--success); color: #fff; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
-    .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 6px; }
+    .btn-sm { padding: 7px 16px; font-size: 0.8rem; }
     .btn-full { width: 100%; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* ===== INPUT ===== */
     .input {
       width: 100%;
-      padding: 12px 16px;
+      padding: 13px 16px;
       border: 2px solid var(--border);
       border-radius: var(--radius-sm);
       font-size: 1rem;
@@ -142,19 +154,19 @@
     }
     .input:focus { outline: none; border-color: var(--primary); }
     .input-label {
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-muted);
       margin-bottom: 6px;
       display: block;
     }
     .form-group { margin-bottom: 14px; }
-    select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23636e72' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B6B67' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 
     /* ===== PIN PAD ===== */
     .pin-display {
       display: flex;
-      gap: 12px;
+      gap: 14px;
       justify-content: center;
       margin: 20px 0 16px;
     }
@@ -174,39 +186,37 @@
       margin: 0 auto;
     }
     .pin-key {
-      background: var(--card);
-      border: 2px solid var(--border);
+      background: var(--primary-light);
+      border: none;
       border-radius: var(--radius-sm);
       padding: 18px 10px;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
-      color: var(--text);
-      transition: background 0.1s, border-color 0.1s;
+      color: var(--primary-dark);
+      transition: background 0.1s;
       user-select: none;
     }
-    .pin-key:hover { background: var(--bg); border-color: var(--primary); }
+    .pin-key:hover { background: var(--primary-mid); }
     .pin-key:active { background: var(--primary); color: #fff; }
-    .pin-key.del { font-size: 1rem; color: var(--danger); }
+    .pin-key.del { font-size: 1rem; color: var(--danger); background: #fff0f0; }
 
     /* ===== LOGIN VIEW ===== */
     #view-login {
-      background: linear-gradient(160deg, #6C5CE7 0%, #a29bfe 100%);
+      background: linear-gradient(160deg, #F59C00 0%, #FFBE45 100%);
       align-items: center;
       justify-content: center;
       padding: 20px;
+      min-height: 100vh;
     }
     .login-logo {
       text-align: center;
       color: #fff;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
-    .login-logo .logo-icon {
-      font-size: 3.5rem;
-      margin-bottom: 8px;
-    }
-    .login-logo h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; }
+    .login-logo .logo-icon { font-size: 3.5rem; margin-bottom: 6px; }
+    .login-logo h1 { font-size: 2.4rem; font-weight: 900; letter-spacing: -1px; }
     .login-logo p { opacity: 0.85; font-size: 1rem; margin-top: 4px; }
     .login-card {
       background: #fff;
@@ -214,13 +224,14 @@
       padding: 28px 24px;
       width: 100%;
       max-width: 380px;
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
     }
     .login-step-title {
       font-size: 1.1rem;
       font-weight: 700;
       text-align: center;
       margin-bottom: 4px;
+      color: var(--text);
     }
     .child-grid {
       display: grid;
@@ -232,28 +243,29 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      padding: 16px 10px;
+      gap: 10px;
+      padding: 18px 10px;
       border-radius: var(--radius);
       border: 2px solid var(--border);
-      background: #fff;
+      background: var(--primary-light);
       cursor: pointer;
       transition: border-color 0.15s, box-shadow 0.15s;
       font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
+      font-weight: 700;
+      color: var(--primary-dark);
     }
-    .child-select-btn:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(108,92,231,0.12); }
-    .child-select-btn.selected { border-color: var(--primary); background: #f3f0ff; }
+    .child-select-btn:hover { border-color: var(--primary); box-shadow: 0 2px 10px rgba(245,156,0,0.2); }
+    .child-select-btn.selected { border-color: var(--primary); background: var(--primary-mid); }
     .child-avatar {
-      width: 52px; height: 52px;
+      width: 58px; height: 58px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      font-weight: 800;
+      font-size: 1.6rem;
+      font-weight: 900;
       color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
     }
     .admin-link {
       text-align: center;
@@ -271,17 +283,18 @@
     /* ===== TABS ===== */
     .tabs {
       display: flex;
-      background: var(--bg);
-      border-radius: var(--radius-sm);
-      padding: 4px;
+      background: var(--border);
+      border-radius: var(--radius-pill);
+      padding: 3px;
       margin-bottom: 16px;
+      gap: 2px;
     }
     .tab-btn {
       flex: 1;
       padding: 10px 8px;
       border: none;
       background: transparent;
-      border-radius: 6px;
+      border-radius: var(--radius-pill);
       font-size: 0.875rem;
       font-weight: 600;
       color: var(--text-muted);
@@ -290,13 +303,14 @@
     }
     .tab-btn.active {
       background: #fff;
-      color: var(--primary);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      color: var(--primary-dark);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+      font-weight: 700;
     }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* ===== PARENT TABS ===== */
+    /* ===== PARENT BOTTOM NAV ===== */
     .parent-nav {
       display: flex;
       background: #fff;
@@ -304,39 +318,50 @@
       position: sticky;
       bottom: 0;
       z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0);
     }
     .parent-nav-btn {
       flex: 1;
-      padding: 12px 4px 10px;
+      padding: 10px 4px 8px;
       border: none;
       background: transparent;
-      color: var(--text-muted);
-      font-size: 0.7rem;
+      color: var(--dark-muted);
+      font-size: 0.68rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       transition: color 0.15s;
+      position: relative;
     }
-    .parent-nav-btn .nav-icon { font-size: 1.3rem; }
+    .parent-nav-btn .nav-icon { font-size: 1.35rem; }
     .parent-nav-btn.active { color: var(--primary); }
+    .parent-nav-btn.active::after {
+      content: '';
+      display: block;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      position: absolute;
+      bottom: 5px;
+    }
 
     /* ===== BADGE ===== */
     .badge {
       display: inline-block;
       padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.75rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.72rem;
       font-weight: 700;
     }
-    .badge-pending { background: #fff3cd; color: #856404; }
-    .badge-approved { background: #d1fae5; color: #065f46; }
-    .badge-rejected { background: #fee2e2; color: #991b1b; }
-    .badge-paid { background: #d1fae5; color: #065f46; }
-    .badge-unpaid { background: #fff3cd; color: #856404; }
-    .badge-reserved { background: #e0e7ff; color: #3730a3; }
+    .badge-pending { background: #FFF3CD; color: #854F0B; }
+    .badge-approved { background: #D1FAE5; color: #065f46; }
+    .badge-rejected { background: #FEE2E2; color: #991b1b; }
+    .badge-paid { background: #D1FAE5; color: #065f46; }
+    .badge-unpaid { background: #FFF3CD; color: #854F0B; }
+    .badge-reserved { background: var(--primary-mid); color: var(--primary-muted); }
 
     /* ===== TASK ITEM ===== */
     .task-item {
@@ -348,9 +373,9 @@
     }
     .task-item:last-child { border-bottom: none; }
     .task-icon {
-      width: 42px; height: 42px;
+      width: 44px; height: 44px;
       border-radius: 12px;
-      background: #f3f0ff;
+      background: var(--primary-light);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -359,12 +384,12 @@
     }
     .task-info { flex: 1; min-width: 0; }
     .task-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .task-price { color: var(--success); font-weight: 700; font-size: 0.9rem; }
-    .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .task-price { color: var(--success); font-weight: 700; font-size: 0.9rem; margin-top: 2px; }
+    .task-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
 
     /* ===== SALDO CARD ===== */
     .saldo-card {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, #FFBE45 100%);
       border-radius: var(--radius);
       padding: 24px 20px;
       color: #fff;
@@ -375,18 +400,19 @@
     .saldo-card::after {
       content: '';
       position: absolute;
-      right: -20px; top: -20px;
+      right: -24px; top: -24px;
       width: 120px; height: 120px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.12);
+      pointer-events: none;
     }
-    .saldo-label { font-size: 0.875rem; opacity: 0.85; margin-bottom: 4px; }
-    .saldo-amount { font-size: 2.4rem; font-weight: 900; letter-spacing: -1px; }
-    .saldo-name { font-size: 1rem; opacity: 0.85; margin-top: 6px; }
+    .saldo-label { font-size: 0.875rem; opacity: 0.85; margin-bottom: 4px; font-weight: 600; }
+    .saldo-amount { font-size: 2.6rem; font-weight: 900; letter-spacing: -1.5px; }
+    .saldo-name { font-size: 0.95rem; opacity: 0.8; margin-top: 8px; }
 
     /* ===== PROGRESS BAR ===== */
     .progress-bar {
-      height: 8px;
+      height: 6px;
       background: var(--border);
       border-radius: 4px;
       overflow: hidden;
@@ -409,19 +435,20 @@
     }
     .child-summary-card:last-child { border-bottom: none; }
     .child-summary-info { flex: 1; }
-    .child-summary-name { font-weight: 700; font-size: 1rem; }
-    .child-summary-saldo { color: var(--success); font-weight: 700; font-size: 0.9rem; }
+    .child-summary-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+    .child-summary-saldo { color: var(--primary); font-weight: 500; font-size: 1rem; margin-top: 2px; }
+    .child-summary-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
 
     /* ===== MODAL / POPUP ===== */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.45);
       display: flex;
       align-items: flex-end;
       justify-content: center;
       z-index: 1000;
-      padding: 20px;
+      padding: 16px;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
@@ -431,18 +458,18 @@
       width: 100%;
       max-width: 480px;
       box-shadow: var(--shadow-lg);
-      animation: slideUp 0.3s ease;
+      animation: slideUp 0.25s ease;
     }
     @keyframes slideUp {
       from { transform: translateY(40px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; text-align: center; }
+    .modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; text-align: center; color: var(--text); }
     .modal-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem; }
     .payment-popup-amount {
       font-size: 3rem;
       font-weight: 900;
-      color: var(--success);
+      color: var(--primary);
       text-align: center;
       margin: 16px 0;
     }
@@ -450,7 +477,7 @@
     .payment-task-list li {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
+      padding: 7px 0;
       border-bottom: 1px solid var(--border);
       font-size: 0.9rem;
     }
@@ -476,18 +503,18 @@
       font-size: 0.9rem;
     }
     .completion-item:last-child { border-bottom: none; }
-    .completion-date { color: var(--text-muted); font-size: 0.8rem; }
+    .completion-date { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
 
     /* ===== TOAST ===== */
     .toast {
       position: fixed;
-      bottom: 80px;
+      bottom: 90px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: #2d3436;
+      background: var(--dark-bg);
       color: #fff;
       padding: 12px 24px;
-      border-radius: 24px;
+      border-radius: var(--radius-pill);
       font-size: 0.9rem;
       font-weight: 600;
       z-index: 9999;
@@ -540,7 +567,7 @@
       transition: border-color 0.15s, transform 0.1s;
     }
     .color-option:hover { transform: scale(1.1); }
-    .color-option.selected { border-color: var(--text); transform: scale(1.1); }
+    .color-option.selected { border-color: var(--text); transform: scale(1.15); }
 
     /* ===== DIVIDER ===== */
     .divider { height: 1px; background: var(--border); margin: 16px 0; }
@@ -557,10 +584,10 @@
       align-items: flex-start;
       margin-bottom: 8px;
     }
-    .pending-child-name { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
-    .pending-task-name { font-weight: 700; font-size: 0.95rem; }
-    .pending-date { font-size: 0.8rem; color: var(--text-muted); }
-    .pending-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .pending-child-name { font-size: 0.78rem; font-weight: 700; }
+    .pending-task-name { font-weight: 700; font-size: 0.95rem; margin-top: 2px; }
+    .pending-date { font-size: 0.78rem; color: var(--text-muted); }
+    .pending-actions { display: flex; gap: 8px; margin-top: 10px; }
 
     /* ===== TASK TEMPLATE GRID ===== */
     .task-template-grid {
@@ -570,36 +597,60 @@
       margin-bottom: 4px;
     }
     .task-template-btn {
-      padding: 10px 10px;
+      padding: 10px;
       border: 2px solid var(--border);
       border-radius: var(--radius-sm);
-      background: #fff;
-      font-size: 0.85rem;
+      background: var(--primary-light);
+      font-size: 0.83rem;
       font-weight: 600;
-      color: var(--text);
+      color: var(--primary-dark);
       cursor: pointer;
       text-align: left;
       transition: border-color 0.15s, background 0.15s;
-      line-height: 1.3;
+      line-height: 1.35;
     }
-    .task-template-btn:hover { border-color: var(--primary-light); background: #f3f0ff; }
+    .task-template-btn:hover { border-color: var(--primary); background: var(--primary-mid); }
     .task-template-btn.selected {
       border-color: var(--primary);
-      background: #f3f0ff;
-      color: var(--primary);
+      background: var(--primary-mid);
+      color: var(--primary-dark);
+      font-weight: 700;
     }
+
+    /* ===== FAB ===== */
+    .fab {
+      position: fixed;
+      bottom: 80px;
+      right: 16px;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-size: 1.6rem;
+      font-weight: 300;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(245,156,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fab:active { transform: scale(0.93); box-shadow: 0 2px 6px rgba(245,156,0,0.3); }
+    .fab.hidden { display: none !important; }
 
     /* ===== FOOTER ===== */
     footer {
       text-align: center;
-      padding: 16px;
+      padding: 14px;
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
     }
 
     /* ===== RESPONSIVE ===== */
     @media (min-width: 600px) {
-      .main-content { padding: 28px 24px; }
+      .main-content { padding: 28px 24px 120px; }
       .child-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
@@ -713,7 +764,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.0</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.1</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -794,8 +845,11 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.0</footer>
+  <footer>Homey v2.1</footer>
 </div>
+
+<!-- ===== FAB ===== -->
+<button id="fab-add-task" class="fab hidden" aria-label="Lisää tehtävä">+</button>
 
 <!-- ===== VIEW: PARENT ===== -->
 <div id="view-parent" class="view">
@@ -829,7 +883,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.0</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.1</footer>
 </div>
 
 <script>
@@ -1078,6 +1132,7 @@ function logout() {
   }
   state.currentUser = null;
   state.userRole = null;
+  document.getElementById('fab-add-task').classList.add('hidden');
   initLogin();
 }
 
@@ -1397,6 +1452,9 @@ async function initParentView() {
   renderParentPayments();
   renderParentManage();
   updatePendingBadge();
+  const fab = document.getElementById('fab-add-task');
+  fab.classList.remove('hidden');
+  fab.onclick = openAddTaskModal;
 }
 
 function switchParentTab(tab, btn) {
@@ -1405,6 +1463,8 @@ function switchParentTab(tab, btn) {
   ['overview','pending','payments','manage'].forEach(t => {
     document.getElementById('parent-panel-' + t).classList.toggle('hidden', t !== tab);
   });
+  const fab = document.getElementById('fab-add-task');
+  fab.classList.toggle('hidden', tab === 'manage');
 }
 
 function updatePendingBadge() {
@@ -1423,21 +1483,23 @@ function renderParentOverview() {
 
   const childCards = state.children.map(child => {
     const saldo = calcOpenSaldo(child.id);
-    const totalApproved = state.completions
-      .filter(c => c.child_id === child.id && c.status === 'approved')
-      .reduce((s, c) => {
-        const task = state.tasks.find(t => t.id === c.task_id);
-        return s + Number(task?.amount || c.task_price || 0);
-      }, 0);
+    const approvedComps = state.completions.filter(c => c.child_id === child.id && c.status === 'approved');
+    const totalApproved = approvedComps.reduce((s, c) => {
+      const task = state.allTasks.find(t => t.id === c.task_id);
+      return s + Number(task?.amount ?? c.task_price ?? 0);
+    }, 0);
+    const doneCount = state.completions.filter(c => c.child_id === child.id && (c.status === 'approved' || c.status === 'pending')).length;
+    const taskCount = state.tasks.filter(t => t.assigned_to === child.id || t.type === 'free').length;
     const pct = totalApproved > 0 ? Math.min(100, (saldo / Math.max(saldo, totalApproved)) * 100) : 0;
 
     return `
       <div class="child-summary-card">
-        <div class="child-avatar" style="background:${childColor(child)};width:48px;height:48px;">${avatarInitial(child.name)}</div>
+        <div class="child-avatar" style="background:${childColor(child)};width:52px;height:52px;font-size:1.4rem;">${avatarInitial(child.name)}</div>
         <div class="child-summary-info">
           <div class="child-summary-name">${child.name}</div>
-          <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${childColor(child)}"></div></div>
+          <div class="child-summary-saldo">${fmt(saldo)}</div>
+          <div class="child-summary-meta">${doneCount} tehtyä tehtävää</div>
+          <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:${pct}%;background:${childColor(child)}"></div></div>
         </div>
       </div>
     `;
@@ -1445,15 +1507,11 @@ function renderParentOverview() {
 
   panel.innerHTML = `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0">Lapset</div>
-        <button class="btn btn-primary btn-sm" id="overview-add-task-btn">+ Lisää tehtävä</button>
-      </div>
+      <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.0</footer>
+    <footer>Homey v2.1</footer>
   `;
-  panel.querySelector('#overview-add-task-btn').addEventListener('click', openAddTaskModal);
 }
 
 function renderParentPending() {
