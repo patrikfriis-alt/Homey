@@ -806,7 +806,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.7</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.8</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -887,7 +887,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.7</footer>
+  <footer>Homey v2.8</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -925,7 +925,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.7</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.8</footer>
 </div>
 
 <script>
@@ -996,6 +996,24 @@ function showNotif(title, type = 'info', subtitle = '', pulse = false) {
     if (bar) bar.style.animationPlayState = 'running';
     card._timer = setTimeout(() => dismissNotif(card), 1500);
   });
+}
+
+function friendlyError(err) {
+  if (!err) return 'Tuntematon virhe';
+  const msg = (err.message || err.details || String(err)).toLowerCase();
+  if (msg.includes('network') || msg.includes('fetch') || msg.includes('failed to fetch'))
+    return 'Yhteysvirhe — tarkista netti';
+  if (msg.includes('jwt') || msg.includes('token') || msg.includes('auth'))
+    return 'Istunto vanhentunut — kirjaudu uudelleen';
+  if (msg.includes('duplicate') || msg.includes('unique'))
+    return 'Tietue on jo olemassa';
+  if (msg.includes('foreign key') || msg.includes('violates'))
+    return 'Viittausvirhe — tietoa ei löydy';
+  if (msg.includes('permission') || msg.includes('policy') || msg.includes('not allowed'))
+    return 'Ei oikeuksia';
+  if (msg.includes('timeout'))
+    return 'Aikakatkaisu — yritä uudelleen';
+  return 'Virhe — yritä uudelleen';
 }
 
 function dismissNotif(card) {
@@ -1448,7 +1466,7 @@ async function markDone(taskId, btn) {
   };
   const { error } = await sb.from('homey_completions').insert(payload);
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = origText; }
     return;
   }
@@ -1464,7 +1482,7 @@ async function reserveTask(taskId, btn) {
   const childId = state.currentUser.id;
   const { error } = await sb.from('homey_tasks').update({ reserved_by: childId }).eq('id', taskId);
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Varaa'; }
     return;
   }
@@ -1477,7 +1495,7 @@ async function unreserveTask(taskId, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Vapautetaan...'; }
   const { error } = await sb.from('homey_tasks').update({ reserved_by: null }).eq('id', taskId);
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Vapauta'; }
     return;
   }
@@ -1623,7 +1641,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.7</footer>
+    <footer>Homey v2.8</footer>
   `;
 }
 
@@ -1676,7 +1694,7 @@ async function approveComp(id, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
   if (error) {
-    showToast('Virhe', 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = '✓ Hyväksy'; }
     return;
   }
@@ -1691,7 +1709,7 @@ async function rejectComp(id, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
   if (error) {
-    showToast('Virhe', 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = '✗ Hylkää'; }
     return;
   }
@@ -1774,7 +1792,7 @@ async function payChild(childId, btn) {
     paid_at: new Date().toISOString(),
   });
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Maksa'; }
     return;
   }
@@ -1863,7 +1881,7 @@ function renderParentManage() {
 async function deleteChild(id) {
   if (!confirm('Poistetaanko lapsi? Tämä ei poista suorituksia.')) return;
   const { error } = await sb.from('homey_children').delete().eq('id', id);
-  if (error) { showToast('Virhe', 'error'); return; }
+  if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
   showToast('Lapsi poistettu');
   await loadAll();
   renderParentManage();
@@ -1873,7 +1891,7 @@ async function deleteChild(id) {
 async function deleteTask(id) {
   if (!confirm('Poistetaanko tehtävä?')) return;
   const { error } = await sb.from('homey_tasks').update({ active: false }).eq('id', id);
-  if (error) { showToast('Virhe', 'error'); return; }
+  if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
   showToast('Tehtävä poistettu');
   await loadAll();
   renderParentManage();
@@ -1897,7 +1915,7 @@ async function saveChild() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor });
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
     return;
   }
@@ -1991,7 +2009,7 @@ async function saveTask() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_tasks').insert(payload);
   if (error) {
-    showToast('Virhe: ' + error.message, 'error');
+    showNotif(friendlyError(error), 'error', error.message);
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
     return;
   }
