@@ -505,27 +505,68 @@
     .completion-item:last-child { border-bottom: none; }
     .completion-date { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
 
-    /* ===== TOAST ===== */
-    .toast {
+    /* ===== NOTIFICATIONS ===== */
+    #notif-container {
       position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--dark-bg);
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: var(--radius-pill);
-      font-size: 0.9rem;
-      font-weight: 600;
+      bottom: 24px;
+      right: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       z-index: 9999;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      white-space: nowrap;
+      width: min(320px, calc(100vw - 32px));
       pointer-events: none;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast.success { background: var(--success); }
-    .toast.error { background: var(--danger); }
+    .notif-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.13), 0 1px 4px rgba(0,0,0,0.07);
+      padding: 12px 12px 16px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      transform: translateX(calc(100% + 24px));
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.34, 1.42, 0.64, 1), opacity 0.25s ease;
+      pointer-events: all;
+      cursor: pointer;
+    }
+    .notif-card.show { transform: translateX(0); opacity: 1; }
+    .notif-card.hiding {
+      transform: translateX(calc(100% + 24px));
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.2s ease;
+    }
+    .notif-card.pulse { animation: notif-pulse 0.55s ease 0.35s both; }
+    @keyframes notif-pulse {
+      0%, 100% { box-shadow: 0 4px 24px rgba(0,0,0,0.13); }
+      50% { box-shadow: 0 4px 36px rgba(108,92,231,0.45), 0 0 0 5px rgba(108,92,231,0.12); }
+    }
+    .notif-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title { font-weight: 700; font-size: 0.875rem; color: var(--text); line-height: 1.3; }
+    .notif-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .notif-close-btn {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 0.75rem; padding: 2px 4px;
+      opacity: 0.5; flex-shrink: 0; line-height: 1;
+    }
+    .notif-close-btn:hover { opacity: 1; }
+    .notif-progress {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: rgba(0,0,0,0.06);
+    }
+    .notif-progress-bar {
+      height: 100%; width: 100%;
+      transform-origin: left;
+      animation: notif-shrink 4s linear forwards;
+    }
+    @keyframes notif-shrink {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
 
     /* ===== EMPTY STATE ===== */
     .empty-state {
@@ -617,44 +658,6 @@
       font-weight: 700;
     }
 
-    /* ===== IN-APP NOTIFICATION ===== */
-    .notif-bar {
-      position: fixed;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-80px);
-      background: var(--primary);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 500;
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin: 0 16px;
-      max-width: calc(100vw - 32px);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      z-index: 9998;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
-      white-space: nowrap;
-      max-width: 420px;
-      width: calc(100vw - 32px);
-    }
-    .notif-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .notif-bar-close {
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 1.1rem;
-      cursor: pointer;
-      padding: 0 0 0 8px;
-      flex-shrink: 0;
-      opacity: 0.8;
-      line-height: 1;
-    }
 
     /* ===== FAB ===== */
     .fab {
@@ -696,14 +699,8 @@
 </head>
 <body>
 
-<!-- ===== TOAST ===== -->
-<div id="toast" class="toast"></div>
-
-<!-- ===== IN-APP NOTIFICATION ===== -->
-<div id="notif-bar" class="notif-bar">
-  <span id="notif-text"></span>
-  <button class="notif-bar-close" id="notif-close">✕</button>
-</div>
+<!-- ===== NOTIFICATIONS ===== -->
+<div id="notif-container"></div>
 
 <!-- ===== PAYMENT POPUP ===== -->
 <div id="payment-popup" class="modal-overlay hidden">
@@ -809,7 +806,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.6</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.7</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -890,7 +887,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.6</footer>
+  <footer>Homey v2.7</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -928,7 +925,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.6</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.7</footer>
 </div>
 
 <script>
@@ -962,12 +959,58 @@ const state = {
   childTaskTab: 'assigned',
 };
 
-// ===== TOAST =====
+// ===== NOTIFICATIONS =====
+const NOTIF_ICONS = { success: '✅', error: '❌', info: 'ℹ️', payment: '💶' };
+const NOTIF_COLORS = { success: '#2A9D5C', error: '#D63031', info: '#F59C00', payment: '#6C5CE7' };
+const NOTIF_DURATION = 4000;
+
+function showNotif(title, type = 'info', subtitle = '', pulse = false) {
+  const container = document.getElementById('notif-container');
+  const existing = container.querySelectorAll('.notif-card');
+  if (existing.length >= 4) dismissNotif(existing[0]);
+
+  const card = document.createElement('div');
+  card.className = 'notif-card' + (pulse ? ' pulse' : '');
+  card.innerHTML = `
+    <div class="notif-icon">${NOTIF_ICONS[type] || NOTIF_ICONS.info}</div>
+    <div class="notif-body">
+      <div class="notif-title">${title}</div>
+      ${subtitle ? `<div class="notif-sub">${subtitle}</div>` : ''}
+    </div>
+    <button class="notif-close-btn" onclick="dismissNotif(this.closest('.notif-card'))">✕</button>
+    <div class="notif-progress"><div class="notif-progress-bar" style="background:${NOTIF_COLORS[type] || NOTIF_COLORS.info}"></div></div>
+  `;
+
+  container.appendChild(card);
+  requestAnimationFrame(() => card.classList.add('show'));
+
+  card._timer = setTimeout(() => dismissNotif(card), NOTIF_DURATION);
+
+  card.addEventListener('mouseenter', () => {
+    clearTimeout(card._timer);
+    const bar = card.querySelector('.notif-progress-bar');
+    if (bar) bar.style.animationPlayState = 'paused';
+  });
+  card.addEventListener('mouseleave', () => {
+    const bar = card.querySelector('.notif-progress-bar');
+    if (bar) bar.style.animationPlayState = 'running';
+    card._timer = setTimeout(() => dismissNotif(card), 1500);
+  });
+}
+
+function dismissNotif(card) {
+  if (!card || card._dismissed) return;
+  card._dismissed = true;
+  clearTimeout(card._timer);
+  card.classList.remove('show');
+  card.classList.add('hiding');
+  setTimeout(() => card.remove(), 300);
+}
+
 function showToast(msg, type = '') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => { el.className = 'toast'; }, 2800);
+  // Legacy wrapper — maps to new system
+  const t = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+  showNotif(msg, t);
 }
 
 // ===== MODAL =====
@@ -1176,21 +1219,6 @@ function logout() {
   initLogin();
 }
 
-// ===== IN-APP NOTIFICATION =====
-let notifTimer = null;
-function showNotif(msg) {
-  const bar = document.getElementById('notif-bar');
-  document.getElementById('notif-text').textContent = msg;
-  bar.classList.add('show');
-  if (notifTimer) clearTimeout(notifTimer);
-  notifTimer = setTimeout(() => bar.classList.remove('show'), 4000);
-}
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('notif-close').addEventListener('click', () => {
-    document.getElementById('notif-bar').classList.remove('show');
-    if (notifTimer) clearTimeout(notifTimer);
-  });
-});
 
 // ===== REALTIME =====
 function setupRealtime() {
@@ -1212,7 +1240,7 @@ function setupRealtime() {
         await loadAll();
         showPaymentPopup(payload.new);
         renderChildSaldo();
-        showNotif('Maksu vastaanotettu! ' + fmt(payload.new.amount));
+        showNotif('Maksu vastaanotettu!', 'payment', fmt(payload.new.amount), true);
       })
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -1227,9 +1255,9 @@ function setupRealtime() {
         renderChildHistory();
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
         if (payload.new.status === 'approved') {
-          showNotif('Tehtävä hyväksytty! +' + fmt(task?.amount ?? 0));
+          showNotif('Tehtävä hyväksytty!', 'success', '+' + fmt(task?.amount ?? 0));
         } else if (payload.new.status === 'rejected') {
-          showNotif('Tehtävä hylätty: ' + (task?.title || 'tehtävä'));
+          showNotif('Tehtävä hylätty', 'error', task?.title || 'tehtävä');
         }
       })
       .subscribe();
@@ -1247,7 +1275,7 @@ function setupRealtime() {
         updatePendingBadge();
         const child = state.children.find(c => c.id === payload.new.child_id);
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
-        showNotif((child?.name || 'Lapsi') + ' merkitsi tehdyksi: ' + (task?.title || 'tehtävä'));
+        showNotif((child?.name || 'Lapsi') + ' merkitsi tehdyksi', 'info', task?.title || 'tehtävä');
       })
       .subscribe();
   }
@@ -1595,7 +1623,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.6</footer>
+    <footer>Homey v2.7</footer>
   `;
 }
 
@@ -1750,7 +1778,7 @@ async function payChild(childId, btn) {
     if (btn) { btn.disabled = false; btn.textContent = 'Maksa'; }
     return;
   }
-  showToast(`Maksu ${fmt(saldo)} tallennettu! 💶`, 'success');
+  showNotif('Maksu tallennettu!', 'payment', fmt(saldo));
   await loadAll();
   renderParentPayments();
   renderParentOverview();
@@ -1776,9 +1804,9 @@ async function payAll(btn) {
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Maksa kaikki'; }
   if (failed > 0) {
-    showToast(`${failed} maksua epäonnistui`, 'error');
+    showNotif('Maksuja epäonnistui', 'error', `${failed} maksua ei onnistunut`);
   } else {
-    showToast('Kaikki maksut suoritettu! 💶', 'success');
+    showNotif('Kaikki maksut suoritettu!', 'payment');
   }
   await loadAll();
   renderParentPayments();
