@@ -809,7 +809,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.5</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.6</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -890,7 +890,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.5</footer>
+  <footer>Homey v2.6</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -928,7 +928,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.5</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.6</footer>
 </div>
 
 <script>
@@ -1014,9 +1014,6 @@ async function loadAll() {
     if (t.error) console.error('homey_tasks:', t.error.message);
     if (co.error) console.error('homey_completions:', co.error.message);
     if (p.error) console.error('homey_payments:', p.error.message);
-    // Debug: log table columns so we can see exact field names
-    if (t.data?.length) console.log('homey_tasks columns:', Object.keys(t.data[0]));
-    if (c.data?.length) console.log('homey_children columns:', Object.keys(c.data[0]));
     state.children = c.data || [];
     state.allTasks = t.data || [];
     // filter active tasks for UI rendering
@@ -1227,6 +1224,7 @@ function setupRealtime() {
         renderChildSaldo();
         renderAssignedTasks();
         renderFreeTasks();
+        renderChildHistory();
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
         if (payload.new.status === 'approved') {
           showNotif('Tehtävä hyväksytty! +' + fmt(task?.amount ?? 0));
@@ -1319,8 +1317,6 @@ function switchTaskTab(tab, btn) {
 
 function renderAssignedTasks() {
   const childId = state.currentUser.id;
-  console.log('renderAssignedTasks — childId:', childId, typeof childId);
-  console.log('all tasks assigned_to values:', state.tasks.filter(t => t.type === 'assigned').map(t => ({id: t.id, title: t.title, assigned_to: t.assigned_to, match: String(t.assigned_to) === String(childId)})));
   const myTasks = state.tasks.filter(t => t.type === 'assigned' && String(t.assigned_to) === String(childId));
   const container = document.getElementById('assigned-tasks-list');
 
@@ -1343,7 +1339,7 @@ function renderAssignedTasks() {
       : '';
     const btn = doneTodayComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4">Tehty</button>`
-      : `<button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Merkitse tehdyksi</button>`;
+      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Merkitse tehdyksi</button>`;
     return `
       <div class="task-item">
         <div class="task-icon">✅</div>
@@ -1356,9 +1352,6 @@ function renderAssignedTasks() {
       </div>
     `;
   }).join('');
-  container.querySelectorAll('[data-action="markDone"]').forEach(btn => {
-    btn.addEventListener('click', () => markDone(btn.dataset.taskId));
-  });
 }
 
 function renderFreeTasks() {
@@ -1390,15 +1383,15 @@ function renderFreeTasks() {
       actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? 'Odottaa' : 'Hyväksytty'}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Tehty</button>
-        <button class="btn btn-sm btn-outline" data-action="unreserve" data-task-id="${task.id}">Vapauta</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Tehty</button>
+        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}', this)">Vapauta</button>
       `;
     } else if (isReservedByOther) {
       actionsHtml = `<span class="badge badge-reserved">Varattu: ${reservedByChild?.name || '?'}</span>`;
     } else {
       actionsHtml = `
-        <button class="btn btn-sm btn-outline" data-action="reserve" data-task-id="${task.id}">Varaa</button>
-        <button class="btn btn-sm btn-primary" data-action="markDone" data-task-id="${task.id}">Tehty</button>
+        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}', this)">Varaa</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Tehty</button>
       `;
     }
 
@@ -1413,18 +1406,11 @@ function renderFreeTasks() {
       </div>
     `;
   }).join('');
-  container.querySelectorAll('[data-action="markDone"]').forEach(btn => {
-    btn.addEventListener('click', () => markDone(btn.dataset.taskId));
-  });
-  container.querySelectorAll('[data-action="reserve"]').forEach(btn => {
-    btn.addEventListener('click', () => reserveTask(btn.dataset.taskId));
-  });
-  container.querySelectorAll('[data-action="unreserve"]').forEach(btn => {
-    btn.addEventListener('click', () => unreserveTask(btn.dataset.taskId));
-  });
 }
 
-async function markDone(taskId) {
+async function markDone(taskId, btn) {
+  const origText = btn ? btn.textContent : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
   const childId = state.currentUser.id;
   const payload = {
     task_id: taskId,
@@ -1432,9 +1418,12 @@ async function markDone(taskId) {
     status: 'pending',
     completed_at: new Date().toISOString(),
   };
-  console.log('markDone insert:', payload);
   const { error } = await sb.from('homey_completions').insert(payload);
-  if (error) { console.error('markDone error:', error); showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+    return;
+  }
   showToast('Tehtävä merkitty tehdyksi! ✅', 'success');
   await loadAll();
   renderAssignedTasks();
@@ -1442,18 +1431,28 @@ async function markDone(taskId) {
   renderChildSaldo();
 }
 
-async function reserveTask(taskId) {
+async function reserveTask(taskId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Varataan...'; }
   const childId = state.currentUser.id;
   const { error } = await sb.from('homey_tasks').update({ reserved_by: childId }).eq('id', taskId);
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Varaa'; }
+    return;
+  }
   showToast('Tehtävä varattu! 🔒', 'success');
   await loadAll();
   renderFreeTasks();
 }
 
-async function unreserveTask(taskId) {
+async function unreserveTask(taskId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Vapautetaan...'; }
   const { error } = await sb.from('homey_tasks').update({ reserved_by: null }).eq('id', taskId);
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Vapauta'; }
+    return;
+  }
   showToast('Varaus vapautettu');
   await loadAll();
   renderFreeTasks();
@@ -1596,7 +1595,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.5</footer>
+    <footer>Homey v2.6</footer>
   `;
 }
 
@@ -1630,8 +1629,8 @@ function renderParentPending() {
           </div>
         </div>
         <div class="pending-actions">
-          <button class="btn btn-success btn-sm" data-action="approve" data-comp-id="${comp.id}">✓ Hyväksy</button>
-          <button class="btn btn-danger btn-sm" data-action="reject" data-comp-id="${comp.id}">✗ Hylkää</button>
+          <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">✓ Hyväksy</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">✗ Hylkää</button>
         </div>
       </div>
     `;
@@ -1643,17 +1642,16 @@ function renderParentPending() {
       ${items}
     </div>
   `;
-  panel.querySelectorAll('[data-action="approve"]').forEach(btn => {
-    btn.addEventListener('click', () => approveComp(btn.dataset.compId));
-  });
-  panel.querySelectorAll('[data-action="reject"]').forEach(btn => {
-    btn.addEventListener('click', () => rejectComp(btn.dataset.compId));
-  });
 }
 
-async function approveComp(id) {
+async function approveComp(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
-  if (error) { showToast('Virhe', 'error'); return; }
+  if (error) {
+    showToast('Virhe', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Hyväksy'; }
+    return;
+  }
   showToast('Hyväksytty ✓', 'success');
   await loadAll();
   renderParentPending();
@@ -1661,9 +1659,14 @@ async function approveComp(id) {
   updatePendingBadge();
 }
 
-async function rejectComp(id) {
+async function rejectComp(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
-  if (error) { showToast('Virhe', 'error'); return; }
+  if (error) {
+    showToast('Virhe', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '✗ Hylkää'; }
+    return;
+  }
   showToast('Hylätty');
   await loadAll();
   renderParentPending();
@@ -1685,7 +1688,7 @@ function renderParentPayments() {
           <div class="child-summary-name">${child.name}</div>
           <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
         </div>
-        <button class="btn btn-primary btn-sm" data-action="payChild" data-child-id="${child.id}">Maksa</button>
+        <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}', this)">Maksa</button>
       </div>
     `;
   }).filter(Boolean);
@@ -1719,7 +1722,7 @@ function renderParentPayments() {
       <div class="divider"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <strong>Yhteensä: ${fmt(totalOpen)}</strong>
-        <button class="btn btn-primary btn-sm" id="pay-all-btn">Maksa kaikki</button>
+        <button class="btn btn-primary btn-sm" onclick="payAll(this)">Maksa kaikki</button>
       </div>` : ''}
     </div>` : `<div class="card"><div class="empty-state"><div class="empty-icon">💶</div><p>Ei avoimia maksuja</p></div></div>`}
     ${histItems ? `
@@ -1728,17 +1731,12 @@ function renderParentPayments() {
       ${histItems}
     </div>` : ''}
   `;
-  panel.querySelectorAll('[data-action="payChild"]').forEach(btn => {
-    btn.addEventListener('click', () => payChild(btn.dataset.childId));
-  });
-  const payAllBtn = panel.querySelector('#pay-all-btn');
-  if (payAllBtn) payAllBtn.addEventListener('click', payAll);
 }
 
-async function payChild(childId) {
-  const child = state.children.find(c => c.id === childId);
+async function payChild(childId, btn) {
   const saldo = calcOpenSaldo(childId);
   if (saldo <= 0) { showToast('Ei avoimia maksuja'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
 
   const currentMonth = monthKey(new Date().toISOString());
   const { error } = await sb.from('homey_payments').insert({
@@ -1747,28 +1745,41 @@ async function payChild(childId) {
     amount: saldo,
     paid_at: new Date().toISOString(),
   });
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Maksa'; }
+    return;
+  }
   showToast(`Maksu ${fmt(saldo)} tallennettu! 💶`, 'success');
   await loadAll();
   renderParentPayments();
   renderParentOverview();
 }
 
-async function payAll() {
-  const currentMonth = monthKey(new Date().toISOString());
+async function payAll(btn) {
+  if (!confirm('Maksetaanko kaikki avoimet maksut?')) return;
   const toPay = state.children.filter(c => calcOpenSaldo(c.id) > 0);
   if (!toPay.length) { showToast('Ei avoimia maksuja'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
 
+  const currentMonth = monthKey(new Date().toISOString());
+  let failed = 0;
   for (const child of toPay) {
     const saldo = calcOpenSaldo(child.id);
-    await sb.from('homey_payments').insert({
+    const { error } = await sb.from('homey_payments').insert({
       child_id: child.id,
       month: currentMonth,
       amount: saldo,
       paid_at: new Date().toISOString(),
     });
+    if (error) failed++;
   }
-  showToast('Kaikki maksut suoritettu! 💶', 'success');
+  if (btn) { btn.disabled = false; btn.textContent = 'Maksa kaikki'; }
+  if (failed > 0) {
+    showToast(`${failed} maksua epäonnistui`, 'error');
+  } else {
+    showToast('Kaikki maksut suoritettu! 💶', 'success');
+  }
   await loadAll();
   renderParentPayments();
   renderParentOverview();
@@ -1782,9 +1793,9 @@ function renderParentManage() {
       <div class="child-avatar" style="background:${childColor(child)};width:42px;height:42px;font-size:1.1rem;">${avatarInitial(child.name)}</div>
       <div class="task-info">
         <div class="task-name">${child.name}</div>
-        <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ${child.pin}</div>
+        <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ****</div>
       </div>
-      <button class="btn btn-sm btn-danger" data-action="deleteChild" data-child-id="${child.id}">Poista</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
     </div>
   `).join('') || '<div class="empty-state"><div class="empty-icon">👶</div><p>Ei lapsia</p></div>';
 
@@ -1798,7 +1809,7 @@ function renderParentManage() {
           <div class="task-name">${task.title}</div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Lapsi'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
         </div>
-        <button class="btn btn-sm btn-danger" data-action="deleteTask" data-task-id="${task.id}">Poista</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">Poista</button>
       </div>
     `;
   }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei tehtäviä</p></div>';
@@ -1819,12 +1830,6 @@ function renderParentManage() {
       ${taskItems}
     </div>
   `;
-  panel.querySelectorAll('[data-action="deleteChild"]').forEach(btn => {
-    btn.addEventListener('click', () => deleteChild(btn.dataset.childId));
-  });
-  panel.querySelectorAll('[data-action="deleteTask"]').forEach(btn => {
-    btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
-  });
 }
 
 async function deleteChild(id) {
@@ -1860,8 +1865,14 @@ async function saveChild() {
   if (!name) { showToast('Syötä nimi', 'error'); return; }
   if (!/^\d{4}$/.test(pin)) { showToast('PIN-koodin tulee olla 4 numeroa', 'error'); return; }
 
+  const saveBtn = document.querySelector('#modal-add-child .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor });
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
+    return;
+  }
   showToast('Lapsi lisätty! 👶', 'success');
   document.getElementById('new-child-name').value = '';
   document.getElementById('new-child-pin').value = '';
@@ -1902,12 +1913,9 @@ function renderTaskTemplateGrid() {
   const grid = document.getElementById('task-template-grid');
   grid.innerHTML = TASK_TEMPLATES.map(name => {
     const sel = selectedTemplateName === name ? ' selected' : '';
-    const escaped = name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<button class="task-template-btn${sel}" data-name="${escaped}">${escaped}</button>`;
+    const escaped = name.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<button class="task-template-btn${sel}" onclick="selectTemplate('${escaped}')">${escaped}</button>`;
   }).join('');
-  grid.querySelectorAll('.task-template-btn').forEach(btn => {
-    btn.addEventListener('click', () => selectTemplate(btn.dataset.name));
-  });
 }
 
 function selectTemplate(name) {
@@ -1951,9 +1959,14 @@ async function saveTask() {
   const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
 
   const payload = { title: name, amount: Number(price), type, assigned_to, active: true };
-  console.log('Inserting task:', payload);
+  const saveBtn = document.querySelector('#modal-add-task .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_tasks').insert(payload);
-  if (error) { console.error('Task insert error:', error); showToast('Virhe: ' + error.message, 'error'); return; }
+  if (error) {
+    showToast('Virhe: ' + error.message, 'error');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
+    return;
+  }
   showToast('Tehtävä lisätty! ✅', 'success');
   closeModal('modal-add-task');
   await loadAll();
