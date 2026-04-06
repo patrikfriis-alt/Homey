@@ -809,7 +809,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.4</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.5</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -890,7 +890,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.4</footer>
+  <footer>Homey v2.5</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -928,7 +928,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.4</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.5</footer>
 </div>
 
 <script>
@@ -1426,15 +1426,15 @@ function renderFreeTasks() {
 
 async function markDone(taskId) {
   const childId = state.currentUser.id;
-  const task = state.tasks.find(t => t.id === taskId);
-  const { error } = await sb.from('homey_completions').insert({
+  const payload = {
     task_id: taskId,
     child_id: childId,
     status: 'pending',
-    task_price: task?.amount || 0,
     completed_at: new Date().toISOString(),
-  });
-  if (error) { showToast('Virhe: ' + error.message, 'error'); return; }
+  };
+  console.log('markDone insert:', payload);
+  const { error } = await sb.from('homey_completions').insert(payload);
+  if (error) { console.error('markDone error:', error); showToast('Virhe: ' + error.message, 'error'); return; }
   showToast('Tehtävä merkitty tehdyksi! ✅', 'success');
   await loadAll();
   renderAssignedTasks();
@@ -1596,7 +1596,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.4</footer>
+    <footer>Homey v2.5</footer>
   `;
 }
 
