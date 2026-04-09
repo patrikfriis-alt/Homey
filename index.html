@@ -1025,7 +1025,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.3</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1106,7 +1106,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.2</footer>
+  <footer>Homey v3.3</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1144,7 +1144,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.3</footer>
 </div>
 
 <script>
@@ -1333,8 +1333,8 @@ async function familyRegister(btn) {
   initLogin();
 }
 
-function logoutFamily() {
-  if (!confirm('Kirjaudutaanko ulos perheenä? Palataan aloitusnäkymään.')) return;
+function switchFamily() {
+  if (!confirm('Vaihdetaanko perhettä? Sinut kirjataan ulos nykyisestä perheestä.')) return;
   localStorage.removeItem('homey_family_id');
   localStorage.removeItem('homey_family_name');
   currentFamilyId = null;
@@ -1344,9 +1344,16 @@ function logoutFamily() {
   }
   state.currentUser = null;
   state.userRole = null;
+  state.children = [];
+  state.tasks = [];
+  state.allTasks = [];
+  state.completions = [];
+  state.payments = [];
   document.getElementById('fab-add-task').classList.add('hidden');
-  showView('welcome');
+  showView('family-login');
 }
+
+function logoutFamily() { switchFamily(); }
 
 // ===== HELPERS =====
 function fmt(amount) {
@@ -1980,7 +1987,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.2</footer>
+    <footer>Homey v3.3</footer>
   `;
 }
 
@@ -2219,8 +2226,8 @@ function renderParentManage() {
       ${taskItems}
     </div>
     <div class="card" style="text-align:center;">
-      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">Kirjautunut perheenä: <strong>${familyName}</strong></div>
-      <button class="btn btn-danger btn-sm" onclick="logoutFamily()">Kirjaudu ulos perheenä</button>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Kirjautunut perheenä: <strong>${familyName}</strong></div>
+      <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 Vaihda perhettä</button>
     </div>
   `;
 }
