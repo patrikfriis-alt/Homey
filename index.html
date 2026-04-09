@@ -1746,6 +1746,19 @@ function escapeHtml(str) {
 }
 const esc = escapeHtml;
 
+// Translate a task title: maps Finnish template names to the current language.
+// Custom (non-template) task names are returned as-is.
+function translateTaskTitle(title) {
+  if (!title) return '';
+  const lang = localStorage.getItem('homey_lang') || 'fi';
+  if (lang === 'fi') return title;
+  const fiList = translations.fi.taskList;
+  const svList = translations.sv.taskList;
+  const idx = fiList.indexOf(title);
+  if (idx !== -1 && svList[idx]) return svList[idx];
+  return title;
+}
+
 function fmt(amount) {
   return Number(amount || 0).toFixed(2).replace('.', ',') + ' €';
 }
@@ -2027,7 +2040,7 @@ function setupRealtime() {
         if (payload.new.status === 'approved') {
           showNotif(t('taskApproved'), 'success', '+' + fmt(task?.amount ?? 0));
         } else if (payload.new.status === 'rejected') {
-          showNotif(t('taskRejected'), 'error', task?.title || '');
+          showNotif(t('taskRejected'), 'error', translateTaskTitle(task?.title || ''));
         }
       })
       .subscribe();
@@ -2045,7 +2058,7 @@ function setupRealtime() {
         updatePendingBadge();
         const child = state.children.find(c => c.id === payload.new.child_id);
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
-        showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', task?.title || '');
+        showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', translateTaskTitle(task?.title || ''));
       })
       .subscribe();
   }
@@ -2070,7 +2083,7 @@ function showPaymentPopup(payment) {
   document.getElementById('popup-amount').textContent = fmt(total);
   document.getElementById('popup-tasks').innerHTML = comps.map(c => {
     const task = state.tasks.find(t => t.id === c.task_id);
-    return `<li><span>${esc(task?.title || 'Tehtävä')}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
+    return `<li><span>${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
   }).join('');
   document.getElementById('payment-popup').classList.remove('hidden');
 }
@@ -2142,7 +2155,7 @@ function renderAssignedTasks() {
       <div class="task-item">
         <div class="task-icon">✅</div>
         <div class="task-info">
-          <div class="task-name">${esc(task.title)}</div>
+          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
           <div class="task-price">${fmt(task.amount)}</div>
           ${statusBadge ? '<div style="margin-top:4px">' + statusBadge + '</div>' : ''}
         </div>
@@ -2197,7 +2210,7 @@ function renderFreeTasks() {
       <div class="task-item">
         <div class="task-icon">🔓</div>
         <div class="task-info">
-          <div class="task-name">${esc(task.title)}</div>
+          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
           <div class="task-price">${fmt(task.amount)}</div>
         </div>
         <div class="task-actions" style="flex-wrap:wrap;justify-content:flex-end;gap:4px;">${actionsHtml}</div>
@@ -2298,7 +2311,7 @@ async function renderChildHistory() {
       return `
         <div class="completion-item">
           <div>
-            <div>${esc(task?.title || 'Tehtävä')}</div>
+            <div>${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</div>
             <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -2427,7 +2440,7 @@ function renderParentTasks() {
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
           <div style="display:flex;align-items:center;gap:6px;">
-            <div class="task-name">${esc(task.title)}</div>
+            <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
             ${typeBadge}
           </div>
           <div class="task-price">${fmt(task.amount)}</div>
@@ -2483,7 +2496,7 @@ function renderParentTasks() {
             ${renderAvatar(child, 38)}
             <div>
               <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
-              <div class="pending-task-name">${esc(task?.title || 'Tehtävä')}</div>
+              <div class="pending-task-name">${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</div>
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
@@ -2689,7 +2702,7 @@ function renderParentManage() {
       <div class="task-item">
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
-          <div class="task-name">${esc(task.title)}</div>
+          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? t('free') : t('child')}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
         </div>
         <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">✕</button>
