@@ -1041,7 +1041,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.6</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.7</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1122,7 +1122,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.6</footer>
+  <footer>Homey v3.7</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1160,7 +1160,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.6</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.7</footer>
 </div>
 
 <script>
@@ -1428,20 +1428,37 @@ function renderAvatar(child, size = 58) {
 // ===== LOAD DATA =====
 async function loadAll() {
   try {
-    const [c, t, co, p] = await Promise.all([
+    // Load children and tasks in parallel first
+    const [c, t] = await Promise.all([
       sb.from('homey_children').select('*').eq('family_id', currentFamilyId).order('name'),
       sb.from('homey_tasks').select('*').eq('family_id', currentFamilyId),
-      sb.from('homey_completions').select('*').order('completed_at', { ascending: false }),
-      sb.from('homey_payments').select('*').order('paid_at', { ascending: false }),
     ]);
     if (c.error) console.error('homey_children:', c.error.message);
     if (t.error) console.error('homey_tasks:', t.error.message);
-    if (co.error) console.error('homey_completions:', co.error.message);
-    if (p.error) console.error('homey_payments:', p.error.message);
     state.children = c.data || [];
     state.allTasks = t.data || [];
-    // filter active tasks for UI rendering
     state.tasks = state.allTasks.filter(task => task.active !== false);
+
+    // Filter completions and payments by family child_ids
+    const childIds = state.children.map(ch => ch.id);
+    if (childIds.length === 0) {
+      state.completions = [];
+      state.payments = [];
+      return;
+    }
+
+    const [co, p] = await Promise.all([
+      sb.from('homey_completions')
+        .select('*, homey_children(id, name, avatar, color), homey_tasks(id, title, amount)')
+        .in('child_id', childIds)
+        .order('completed_at', { ascending: false }),
+      sb.from('homey_payments')
+        .select('*')
+        .in('child_id', childIds)
+        .order('paid_at', { ascending: false }),
+    ]);
+    if (co.error) console.error('homey_completions:', co.error.message);
+    if (p.error) console.error('homey_payments:', p.error.message);
     state.completions = co.data || [];
     state.payments = p.data || [];
   } catch (err) {
@@ -2006,7 +2023,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.6</footer>
+    <footer>Homey v3.7</footer>
   `;
 }
 
@@ -2016,13 +2033,39 @@ const tasksFilter = { status: 'all', childId: 'all' };
 function renderParentTasks() {
   const panel = document.getElementById('parent-panel-tasks');
 
-  // Apply filters
-  let comps = [...state.completions];
-  if (tasksFilter.status !== 'all') comps = comps.filter(c => c.status === tasksFilter.status);
-  if (tasksFilter.childId !== 'all') comps = comps.filter(c => c.child_id === tasksFilter.childId);
-  // newest first
-  comps.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+  // ---- OSIO 1: Avoimet tehtävät ----
+  const openTaskItems = state.tasks.map(task => {
+    const assignedChild = task.assigned_to ? state.children.find(c => c.id === task.assigned_to) : null;
+    const reservedChild = task.reserved_by ? state.children.find(c => c.id === task.reserved_by) : null;
+    const typeBadge = task.type === 'free'
+      ? '<span class="badge badge-unpaid" style="font-size:0.7rem;">vapaa</span>'
+      : '<span class="badge badge-pending" style="font-size:0.7rem;">lapsi</span>';
 
+    let infoHtml = '';
+    if (task.type === 'assigned' && assignedChild) {
+      infoHtml = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${renderAvatar(assignedChild, 22)}<span style="font-size:0.8rem;color:var(--text-muted)">${esc(assignedChild.name)}</span></div>`;
+    } else if (task.type === 'free' && reservedChild) {
+      infoHtml = `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Varattu: ${esc(reservedChild.name)}</div>`;
+    } else if (task.type === 'free') {
+      infoHtml = `<div style="font-size:0.8rem;color:var(--success);margin-top:2px;">Vapaa</div>`;
+    }
+
+    return `
+      <div class="task-item">
+        <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
+        <div class="task-info">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="task-name">${esc(task.title)}</div>
+            ${typeBadge}
+          </div>
+          <div class="task-price">${fmt(task.amount)}</div>
+          ${infoHtml}
+        </div>
+      </div>
+    `;
+  }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei aktiivisia tehtäviä</p></div>';
+
+  // ---- OSIO 2: Suoritukset filtterit ----
   const statusBtns = [
     { key: 'all', label: 'Kaikki' },
     { key: 'pending', label: 'Odottavat' },
@@ -2037,17 +2080,24 @@ function renderParentTasks() {
     `<button class="filter-btn${tasksFilter.childId === 'all' ? ' active' : ''}" onclick="setTasksFilter('childId','all',this)">Kaikki lapset</button>`,
     ...state.children.map(child => {
       const active = tasksFilter.childId === child.id ? ' active' : '';
-      return `<button class="filter-btn${active}" onclick="setTasksFilter('childId','${child.id}',this)">${child.name}</button>`;
+      return `<button class="filter-btn${active}" onclick="setTasksFilter('childId','${child.id}',this)">${esc(child.name)}</button>`;
     })
   ].join('');
 
+  // Apply filters to completions
+  let comps = [...state.completions];
+  if (tasksFilter.status !== 'all') comps = comps.filter(c => c.status === tasksFilter.status);
+  if (tasksFilter.childId !== 'all') comps = comps.filter(c => c.child_id === tasksFilter.childId);
+  comps.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+
   const pendingCount = state.completions.filter(c => c.status === 'pending').length;
 
-  const items = comps.length ? comps.map(comp => {
-    const child = state.children.find(c => c.id === comp.child_id);
-    const task = state.allTasks.find(t => t.id === comp.task_id);
+  const compItems = comps.length ? comps.map(comp => {
+    // Use joined data if available, fall back to state lookup
+    const child = comp.homey_children || state.children.find(c => c.id === comp.child_id);
+    const task = comp.homey_tasks || state.allTasks.find(t => t.id === comp.task_id);
     const d = comp.completed_at ? new Date(comp.completed_at) : null;
-    const amount = task?.amount ?? comp.task_price ?? 0;
+    const amount = task?.amount ?? 0;
     const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
     const actions = comp.status === 'pending' ? `
       <div class="pending-actions">
@@ -2076,13 +2126,17 @@ function renderParentTasks() {
   }).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei suorituksia</p></div>';
 
   panel.innerHTML = `
+    <div class="card">
+      <div class="card-title">Avoimet tehtävät (${state.tasks.length})</div>
+      ${openTaskItems}
+    </div>
     <div class="card" style="margin-bottom:10px;">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${statusBtns}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">${childBtns}</div>
     </div>
     <div class="card">
       <div class="card-title">Suoritukset${pendingCount > 0 ? ` <span class="badge badge-pending">${pendingCount} odottaa</span>` : ''}</div>
-      ${items}
+      ${compItems}
     </div>
   `;
 }
