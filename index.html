@@ -1041,7 +1041,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.5</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.6</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1122,7 +1122,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.5</footer>
+  <footer>Homey v3.6</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1160,7 +1160,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.5</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.6</footer>
 </div>
 
 <script>
@@ -1210,12 +1210,14 @@ function showNotif(title, type = 'info', subtitle = '', pulse = false) {
   card.innerHTML = `
     <div class="notif-icon">${NOTIF_ICONS[type] || NOTIF_ICONS.info}</div>
     <div class="notif-body">
-      <div class="notif-title">${title}</div>
-      ${subtitle ? `<div class="notif-sub">${subtitle}</div>` : ''}
+      <div class="notif-title"></div>
+      ${subtitle ? '<div class="notif-sub"></div>' : ''}
     </div>
     <button class="notif-close-btn" onclick="dismissNotif(this.closest('.notif-card'))">✕</button>
     <div class="notif-progress"><div class="notif-progress-bar" style="background:${NOTIF_COLORS[type] || NOTIF_COLORS.info}"></div></div>
   `;
+  card.querySelector('.notif-title').textContent = title;
+  if (subtitle) card.querySelector('.notif-sub').textContent = subtitle;
 
   container.appendChild(card);
   requestAnimationFrame(() => card.classList.add('show'));
@@ -1283,29 +1285,25 @@ async function familyLogin(btn) {
   const password = document.getElementById('fl-password').value;
   const errEl = document.getElementById('fl-error');
   errEl.textContent = '';
-
   if (!email || !password) { errEl.textContent = 'Täytä kaikki kentät'; return; }
 
   const origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Kirjaudutaan...';
-
-  const { data: result, error } = await sb.rpc('verify_family_password', {
-    p_email: email,
-    p_password: password,
-  });
-
-  btn.disabled = false; btn.textContent = origText;
-
-  if (error || !result) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
-
-  const familyId = result.id;
-  const familyName = result.name;
-  currentFamilyId = familyId;
-  localStorage.setItem('homey_family_id', familyId);
-  localStorage.setItem('homey_family_name', familyName);
-  document.getElementById('fl-email').value = '';
-  document.getElementById('fl-password').value = '';
-  initLogin();
+  try {
+    btn.disabled = true; btn.textContent = 'Kirjaudutaan...';
+    const { data: result, error } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
+    if (error) throw error;
+    if (!result) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
+    currentFamilyId = result.id;
+    localStorage.setItem('homey_family_id', result.id);
+    localStorage.setItem('homey_family_name', result.name);
+    document.getElementById('fl-email').value = '';
+    document.getElementById('fl-password').value = '';
+    initLogin();
+  } catch (err) {
+    errEl.textContent = friendlyError(err);
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
 }
 
 async function familyRegister(btn) {
@@ -1315,38 +1313,31 @@ async function familyRegister(btn) {
   const password2 = document.getElementById('fr-password2').value;
   const errEl = document.getElementById('fr-error');
   errEl.textContent = '';
-
   if (!name || !email || !password || !password2) { errEl.textContent = 'Täytä kaikki kentät'; return; }
   if (password.length < 6) { errEl.textContent = 'Salasanan tulee olla vähintään 6 merkkiä'; return; }
   if (password !== password2) { errEl.textContent = 'Salasanat eivät täsmää'; return; }
 
   const origText = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Luodaan...';
-
-  const { data: result, error } = await sb.rpc('create_family', {
-    p_name: name,
-    p_email: email,
-    p_password: password,
-  });
-
-  btn.disabled = false; btn.textContent = origText;
-
-  if (error) {
-    errEl.textContent = error.message?.includes('unique') || error.message?.includes('duplicate')
+  try {
+    btn.disabled = true; btn.textContent = 'Luodaan...';
+    const { data: result, error } = await sb.rpc('create_family', { p_name: name, p_email: email, p_password: password });
+    if (error) throw error;
+    currentFamilyId = result.id;
+    localStorage.setItem('homey_family_id', result.id);
+    localStorage.setItem('homey_family_name', result.name);
+    document.getElementById('fr-name').value = '';
+    document.getElementById('fr-email').value = '';
+    document.getElementById('fr-password').value = '';
+    document.getElementById('fr-password2').value = '';
+    showNotif('Perhe luotu!', 'success', result.name);
+    initLogin();
+  } catch (err) {
+    errEl.textContent = err.message?.includes('unique') || err.message?.includes('duplicate')
       ? 'Sähköposti on jo käytössä'
-      : friendlyError(error);
-    return;
+      : friendlyError(err);
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
   }
-
-  currentFamilyId = result.id;
-  localStorage.setItem('homey_family_id', result.id);
-  localStorage.setItem('homey_family_name', result.name);
-  document.getElementById('fr-name').value = '';
-  document.getElementById('fr-email').value = '';
-  document.getElementById('fr-password').value = '';
-  document.getElementById('fr-password2').value = '';
-  showNotif('Perhe luotu!', 'success', result.name);
-  initLogin();
 }
 
 function switchFamily() {
@@ -1372,6 +1363,16 @@ function switchFamily() {
 function logoutFamily() { switchFamily(); }
 
 // ===== HELPERS =====
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+const esc = escapeHtml;
+
 function fmt(amount) {
   return Number(amount || 0).toFixed(2).replace('.', ',') + ' €';
 }
@@ -1489,7 +1490,7 @@ function renderChildGrid() {
   grid.innerHTML = state.children.map(child => `
     <button class="child-select-btn" data-child-id="${child.id}">
       ${renderAvatar(child, 58)}
-      <span>${child.name}</span>
+      <span>${esc(child.name)}</span>
     </button>
   `).join('');
   grid.querySelectorAll('.child-select-btn').forEach(btn => {
@@ -1680,7 +1681,7 @@ function showPaymentPopup(payment) {
   document.getElementById('popup-amount').textContent = fmt(total);
   document.getElementById('popup-tasks').innerHTML = comps.map(c => {
     const task = state.tasks.find(t => t.id === c.task_id);
-    return `<li><span>${task?.title || 'Tehtävä'}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
+    return `<li><span>${esc(task?.title || 'Tehtävä')}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
   }).join('');
   document.getElementById('payment-popup').classList.remove('hidden');
 }
@@ -1752,7 +1753,7 @@ function renderAssignedTasks() {
       <div class="task-item">
         <div class="task-icon">✅</div>
         <div class="task-info">
-          <div class="task-name">${task.title}</div>
+          <div class="task-name">${esc(task.title)}</div>
           <div class="task-price">${fmt(task.amount)}</div>
           ${statusBadge ? '<div style="margin-top:4px">' + statusBadge + '</div>' : ''}
         </div>
@@ -1795,7 +1796,7 @@ function renderFreeTasks() {
         <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}', this)">Vapauta</button>
       `;
     } else if (isReservedByOther) {
-      actionsHtml = `<span class="badge badge-reserved">Varattu: ${reservedByChild?.name || '?'}</span>`;
+      actionsHtml = `<span class="badge badge-reserved">Varattu: ${esc(reservedByChild?.name || '?')}</span>`;
     } else {
       actionsHtml = `
         <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}', this)">Varaa</button>
@@ -1807,7 +1808,7 @@ function renderFreeTasks() {
       <div class="task-item">
         <div class="task-icon">🔓</div>
         <div class="task-info">
-          <div class="task-name">${task.title}</div>
+          <div class="task-name">${esc(task.title)}</div>
           <div class="task-price">${fmt(task.amount)}</div>
         </div>
         <div class="task-actions" style="flex-wrap:wrap;justify-content:flex-end;gap:4px;">${actionsHtml}</div>
@@ -1818,52 +1819,53 @@ function renderFreeTasks() {
 
 async function markDone(taskId, btn) {
   const origText = btn ? btn.textContent : null;
-  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
-  const childId = state.currentUser.id;
-  const payload = {
-    task_id: taskId,
-    child_id: childId,
-    status: 'pending',
-    completed_at: new Date().toISOString(),
-  };
-  const { error } = await sb.from('homey_completions').insert(payload);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    const childId = state.currentUser.id;
+    const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
+    const { error } = await sb.from('homey_completions').insert(payload);
+    if (error) throw error;
+    showToast('Tehtävä merkitty tehdyksi! ✅', 'success');
+    await loadAll();
+    renderAssignedTasks();
+    renderFreeTasks();
+    renderChildSaldo();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
-    return;
   }
-  showToast('Tehtävä merkitty tehdyksi! ✅', 'success');
-  await loadAll();
-  renderAssignedTasks();
-  renderFreeTasks();
-  renderChildSaldo();
 }
 
 async function reserveTask(taskId, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Varataan...'; }
-  const childId = state.currentUser.id;
-  const { error } = await sb.from('homey_tasks').update({ reserved_by: childId }).eq('id', taskId);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Varataan...'; }
+    const childId = state.currentUser.id;
+    const { error } = await sb.from('homey_tasks').update({ reserved_by: childId }).eq('id', taskId);
+    if (error) throw error;
+    showToast('Tehtävä varattu! 🔒', 'success');
+    await loadAll();
+    renderFreeTasks();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Varaa'; }
-    return;
   }
-  showToast('Tehtävä varattu! 🔒', 'success');
-  await loadAll();
-  renderFreeTasks();
 }
 
 async function unreserveTask(taskId, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Vapautetaan...'; }
-  const { error } = await sb.from('homey_tasks').update({ reserved_by: null }).eq('id', taskId);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Vapautetaan...'; }
+    const { error } = await sb.from('homey_tasks').update({ reserved_by: null }).eq('id', taskId);
+    if (error) throw error;
+    showToast('Varaus vapautettu');
+    await loadAll();
+    renderFreeTasks();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Vapauta'; }
-    return;
   }
-  showToast('Varaus vapautettu');
-  await loadAll();
-  renderFreeTasks();
 }
 
 async function renderChildHistory() {
@@ -1874,6 +1876,7 @@ async function renderChildHistory() {
   // group by month
   const byMonth = {};
   comps.forEach(c => {
+    if (!c.completed_at) return;
     const mk = monthKey(c.completed_at);
     if (!byMonth[mk]) byMonth[mk] = [];
     byMonth[mk].push(c);
@@ -1906,7 +1909,7 @@ async function renderChildHistory() {
       return `
         <div class="completion-item">
           <div>
-            <div>${task?.title || 'Tehtävä'}</div>
+            <div>${esc(task?.title || 'Tehtävä')}</div>
             <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -1989,7 +1992,7 @@ function renderParentOverview() {
       <div class="child-summary-card">
         ${renderAvatar(child, 52)}
         <div class="child-summary-info">
-          <div class="child-summary-name">${child.name}</div>
+          <div class="child-summary-name">${esc(child.name)}</div>
           <div class="child-summary-saldo">${fmt(saldo)}</div>
           <div class="child-summary-meta">${doneCount} tehtyä tehtävää</div>
           <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:${pct}%;background:${childColor(child)}"></div></div>
@@ -2003,7 +2006,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.5</footer>
+    <footer>Homey v3.6</footer>
   `;
 }
 
@@ -2057,8 +2060,8 @@ function renderParentTasks() {
           <div style="display:flex;align-items:center;gap:10px;">
             ${renderAvatar(child, 38)}
             <div>
-              <div class="pending-child-name" style="color:${childColor(child)}">${child?.name || '?'}</div>
-              <div class="pending-task-name">${task?.title || 'Tehtävä'}</div>
+              <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
+              <div class="pending-task-name">${esc(task?.title || 'Tehtävä')}</div>
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
@@ -2097,33 +2100,37 @@ function setTasksFilter(key, value, btn) {
 function renderParentPending() { renderParentTasks(); }
 
 async function approveComp(id, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
-  const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
+    if (error) throw error;
+    showToast('Hyväksytty ✓', 'success');
+    await loadAll();
+    renderParentPending();
+    renderParentOverview();
+    updatePendingBadge();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✓ Hyväksy'; }
-    return;
   }
-  showToast('Hyväksytty ✓', 'success');
-  await loadAll();
-  renderParentPending();
-  renderParentOverview();
-  updatePendingBadge();
 }
 
 async function rejectComp(id, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
-  const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
+    if (error) throw error;
+    showToast('Hylätty');
+    await loadAll();
+    renderParentPending();
+    renderParentOverview();
+    updatePendingBadge();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✗ Hylkää'; }
-    return;
   }
-  showToast('Hylätty');
-  await loadAll();
-  renderParentPending();
-  renderParentOverview();
-  updatePendingBadge();
 }
 
 function renderParentPayments() {
@@ -2137,7 +2144,7 @@ function renderParentPayments() {
       <div class="child-summary-card">
         ${renderAvatar(child, 48)}
         <div class="child-summary-info" style="flex:1;">
-          <div class="child-summary-name">${child.name}</div>
+          <div class="child-summary-name">${esc(child.name)}</div>
           <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}', this)">Maksa</button>
@@ -2154,7 +2161,7 @@ function renderParentPayments() {
     return `
       <div class="completion-item">
         <div>
-          <div style="font-weight:600">${child?.name || '?'}</div>
+          <div style="font-weight:600">${esc(child?.name || '?')}</div>
           <div class="completion-date">${monthLabel(p.month)} · ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -2188,53 +2195,48 @@ function renderParentPayments() {
 async function payChild(childId, btn) {
   const saldo = calcOpenSaldo(childId);
   if (saldo <= 0) { showToast('Ei avoimia maksuja'); return; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
-
-  const currentMonth = monthKey(new Date().toISOString());
-  const { error } = await sb.from('homey_payments').insert({
-    child_id: childId,
-    month: currentMonth,
-    amount: saldo,
-    paid_at: new Date().toISOString(),
-  });
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
+    const currentMonth = monthKey(new Date().toISOString());
+    const { error } = await sb.from('homey_payments').insert({ child_id: childId, month: currentMonth, amount: saldo, paid_at: new Date().toISOString() });
+    if (error) throw error;
+    showNotif('Maksu tallennettu!', 'payment', fmt(saldo));
+    await loadAll();
+    renderParentPayments();
+    renderParentOverview();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Maksa'; }
-    return;
   }
-  showNotif('Maksu tallennettu!', 'payment', fmt(saldo));
-  await loadAll();
-  renderParentPayments();
-  renderParentOverview();
 }
 
 async function payAll(btn) {
   if (!confirm('Maksetaanko kaikki avoimet maksut?')) return;
   const toPay = state.children.filter(c => calcOpenSaldo(c.id) > 0);
   if (!toPay.length) { showToast('Ei avoimia maksuja'); return; }
-  if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
-
-  const currentMonth = monthKey(new Date().toISOString());
-  let failed = 0;
-  for (const child of toPay) {
-    const saldo = calcOpenSaldo(child.id);
-    const { error } = await sb.from('homey_payments').insert({
-      child_id: child.id,
-      month: currentMonth,
-      amount: saldo,
-      paid_at: new Date().toISOString(),
-    });
-    if (error) failed++;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
+    const currentMonth = monthKey(new Date().toISOString());
+    const failed = [];
+    for (const child of toPay) {
+      const saldo = calcOpenSaldo(child.id);
+      const { error } = await sb.from('homey_payments').insert({ child_id: child.id, month: currentMonth, amount: saldo, paid_at: new Date().toISOString() });
+      if (error) failed.push(child.name);
+    }
+    if (failed.length > 0) {
+      showNotif('Maksuja epäonnistui', 'error', `${toPay.length - failed.length} onnistui, epäonnistui: ${failed.join(', ')}`);
+    } else {
+      showNotif('Kaikki maksut suoritettu!', 'payment');
+    }
+    await loadAll();
+    renderParentPayments();
+    renderParentOverview();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Maksa kaikki'; }
   }
-  if (btn) { btn.disabled = false; btn.textContent = 'Maksa kaikki'; }
-  if (failed > 0) {
-    showNotif('Maksuja epäonnistui', 'error', `${failed} maksua ei onnistunut`);
-  } else {
-    showNotif('Kaikki maksut suoritettu!', 'payment');
-  }
-  await loadAll();
-  renderParentPayments();
-  renderParentOverview();
 }
 
 function renderParentManage() {
@@ -2244,7 +2246,7 @@ function renderParentManage() {
     <div class="task-item">
       ${renderAvatar(child, 42)}
       <div class="task-info">
-        <div class="task-name">${child.name}</div>
+        <div class="task-name">${esc(child.name)}</div>
         <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ****</div>
       </div>
       <div style="display:flex;gap:6px;">
@@ -2261,8 +2263,8 @@ function renderParentManage() {
       <div class="task-item">
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
-          <div class="task-name">${task.title}</div>
-          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Lapsi'}${assignedTo ? ' · ' + assignedTo.name : ''}</div>
+          <div class="task-name">${esc(task.title)}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Lapsi'}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
         </div>
         <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">Poista</button>
       </div>
@@ -2286,7 +2288,7 @@ function renderParentManage() {
       ${taskItems}
     </div>
     <div class="card" style="text-align:center;">
-      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Kirjautunut perheenä: <strong>${familyName}</strong></div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Kirjautunut perheenä: <strong>${esc(familyName)}</strong></div>
       <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 Vaihda perhettä</button>
     </div>
   `;
@@ -2294,21 +2296,35 @@ function renderParentManage() {
 
 async function deleteChild(id) {
   if (!confirm('Poistetaanko lapsi? Tämä ei poista suorituksia.')) return;
-  const { error } = await sb.from('homey_children').delete().eq('id', id);
-  if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
-  showToast('Lapsi poistettu');
-  await loadAll();
-  renderParentManage();
-  renderParentOverview();
+  try {
+    const { error } = await sb.from('homey_children').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Lapsi poistettu');
+    await loadAll();
+    renderParentManage();
+    renderParentOverview();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+    // Refresh UI anyway to reflect actual DB state
+    await loadAll().catch(() => {});
+    renderParentManage();
+    renderParentOverview();
+  }
 }
 
 async function deleteTask(id) {
   if (!confirm('Poistetaanko tehtävä?')) return;
-  const { error } = await sb.from('homey_tasks').update({ active: false }).eq('id', id);
-  if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
-  showToast('Tehtävä poistettu');
-  await loadAll();
-  renderParentManage();
+  try {
+    const { error } = await sb.from('homey_tasks').update({ active: false }).eq('id', id);
+    if (error) throw error;
+    showToast('Tehtävä poistettu');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+    await loadAll().catch(() => {});
+    renderParentManage();
+  }
 }
 
 // ===== ADD CHILD =====
@@ -2359,7 +2375,7 @@ let selectedTemplateName = null;
 
 function openAddTaskModal() {
   const sel = document.getElementById('new-task-assigned');
-  sel.innerHTML = state.children.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML = state.children.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   document.getElementById('new-task-price').value = '';
   document.getElementById('new-task-custom-name').value = '';
   document.getElementById('assigned-to-group').style.display = 'none';
@@ -2422,17 +2438,19 @@ async function saveTask() {
 
   const payload = { title: name, amount: Number(price), type, assigned_to, active: true, family_id: currentFamilyId };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
-  const { error } = await sb.from('homey_tasks').insert(payload);
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
+    const { error } = await sb.from('homey_tasks').insert(payload);
+    if (error) throw error;
+    showToast('Tehtävä lisätty! ✅', 'success');
+    closeModal('modal-add-task');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
-    return;
   }
-  showToast('Tehtävä lisätty! ✅', 'success');
-  closeModal('modal-add-task');
-  await loadAll();
-  renderParentManage();
 }
 
 // ===== AVATAR MODAL =====
@@ -2491,7 +2509,8 @@ function selectAvatarDicebear(style, el) {
 }
 
 async function saveAvatar() {
-  if (!avatarModalChildId || !selectedAvatarValue) { closeModal('modal-avatar'); return; }
+  if (!avatarModalChildId) { closeModal('modal-avatar'); return; }
+  if (!selectedAvatarValue) { showNotif('Valitse ensin avatar', 'error'); return; }
   const { error } = await sb.from('homey_children')
     .update({ avatar: selectedAvatarValue })
     .eq('id', avatarModalChildId);
