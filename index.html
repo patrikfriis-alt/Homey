@@ -728,23 +728,24 @@
     }
     .avatar-option:hover { transform: scale(1.08); }
     .avatar-option.selected { border-color: var(--primary-dark); transform: scale(1.12); }
-    .avatar-color-grid {
+    .avatar-dicebear-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
     }
-    .avatar-color-option {
-      aspect-ratio: 1;
-      border-radius: 50%;
-      border: 3px solid transparent;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-      font-weight: 900;
+    .avatar-dicebear-option {
+      border-radius: var(--radius-sm);
+      border: 3px solid var(--border);
+      background: var(--primary-light);
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 12px 8px;
       cursor: pointer;
       transition: border-color 0.15s, transform 0.1s;
     }
-    .avatar-color-option:hover { transform: scale(1.08); }
-    .avatar-color-option.selected { border-color: var(--text); transform: scale(1.12); }
+    .avatar-dicebear-option:hover { border-color: var(--primary); transform: scale(1.03); }
+    .avatar-dicebear-option.selected { border-color: var(--primary); background: var(--primary-mid); }
+    .avatar-dicebear-option img { width: 64px; height: 64px; border-radius: 50%; }
+    .avatar-dicebear-option span { font-size: 0.8rem; font-weight: 700; color: var(--primary-dark); }
 
     /* ===== PWA INSTALL BANNER ===== */
     #pwa-banner {
@@ -928,7 +929,7 @@
       <div class="avatar-grid" id="avatar-emoji-grid"></div>
     </div>
     <div id="avatar-tab-color" style="display:none;">
-      <div class="avatar-color-grid" id="avatar-color-grid"></div>
+      <div class="avatar-dicebear-grid" id="avatar-dicebear-grid"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-avatar')">Peruuta</button>
@@ -1024,7 +1025,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.1</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.2</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1105,7 +1106,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.1</footer>
+  <footer>Homey v3.2</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1143,7 +1144,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.1</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.2</footer>
 </div>
 
 <script>
@@ -1369,17 +1370,16 @@ function childColor(child) {
 }
 
 // ===== AVATAR RENDER =====
-const AVATAR_COLORS = [
-  { bg: '#FAEEDA', fg: '#F59C00' },
-  { bg: '#E1F5EE', fg: '#1D9E75' },
-  { bg: '#E6F1FB', fg: '#378ADD' },
-  { bg: '#FBEAF0', fg: '#D4537E' },
-  { bg: '#EDE9FB', fg: '#7F77DD' },
-  { bg: '#FAECE7', fg: '#D85A30' },
-  { bg: '#E1F5EE', fg: '#0F6E56' },
-  { bg: '#FAEEDA', fg: '#BA7517' },
-];
 const AVATAR_EMOJIS = ['🦁','🐻','🦊','🐼','🐨','🐯','🦋','🐸','🐧','🦄','🐶','🐱','🐭','🐹','🐰','🦝','🐮','🐷','🐙','🦖'];
+const DICEBEAR_STYLES = [
+  { id: 'bottts', label: 'Robotti' },
+  { id: 'big-smile', label: 'Hymy' },
+  { id: 'adventurer', label: 'Seikkailija' },
+];
+
+function dicebearUrl(style, seed) {
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed || 'Homey')}`;
+}
 
 function renderAvatar(child, size = 58) {
   const av = child?.avatar || null;
@@ -1391,15 +1391,14 @@ function renderAvatar(child, size = 58) {
     const emojiSize = Math.round(size * 0.55);
     return `<div style="${sz}${base}background:var(--primary-light);font-size:${emojiSize}px;line-height:1;">${emoji}</div>`;
   }
-  if (av && av.startsWith('color:')) {
-    const parts = av.split(':');
-    const bg = parts[1], fg = parts[2];
-    const fontSize = Math.round(size * 0.45);
-    return `<div style="${sz}${base}background:${bg};color:${fg};font-size:${fontSize}px;font-weight:900;">${avatarInitial(child?.name)}</div>`;
+  if (av && av.startsWith('dicebear:')) {
+    const style = av.slice(9);
+    const url = dicebearUrl(style, child?.name);
+    return `<img src="${url}" alt="${child?.name}" style="${sz}border-radius:50%;object-fit:cover;flex-shrink:0;" />`;
   }
-  // default: color circle
-  const fontSize = Math.round(size * 0.45);
-  return `<div style="${sz}${base}background:${childColor(child)};color:#fff;font-size:${fontSize}px;font-weight:900;box-shadow:0 3px 10px rgba(0,0,0,0.15);">${avatarInitial(child?.name)}</div>`;
+  // default: bottts with child name
+  const url = dicebearUrl('bottts', child?.name);
+  return `<img src="${url}" alt="${child?.name}" style="${sz}border-radius:50%;object-fit:cover;flex-shrink:0;" />`;
 }
 
 // ===== LOAD DATA =====
@@ -1981,7 +1980,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.1</footer>
+    <footer>Homey v3.2</footer>
   `;
 }
 
@@ -2383,19 +2382,22 @@ function openAvatarModal(childId) {
     return `<div class="avatar-option${sel}" onclick="selectAvatarEmoji('${e}', this)">${e}</div>`;
   }).join('');
 
-  // Render color grid
-  const colorGrid = document.getElementById('avatar-color-grid');
-  const initial = avatarInitial(child?.name);
-  colorGrid.innerHTML = AVATAR_COLORS.map((c, i) => {
-    const val = `color:${c.bg}:${c.fg}`;
+  // Render dicebear grid
+  const dicebearGrid = document.getElementById('avatar-dicebear-grid');
+  const seed = child?.name || 'Homey';
+  dicebearGrid.innerHTML = DICEBEAR_STYLES.map(s => {
+    const val = 'dicebear:' + s.id;
     const sel = selectedAvatarValue === val ? ' selected' : '';
-    return `<div class="avatar-color-option${sel}" style="background:${c.bg};color:${c.fg};" onclick="selectAvatarColor('${c.bg}','${c.fg}',this)">${initial}</div>`;
+    return `<div class="avatar-dicebear-option${sel}" onclick="selectAvatarDicebear('${s.id}', this)">
+      <img src="${dicebearUrl(s.id, seed)}" alt="${s.label}" />
+      <span>${s.label}</span>
+    </div>`;
   }).join('');
 
   // Switch to correct tab
-  const isColor = selectedAvatarValue?.startsWith('color:');
-  switchAvatarTab(isColor ? 'color' : 'emoji',
-    document.getElementById(isColor ? 'avatar-tab-btn-color' : 'avatar-tab-btn-emoji'));
+  const isDicebear = selectedAvatarValue?.startsWith('dicebear:');
+  switchAvatarTab(isDicebear ? 'color' : 'emoji',
+    document.getElementById(isDicebear ? 'avatar-tab-btn-color' : 'avatar-tab-btn-emoji'));
 
   openModal('modal-avatar');
 }
@@ -2413,9 +2415,9 @@ function selectAvatarEmoji(emoji, el) {
   el.classList.add('selected');
 }
 
-function selectAvatarColor(bg, fg, el) {
-  selectedAvatarValue = `color:${bg}:${fg}`;
-  document.querySelectorAll('#avatar-color-grid .avatar-color-option').forEach(e => e.classList.remove('selected'));
+function selectAvatarDicebear(style, el) {
+  selectedAvatarValue = 'dicebear:' + style;
+  document.querySelectorAll('#avatar-dicebear-grid .avatar-dicebear-option').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
 }
 
