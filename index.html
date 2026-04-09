@@ -1025,7 +1025,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.3</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.4</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1106,7 +1106,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.3</footer>
+  <footer>Homey v3.4</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1144,7 +1144,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.3</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.4</footer>
 </div>
 
 <script>
@@ -1987,7 +1987,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.3</footer>
+    <footer>Homey v3.4</footer>
   `;
 }
 
@@ -2266,20 +2266,22 @@ async function saveChild() {
   if (!/^\d{4}$/.test(pin)) { showToast('PIN-koodin tulee olla 4 numeroa', 'error'); return; }
 
   const saveBtn = document.querySelector('#modal-add-child .btn-primary');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
-  const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor, family_id: currentFamilyId });
-  if (error) {
-    showNotif(friendlyError(error), 'error', error.message);
+  try {
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
+    const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor, family_id: currentFamilyId });
+    if (error) throw error;
+    showToast('Lapsi lisätty! 👶', 'success');
+    document.getElementById('new-child-name').value = '';
+    document.getElementById('new-child-pin').value = '';
+    closeModal('modal-add-child');
+    await loadAll();
+    renderParentManage();
+    renderParentOverview();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
-    return;
   }
-  showToast('Lapsi lisätty! 👶', 'success');
-  document.getElementById('new-child-name').value = '';
-  document.getElementById('new-child-pin').value = '';
-  closeModal('modal-add-child');
-  await loadAll();
-  renderParentManage();
-  renderParentOverview();
 }
 
 // ===== ADD TASK =====
