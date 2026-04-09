@@ -709,6 +709,22 @@
     }
 
 
+    /* ===== FILTER BUTTONS ===== */
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      border: 2px solid var(--border);
+      background: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
     /* ===== AVATAR MODAL ===== */
     .avatar-grid {
       display: grid;
@@ -1025,7 +1041,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.4</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.5</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1106,7 +1122,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.4</footer>
+  <footer>Homey v3.5</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1124,7 +1140,7 @@
 
   <!-- Parent content panels -->
   <div id="parent-panel-overview" class="main-content"></div>
-  <div id="parent-panel-pending" class="main-content hidden"></div>
+  <div id="parent-panel-tasks" class="main-content hidden"></div>
   <div id="parent-panel-payments" class="main-content hidden"></div>
   <div id="parent-panel-manage" class="main-content hidden"></div>
 
@@ -1133,8 +1149,8 @@
     <button class="parent-nav-btn active" onclick="switchParentTab('overview', this)">
       <span class="nav-icon">🏠</span>Yleiskuva
     </button>
-    <button class="parent-nav-btn" onclick="switchParentTab('pending', this)">
-      <span class="nav-icon">⏳</span>Odottavat
+    <button class="parent-nav-btn" onclick="switchParentTab('tasks', this)">
+      <span class="nav-icon">📋</span>Tehtävät
       <span id="pending-badge" class="badge badge-pending hidden" style="font-size:0.65rem;padding:1px 6px;"></span>
     </button>
     <button class="parent-nav-btn" onclick="switchParentTab('payments', this)">
@@ -1144,7 +1160,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.4</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.5</footer>
 </div>
 
 <script>
@@ -1925,7 +1941,7 @@ function statusLabel(s) {
 // ===== PARENT VIEW =====
 async function initParentView() {
   renderParentOverview();
-  renderParentPending();
+  renderParentTasks();
   renderParentPayments();
   renderParentManage();
   updatePendingBadge();
@@ -1937,7 +1953,7 @@ async function initParentView() {
 function switchParentTab(tab, btn) {
   document.querySelectorAll('.parent-nav-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  ['overview','pending','payments','manage'].forEach(t => {
+  ['overview','tasks','payments','manage'].forEach(t => {
     document.getElementById('parent-panel-' + t).classList.toggle('hidden', t !== tab);
   });
   const fab = document.getElementById('fab-add-task');
@@ -1987,24 +2003,54 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.4</footer>
+    <footer>Homey v3.5</footer>
   `;
 }
 
-function renderParentPending() {
-  const panel = document.getElementById('parent-panel-pending');
-  const pending = state.completions.filter(c => c.status === 'pending');
+// Tasks filter state
+const tasksFilter = { status: 'all', childId: 'all' };
 
-  if (!pending.length) {
-    panel.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">✅</div><p>Ei odottavia suorituksia</p></div></div>';
-    return;
-  }
+function renderParentTasks() {
+  const panel = document.getElementById('parent-panel-tasks');
 
-  const items = pending.map(comp => {
+  // Apply filters
+  let comps = [...state.completions];
+  if (tasksFilter.status !== 'all') comps = comps.filter(c => c.status === tasksFilter.status);
+  if (tasksFilter.childId !== 'all') comps = comps.filter(c => c.child_id === tasksFilter.childId);
+  // newest first
+  comps.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+  const statusBtns = [
+    { key: 'all', label: 'Kaikki' },
+    { key: 'pending', label: 'Odottavat' },
+    { key: 'approved', label: 'Hyväksytyt' },
+    { key: 'rejected', label: 'Hylätyt' },
+  ].map(s => {
+    const active = tasksFilter.status === s.key ? ' active' : '';
+    return `<button class="filter-btn${active}" onclick="setTasksFilter('status','${s.key}',this)">${s.label}</button>`;
+  }).join('');
+
+  const childBtns = [
+    `<button class="filter-btn${tasksFilter.childId === 'all' ? ' active' : ''}" onclick="setTasksFilter('childId','all',this)">Kaikki lapset</button>`,
+    ...state.children.map(child => {
+      const active = tasksFilter.childId === child.id ? ' active' : '';
+      return `<button class="filter-btn${active}" onclick="setTasksFilter('childId','${child.id}',this)">${child.name}</button>`;
+    })
+  ].join('');
+
+  const pendingCount = state.completions.filter(c => c.status === 'pending').length;
+
+  const items = comps.length ? comps.map(comp => {
     const child = state.children.find(c => c.id === comp.child_id);
     const task = state.allTasks.find(t => t.id === comp.task_id);
-    const d = new Date(comp.completed_at);
+    const d = comp.completed_at ? new Date(comp.completed_at) : null;
     const amount = task?.amount ?? comp.task_price ?? 0;
+    const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
+    const actions = comp.status === 'pending' ? `
+      <div class="pending-actions">
+        <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">✓ Hyväksy</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">✗ Hylkää</button>
+      </div>` : '';
     return `
       <div class="pending-item">
         <div class="pending-item-header">
@@ -2017,24 +2063,38 @@ function renderParentPending() {
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <div style="font-weight:700;color:var(--success);font-size:1rem;">${fmt(amount)}</div>
-            <div class="pending-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
+            <div class="pending-date">${dateStr}</div>
+            <span class="badge badge-${comp.status}" style="font-size:0.7rem;margin-top:4px;display:inline-block;">${statusLabel(comp.status)}</span>
           </div>
         </div>
-        <div class="pending-actions">
-          <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">✓ Hyväksy</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">✗ Hylkää</button>
-        </div>
+        ${actions}
       </div>
     `;
-  }).join('');
+  }).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei suorituksia</p></div>';
 
   panel.innerHTML = `
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${statusBtns}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${childBtns}</div>
+    </div>
     <div class="card">
-      <div class="card-title">Odottavat suoritukset (${pending.length})</div>
+      <div class="card-title">Suoritukset${pendingCount > 0 ? ` <span class="badge badge-pending">${pendingCount} odottaa</span>` : ''}</div>
       ${items}
     </div>
   `;
 }
+
+function setTasksFilter(key, value, btn) {
+  tasksFilter[key] = value;
+  // update active state in that row
+  const row = btn.parentElement;
+  row.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // re-render only the list, not the whole panel (re-render is simple enough)
+  renderParentTasks();
+}
+
+function renderParentPending() { renderParentTasks(); }
 
 async function approveComp(id, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
