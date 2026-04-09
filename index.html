@@ -202,7 +202,10 @@
     .pin-key:active { background: var(--primary); color: #fff; }
     .pin-key.del { font-size: 1rem; color: var(--danger); background: #fff0f0; }
 
-    /* ===== LOGIN VIEW ===== */
+    /* ===== AUTH VIEWS (welcome, family-login, family-register, login) ===== */
+    #view-welcome,
+    #view-family-login,
+    #view-family-register,
     #view-login {
       background: linear-gradient(160deg, #F59C00 0%, #FFBE45 100%);
       align-items: center;
@@ -210,6 +213,47 @@
       padding: 20px;
       min-height: 100vh;
     }
+    .auth-back-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0;
+    }
+    .auth-back-btn:hover { color: #fff; }
+    .welcome-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .btn-white {
+      background: #fff;
+      color: var(--primary-dark);
+      font-weight: 800;
+    }
+    .btn-white:hover { opacity: 0.92; }
+    .btn-ghost {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.5);
+      font-weight: 700;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.28); }
+    .auth-divider {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 4px 0 8px;
+    }
+
+    /* ===== LOGIN VIEW ===== */
     .login-logo {
       text-align: center;
       color: #fff;
@@ -800,13 +844,84 @@
   </div>
 </div>
 
-<!-- ===== VIEW: LOGIN ===== -->
-<div id="view-login" class="view active">
+<!-- ===== VIEW: WELCOME ===== -->
+<div id="view-welcome" class="view active">
   <div class="login-logo">
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v2.8</p>
+  </div>
+  <div class="login-card">
+    <div class="login-step-title" style="margin-bottom:20px;">Tervetuloa!</div>
+    <div class="welcome-actions">
+      <button class="btn btn-primary btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-login')">Kirjaudu sisään</button>
+      <div class="auth-divider">tai</div>
+      <button class="btn btn-outline btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-register')">Luo uusi perhe</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW: FAMILY LOGIN ===== -->
+<div id="view-family-login" class="view">
+  <div class="login-logo">
+    <div class="logo-icon">🏠</div>
+    <h1>Homey</h1>
+  </div>
+  <div class="login-card">
+    <button class="auth-back-btn" onclick="showView('welcome')">← Takaisin</button>
+    <div class="login-step-title" style="margin-bottom:20px;">Kirjaudu perheenä</div>
+    <div class="form-group">
+      <label class="input-label">Sähköposti</label>
+      <input id="fl-email" type="email" class="input" placeholder="perhe@esimerkki.fi" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Salasana</label>
+      <input id="fl-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <div id="fl-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:10px;"></div>
+    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyLogin(this)">Kirjaudu sisään</button>
+    <div class="auth-divider" style="margin-top:16px;">Ei tiliä?</div>
+    <button class="btn btn-outline btn-full" style="padding:12px;" onclick="showView('family-register')">Luo uusi perhe</button>
+  </div>
+</div>
+
+<!-- ===== VIEW: FAMILY REGISTER ===== -->
+<div id="view-family-register" class="view">
+  <div class="login-logo">
+    <div class="logo-icon">🏠</div>
+    <h1>Homey</h1>
+  </div>
+  <div class="login-card">
+    <button class="auth-back-btn" onclick="showView('welcome')">← Takaisin</button>
+    <div class="login-step-title" style="margin-bottom:20px;">Luo uusi perhe</div>
+    <div class="form-group">
+      <label class="input-label">Perheen nimi</label>
+      <input id="fr-name" type="text" class="input" placeholder="Virtanen" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Sähköposti</label>
+      <input id="fr-email" type="email" class="input" placeholder="perhe@esimerkki.fi" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Salasana</label>
+      <input id="fr-password" type="password" class="input" placeholder="••••••••" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Salasana uudelleen</label>
+      <input id="fr-password2" type="password" class="input" placeholder="••••••••" autocomplete="new-password" />
+    </div>
+    <div id="fr-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:10px;"></div>
+    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyRegister(this)">Luo perhe</button>
+  </div>
+</div>
+
+<!-- ===== VIEW: LOGIN ===== -->
+<div id="view-login" class="view">
+  <div class="login-logo">
+    <div class="logo-icon">🏠</div>
+    <h1>Homey</h1>
+    <p>Kotitöiden seuranta</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.0</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -887,7 +1002,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v2.8</footer>
+  <footer>Homey v3.0</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -925,7 +1040,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v2.8</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.0</footer>
 </div>
 
 <script>
@@ -942,6 +1057,7 @@ try {
 }
 
 const ADMIN_PIN = '1987';
+let currentFamilyId = null;
 
 // ===== STATE =====
 const state = {
@@ -1041,6 +1157,99 @@ function showView(name) {
   document.getElementById('view-' + name).classList.add('active');
 }
 
+// ===== FAMILY AUTH =====
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function familyLogin(btn) {
+  const email = document.getElementById('fl-email').value.trim();
+  const password = document.getElementById('fl-password').value;
+  const errEl = document.getElementById('fl-error');
+  errEl.textContent = '';
+
+  if (!email || !password) { errEl.textContent = 'Täytä kaikki kentät'; return; }
+
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Kirjaudutaan...';
+
+  const hash = await hashPassword(password);
+  const { data, error } = await sb.from('homey_families')
+    .select('id, name')
+    .eq('email', email)
+    .eq('password_hash', hash)
+    .single();
+
+  btn.disabled = false; btn.textContent = origText;
+
+  if (error || !data) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
+
+  currentFamilyId = data.id;
+  localStorage.setItem('homey_family_id', data.id);
+  localStorage.setItem('homey_family_name', data.name);
+  document.getElementById('fl-email').value = '';
+  document.getElementById('fl-password').value = '';
+  initLogin();
+}
+
+async function familyRegister(btn) {
+  const name = document.getElementById('fr-name').value.trim();
+  const email = document.getElementById('fr-email').value.trim();
+  const password = document.getElementById('fr-password').value;
+  const password2 = document.getElementById('fr-password2').value;
+  const errEl = document.getElementById('fr-error');
+  errEl.textContent = '';
+
+  if (!name || !email || !password || !password2) { errEl.textContent = 'Täytä kaikki kentät'; return; }
+  if (password.length < 6) { errEl.textContent = 'Salasanan tulee olla vähintään 6 merkkiä'; return; }
+  if (password !== password2) { errEl.textContent = 'Salasanat eivät täsmää'; return; }
+
+  const origText = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Luodaan...';
+
+  const hash = await hashPassword(password);
+  const { data, error } = await sb.from('homey_families')
+    .insert({ name, email, password_hash: hash })
+    .select('id, name')
+    .single();
+
+  btn.disabled = false; btn.textContent = origText;
+
+  if (error) {
+    errEl.textContent = error.message?.includes('unique') || error.message?.includes('duplicate')
+      ? 'Sähköposti on jo käytössä'
+      : friendlyError(error);
+    return;
+  }
+
+  currentFamilyId = data.id;
+  localStorage.setItem('homey_family_id', data.id);
+  localStorage.setItem('homey_family_name', data.name);
+  document.getElementById('fr-name').value = '';
+  document.getElementById('fr-email').value = '';
+  document.getElementById('fr-password').value = '';
+  document.getElementById('fr-password2').value = '';
+  showNotif('Perhe luotu!', 'success', data.name);
+  initLogin();
+}
+
+function logoutFamily() {
+  if (!confirm('Kirjaudutaanko ulos perheenä? Palataan aloitusnäkymään.')) return;
+  localStorage.removeItem('homey_family_id');
+  localStorage.removeItem('homey_family_name');
+  currentFamilyId = null;
+  if (state.realtimeChannel) {
+    sb.removeChannel(state.realtimeChannel);
+    state.realtimeChannel = null;
+  }
+  state.currentUser = null;
+  state.userRole = null;
+  document.getElementById('fab-add-task').classList.add('hidden');
+  showView('welcome');
+}
+
 // ===== HELPERS =====
 function fmt(amount) {
   return Number(amount || 0).toFixed(2).replace('.', ',') + ' €';
@@ -1066,8 +1275,8 @@ function childColor(child) {
 async function loadAll() {
   try {
     const [c, t, co, p] = await Promise.all([
-      sb.from('homey_children').select('*').order('name'),
-      sb.from('homey_tasks').select('*'),
+      sb.from('homey_children').select('*').eq('family_id', currentFamilyId).order('name'),
+      sb.from('homey_tasks').select('*').eq('family_id', currentFamilyId),
       sb.from('homey_completions').select('*').order('completed_at', { ascending: false }),
       sb.from('homey_payments').select('*').order('paid_at', { ascending: false }),
     ]);
@@ -1641,7 +1850,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v2.8</footer>
+    <footer>Homey v3.0</footer>
   `;
 }
 
@@ -1860,6 +2069,7 @@ function renderParentManage() {
     `;
   }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei tehtäviä</p></div>';
 
+  const familyName = localStorage.getItem('homey_family_name') || 'Perhe';
   panel.innerHTML = `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -1874,6 +2084,10 @@ function renderParentManage() {
         <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">+ Lisää</button>
       </div>
       ${taskItems}
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px;">Kirjautunut perheenä: <strong>${familyName}</strong></div>
+      <button class="btn btn-danger btn-sm" onclick="logoutFamily()">Kirjaudu ulos perheenä</button>
     </div>
   `;
 }
@@ -1913,7 +2127,7 @@ async function saveChild() {
 
   const saveBtn = document.querySelector('#modal-add-child .btn-primary');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
-  const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor });
+  const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor, family_id: currentFamilyId });
   if (error) {
     showNotif(friendlyError(error), 'error', error.message);
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
@@ -2004,7 +2218,7 @@ async function saveTask() {
   const assignedRaw = document.getElementById('new-task-assigned').value;
   const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
 
-  const payload = { title: name, amount: Number(price), type, assigned_to, active: true };
+  const payload = { title: name, amount: Number(price), type, assigned_to, active: true, family_id: currentFamilyId };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
   const { error } = await sb.from('homey_tasks').insert(payload);
@@ -2020,13 +2234,17 @@ async function saveTask() {
 }
 
 // ===== INIT =====
-// CSS tweak: tab display fix
 document.addEventListener('DOMContentLoaded', () => {
-  // Set initial tab content display correctly
   document.querySelectorAll('.tab-content').forEach(el => {
     el.style.display = el.classList.contains('active') ? 'block' : 'none';
   });
-  initLogin();
+  const savedFamilyId = localStorage.getItem('homey_family_id');
+  if (savedFamilyId) {
+    currentFamilyId = savedFamilyId;
+    initLogin();
+  } else {
+    showView('welcome');
+  }
 });
 </script>
 
