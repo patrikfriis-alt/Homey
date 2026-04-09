@@ -828,9 +828,43 @@
       .main-content { padding: 28px 24px 120px; }
       .child-grid { grid-template-columns: repeat(3, 1fr); }
     }
+
+    /* ===== LANGUAGE SWITCHER ===== */
+    #lang-switcher {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 9998;
+      display: flex;
+      gap: 3px;
+      background: rgba(255,255,255,0.88);
+      border-radius: 8px;
+      padding: 3px;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 1px 8px rgba(0,0,0,0.12);
+    }
+    .lang-btn {
+      font-size: 1.2rem;
+      background: none;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 1px 3px;
+      line-height: 1;
+      transition: border-color 0.15s, opacity 0.15s;
+      opacity: 0.38;
+    }
+    .lang-btn:hover { opacity: 0.75; }
+    .lang-btn.active { border-color: var(--primary); opacity: 1; }
   </style>
 </head>
 <body>
+
+<!-- ===== LANGUAGE SWITCHER ===== -->
+<div id="lang-switcher">
+  <button class="lang-btn" data-lang="fi" onclick="switchLanguage('fi')">🇫🇮</button>
+  <button class="lang-btn" data-lang="sv" onclick="switchLanguage('sv')">🇸🇪</button>
+</div>
 
 <!-- ===== NOTIFICATIONS ===== -->
 <div id="notif-container"></div>
@@ -839,28 +873,28 @@
 <div id="payment-popup" class="modal-overlay hidden">
   <div class="modal">
     <div style="font-size:3rem;text-align:center;">🎉</div>
-    <div class="modal-title">Maksu vastaanotettu!</div>
+    <div class="modal-title" data-i18n="paymentReceived">Maksu vastaanotettu!</div>
     <div class="modal-subtitle" id="popup-month"></div>
     <div class="payment-popup-amount" id="popup-amount"></div>
     <ul class="payment-task-list" id="popup-tasks"></ul>
-    <button class="btn btn-primary btn-full" onclick="closePaymentPopup()">Selvä, kiitos!</button>
+    <button class="btn btn-primary btn-full" onclick="closePaymentPopup()" data-i18n="gotIt">Selvä, kiitos!</button>
   </div>
 </div>
 
 <!-- ===== ADD CHILD MODAL ===== -->
 <div id="modal-add-child" class="modal-overlay hidden">
   <div class="modal">
-    <div class="modal-title">Lisää lapsi</div>
+    <div class="modal-title" data-i18n="addChild">Lisää lapsi</div>
     <div class="form-group">
-      <label class="input-label">Nimi</label>
+      <label class="input-label" data-i18n="name">Nimi</label>
       <input type="text" id="new-child-name" class="input" placeholder="Esim. Matti" />
     </div>
     <div class="form-group">
-      <label class="input-label">PIN-koodi (4 numeroa)</label>
+      <label class="input-label" data-i18n="pinCode">PIN-koodi (4 numeroa)</label>
       <input type="password" id="new-child-pin" class="input" maxlength="4" placeholder="****" inputmode="numeric" />
     </div>
     <div class="form-group">
-      <label class="input-label">Väri</label>
+      <label class="input-label" data-i18n="color">Väri</label>
       <div class="color-picker" id="child-color-picker">
         <div class="color-option selected" style="background:#6C5CE7" data-color="#6C5CE7" onclick="selectColor(this)"></div>
         <div class="color-option" style="background:#e17055" data-color="#e17055" onclick="selectColor(this)"></div>
@@ -873,8 +907,8 @@
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px;">
-      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-child')">Peruuta</button>
-      <button class="btn btn-primary w-full" onclick="saveChild()">Tallenna</button>
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-child')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveChild()" data-i18n="save">Tallenna</button>
     </div>
   </div>
 </div>
@@ -882,12 +916,12 @@
 <!-- ===== ADD TASK MODAL ===== -->
 <div id="modal-add-task" class="modal-overlay hidden">
   <div class="modal" style="max-height:90vh;overflow-y:auto;">
-    <div class="modal-title">Lisää tehtävä</div>
+    <div class="modal-title" data-i18n="addTask">Lisää tehtävä</div>
 
     <!-- Tab-palkki -->
     <div class="tabs" style="margin-bottom:14px;">
-      <button class="tab-btn active" id="task-tab-btn-template" onclick="switchTaskModalTab('template', this)">Valmis lista</button>
-      <button class="tab-btn" id="task-tab-btn-custom" onclick="switchTaskModalTab('custom', this)">Oma tehtävä</button>
+      <button class="tab-btn active" id="task-tab-btn-template" onclick="switchTaskModalTab('template', this)" data-i18n="readyList">Valmis lista</button>
+      <button class="tab-btn" id="task-tab-btn-custom" onclick="switchTaskModalTab('custom', this)" data-i18n="ownTask">Oma tehtävä</button>
     </div>
 
     <!-- TAB 1: Valmis lista -->
@@ -898,7 +932,7 @@
     <!-- TAB 2: Oma tehtävä -->
     <div id="task-tab-custom" style="display:none;">
       <div class="form-group">
-        <label class="input-label">Tehtävän nimi</label>
+        <label class="input-label" data-i18n="taskName">Tehtävän nimi</label>
         <input type="text" id="new-task-custom-name" class="input" placeholder="Esim. Ikkunoiden pesu" />
       </div>
     </div>
@@ -906,29 +940,29 @@
     <!-- Yhteiset kentät -->
     <div class="divider"></div>
     <div class="form-group">
-      <label class="input-label">Hinta (€)</label>
+      <label class="input-label" data-i18n="price">Hinta (€)</label>
       <input type="number" id="new-task-price" class="input" placeholder="Syötä hinta" min="0" step="0.10" />
     </div>
     <div class="form-group">
-      <label class="input-label">Tyyppi</label>
+      <label class="input-label" data-i18n="type">Tyyppi</label>
       <div style="display:flex;gap:10px;">
         <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-free-label">
           <input type="radio" name="task-type" value="free" checked onchange="toggleAssignedTo()" style="accent-color:var(--primary);width:18px;height:18px;" />
-          <span style="font-weight:600;font-size:0.9rem;">Vapaa</span>
+          <span style="font-weight:600;font-size:0.9rem;" data-i18n="free">Vapaa</span>
         </label>
         <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-assigned-label">
           <input type="radio" name="task-type" value="assigned" onchange="toggleAssignedTo()" style="accent-color:var(--primary);width:18px;height:18px;" />
-          <span style="font-weight:600;font-size:0.9rem;">Lapsi</span>
+          <span style="font-weight:600;font-size:0.9rem;" data-i18n="child">Lapsi</span>
         </label>
       </div>
     </div>
     <div class="form-group" id="assigned-to-group" style="display:none">
-      <label class="input-label">Kenelle</label>
+      <label class="input-label" data-i18n="assignTo">Kenelle</label>
       <select id="new-task-assigned" class="input"></select>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px;">
-      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-task')">Peruuta</button>
-      <button class="btn btn-primary w-full" onclick="saveTask()">Tallenna</button>
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-task')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveTask()" data-i18n="save">Tallenna</button>
     </div>
   </div>
 </div>
@@ -936,10 +970,10 @@
 <!-- ===== AVATAR MODAL ===== -->
 <div id="modal-avatar" class="modal-overlay hidden">
   <div class="modal" style="max-height:85vh;overflow-y:auto;">
-    <div class="modal-title">Valitse avatar</div>
+    <div class="modal-title" data-i18n="chooseAvatar">Valitse avatar</div>
     <div class="tabs" style="margin-bottom:14px;">
-      <button class="tab-btn active" id="avatar-tab-btn-emoji" onclick="switchAvatarTab('emoji', this)">Emoji</button>
-      <button class="tab-btn" id="avatar-tab-btn-color" onclick="switchAvatarTab('color', this)">Hahmo</button>
+      <button class="tab-btn active" id="avatar-tab-btn-emoji" onclick="switchAvatarTab('emoji', this)" data-i18n="emoji">Emoji</button>
+      <button class="tab-btn" id="avatar-tab-btn-color" onclick="switchAvatarTab('color', this)" data-i18n="character">Hahmo</button>
     </div>
     <div id="avatar-tab-emoji">
       <div class="avatar-grid" id="avatar-emoji-grid"></div>
@@ -948,8 +982,8 @@
       <div class="avatar-dicebear-grid" id="avatar-dicebear-grid"></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-outline w-full" onclick="closeModal('modal-avatar')">Peruuta</button>
-      <button class="btn btn-primary w-full" onclick="saveAvatar()">Tallenna</button>
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-avatar')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveAvatar()" data-i18n="save">Tallenna</button>
     </div>
   </div>
 </div>
@@ -957,10 +991,10 @@
 <!-- ===== PWA INSTALL BANNER ===== -->
 <div id="pwa-banner">
   <div class="pwa-text">
-    Asenna Homey kotinäytölle
-    <span>Toimii myös offline-tilassa</span>
+    <span data-i18n="installApp">Asenna Homey kotinäytölle</span>
+    <span data-i18n="installSub">Toimii myös offline-tilassa</span>
   </div>
-  <button id="pwa-install-btn" onclick="pwsInstall()">Asenna</button>
+  <button id="pwa-install-btn" onclick="pwsInstall()" data-i18n="install">Asenna</button>
   <button id="pwa-dismiss-btn" onclick="pwaDismiss()">✕</button>
 </div>
 
@@ -972,11 +1006,11 @@
     <p>Kotitöiden seuranta</p>
   </div>
   <div class="login-card">
-    <div class="login-step-title" style="margin-bottom:20px;">Tervetuloa!</div>
+    <div class="login-step-title" style="margin-bottom:20px;" data-i18n="welcome">Tervetuloa!</div>
     <div class="welcome-actions">
-      <button class="btn btn-primary btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-login')">Kirjaudu sisään</button>
-      <div class="auth-divider">tai</div>
-      <button class="btn btn-outline btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-register')">Luo uusi perhe</button>
+      <button class="btn btn-primary btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-login')" data-i18n="loginFamily">Kirjaudu sisään</button>
+      <div class="auth-divider" data-i18n="or">tai</div>
+      <button class="btn btn-outline btn-full" style="padding:16px;font-size:1rem;" onclick="showView('family-register')" data-i18n="createFamily">Luo uusi perhe</button>
     </div>
   </div>
 </div>
@@ -989,19 +1023,19 @@
   </div>
   <div class="login-card">
     <button class="auth-back-btn" onclick="showView('welcome')">← Takaisin</button>
-    <div class="login-step-title" style="margin-bottom:20px;">Kirjaudu perheenä</div>
+    <div class="login-step-title" style="margin-bottom:20px;" data-i18n="loginAsFamily">Kirjaudu perheenä</div>
     <div class="form-group">
-      <label class="input-label">Sähköposti</label>
+      <label class="input-label" data-i18n="email">Sähköposti</label>
       <input id="fl-email" type="email" class="input" placeholder="perhe@esimerkki.fi" autocomplete="email" />
     </div>
     <div class="form-group">
-      <label class="input-label">Salasana</label>
+      <label class="input-label" data-i18n="password">Salasana</label>
       <input id="fl-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" />
     </div>
     <div id="fl-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:10px;"></div>
-    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyLogin(this)">Kirjaudu sisään</button>
-    <div class="auth-divider" style="margin-top:16px;">Ei tiliä?</div>
-    <button class="btn btn-outline btn-full" style="padding:12px;" onclick="showView('family-register')">Luo uusi perhe</button>
+    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyLogin(this)" data-i18n="loginFamily">Kirjaudu sisään</button>
+    <div class="auth-divider" style="margin-top:16px;" data-i18n="noAccount">Ei tiliä?</div>
+    <button class="btn btn-outline btn-full" style="padding:12px;" onclick="showView('family-register')" data-i18n="createFamily">Luo uusi perhe</button>
   </div>
 </div>
 
@@ -1013,25 +1047,25 @@
   </div>
   <div class="login-card">
     <button class="auth-back-btn" onclick="showView('welcome')">← Takaisin</button>
-    <div class="login-step-title" style="margin-bottom:20px;">Luo uusi perhe</div>
+    <div class="login-step-title" style="margin-bottom:20px;" data-i18n="createFamily">Luo uusi perhe</div>
     <div class="form-group">
-      <label class="input-label">Perheen nimi</label>
+      <label class="input-label" data-i18n="familyName">Perheen nimi</label>
       <input id="fr-name" type="text" class="input" placeholder="Virtanen" autocomplete="off" />
     </div>
     <div class="form-group">
-      <label class="input-label">Sähköposti</label>
+      <label class="input-label" data-i18n="email">Sähköposti</label>
       <input id="fr-email" type="email" class="input" placeholder="perhe@esimerkki.fi" autocomplete="email" />
     </div>
     <div class="form-group">
-      <label class="input-label">Salasana</label>
+      <label class="input-label" data-i18n="password">Salasana</label>
       <input id="fr-password" type="password" class="input" placeholder="••••••••" autocomplete="new-password" />
     </div>
     <div class="form-group">
-      <label class="input-label">Salasana uudelleen</label>
+      <label class="input-label" data-i18n="passwordRepeat">Salasana uudelleen</label>
       <input id="fr-password2" type="password" class="input" placeholder="••••••••" autocomplete="new-password" />
     </div>
     <div id="fr-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:10px;"></div>
-    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyRegister(this)">Luo perhe</button>
+    <button class="btn btn-primary btn-full" style="padding:14px;" onclick="familyRegister(this)" data-i18n="createFamilyBtn">Luo perhe</button>
   </div>
 </div>
 
@@ -1041,18 +1075,18 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.7</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.8</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
     <div id="login-step-1">
-      <div class="login-step-title">Kuka olet?</div>
-      <p class="text-muted text-center" style="margin-bottom:16px;font-size:0.85rem;">Valitse oma kuvakkeesi</p>
+      <div class="login-step-title" data-i18n="whoAreYou">Kuka olet?</div>
+      <p class="text-muted text-center" style="margin-bottom:16px;font-size:0.85rem;" data-i18n="chooseYourIcon">Valitse oma kuvakkeesi</p>
       <div id="child-grid" class="child-grid">
         <div class="loading"><div class="spinner"></div></div>
       </div>
       <div class="admin-link">
-        <button onclick="showAdminLogin()">Vanhemman kirjautuminen</button>
+        <button onclick="showAdminLogin()" data-i18n="parentLogin">Vanhemman kirjautuminen</button>
       </div>
     </div>
     <!-- Step 2: syötä PIN -->
@@ -1091,27 +1125,27 @@
       <div class="app-header h1" style="font-size:1.25rem;font-weight:800;">Homey</div>
       <div class="subtitle" id="child-header-name"></div>
     </div>
-    <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
+    <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
   </div>
   <div class="main-content">
     <!-- Saldo -->
     <div class="saldo-card">
-      <div class="saldo-label">Avoin saldo</div>
+      <div class="saldo-label" data-i18n="openBalance">Avoin saldo</div>
       <div class="saldo-amount" id="child-saldo">0,00 €</div>
       <div class="saldo-name" id="child-saldo-name"></div>
     </div>
 
     <!-- Välilehdet -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchChildTab('tasks', this)">Tehtävät</button>
-      <button class="tab-btn" onclick="switchChildTab('history', this)">Historia</button>
+      <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
+      <button class="tab-btn" onclick="switchChildTab('history', this)" data-i18n="history">Historia</button>
     </div>
 
     <!-- Tehtävät -->
     <div id="child-tab-tasks" class="tab-content active">
       <div class="tabs" style="margin-bottom:12px;">
-        <button class="tab-btn active" onclick="switchTaskTab('assigned', this)">Omat</button>
-        <button class="tab-btn" onclick="switchTaskTab('free', this)">Vapaat</button>
+        <button class="tab-btn active" onclick="switchTaskTab('assigned', this)" data-i18n="myTasks">Omat</button>
+        <button class="tab-btn" onclick="switchTaskTab('free', this)" data-i18n="freeTasks">Vapaat</button>
       </div>
       <div id="assigned-tasks-list" class="card"></div>
       <div id="free-tasks-list" class="card hidden"></div>
@@ -1122,7 +1156,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.7</footer>
+  <footer>Homey v3.8</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1133,9 +1167,9 @@
   <div class="app-header">
     <div>
       <div style="font-size:1.25rem;font-weight:800;color:#fff;">Homey</div>
-      <div class="subtitle">Vanhemman näkymä</div>
+      <div class="subtitle" data-i18n="parentView">Vanhemman näkymä</div>
     </div>
-    <button class="logout-btn" onclick="logout()">Kirjaudu ulos</button>
+    <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
   </div>
 
   <!-- Parent content panels -->
@@ -1147,20 +1181,20 @@
   <!-- Bottom nav -->
   <nav class="parent-nav">
     <button class="parent-nav-btn active" onclick="switchParentTab('overview', this)">
-      <span class="nav-icon">🏠</span>Yleiskuva
+      <span class="nav-icon">🏠</span><span data-i18n="overview">Yleiskuva</span>
     </button>
     <button class="parent-nav-btn" onclick="switchParentTab('tasks', this)">
-      <span class="nav-icon">📋</span>Tehtävät
+      <span class="nav-icon">📋</span><span data-i18n="tasks">Tehtävät</span>
       <span id="pending-badge" class="badge badge-pending hidden" style="font-size:0.65rem;padding:1px 6px;"></span>
     </button>
     <button class="parent-nav-btn" onclick="switchParentTab('payments', this)">
-      <span class="nav-icon">💶</span>Maksut
+      <span class="nav-icon">💶</span><span data-i18n="payments">Maksut</span>
     </button>
     <button class="parent-nav-btn" onclick="switchParentTab('manage', this)">
-      <span class="nav-icon">⚙️</span>Hallinta
+      <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.7</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.8</footer>
 </div>
 
 <script>
@@ -1174,6 +1208,344 @@ try {
 } catch (e) {
   console.error('Supabase init failed:', e);
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px;"><div style="font-size:2rem;">⚠️</div><div style="font-weight:700;">Yhteysvirhe</div><div style="color:#636e72;font-size:0.9rem;">Tarkista internetyhteys ja päivitä sivu.</div></div>';
+}
+
+// ===== TRANSLATIONS =====
+const translations = {
+  fi: {
+    appName: 'Homey',
+    months: ['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu','Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'],
+    welcome: 'Tervetuloa!',
+    or: 'tai',
+    loginFamily: 'Kirjaudu sisään',
+    loginAsFamily: 'Kirjaudu perheenä',
+    createFamily: 'Luo uusi perhe',
+    createFamilyBtn: 'Luo perhe',
+    noAccount: 'Ei tiliä?',
+    email: 'Sähköposti',
+    password: 'Salasana',
+    passwordRepeat: 'Salasana uudelleen',
+    familyName: 'Perheen nimi',
+    register: 'Rekisteröidy',
+    whoAreYou: 'Kuka olet?',
+    chooseYourIcon: 'Valitse oma kuvakkeesi',
+    parentLogin: 'Vanhemman kirjautuminen',
+    parent: 'Vanhempi',
+    parentView: 'Vanhemman näkymä',
+    parentPin: 'Vanhemman PIN-koodi',
+    hi: 'Hei',
+    enterPin: 'Syötä PIN-koodi',
+    wrongPin: 'Väärä PIN, yritä uudelleen',
+    logOut: 'Kirjaudu ulos',
+    tasks: 'Tehtävät',
+    history: 'Historia',
+    myTasks: 'Omat',
+    freeTasks: 'Vapaat',
+    openBalance: 'Avoin saldo',
+    saldoSuffix: 'n avoin saldo',
+    tasksDone: 'tehtyä tehtävää',
+    pending: 'Odottaa',
+    approved: 'Hyväksytty',
+    rejected: 'Hylätty',
+    pendingPlural: 'Odottavat',
+    approvedPlural: 'Hyväksytyt',
+    rejectedPlural: 'Hylätyt',
+    reserve: 'Varaa',
+    reserving: 'Varataan...',
+    reserved: 'Varattu',
+    reservedFor: 'Varattu',
+    markDone: 'Merkitse tehdyksi',
+    done: 'Tehty',
+    release: 'Vapauta',
+    releasing: 'Vapautetaan...',
+    free: 'Vapaa',
+    openStatus: 'Vapaa',
+    openAmount: 'avoinna',
+    noCompletions: 'Ei suorituksia',
+    noCompletionsYet: 'Ei suorituksia vielä',
+    noOpenTasks: 'Ei aktiivisia tehtäviä',
+    noTasks: 'Ei tehtäviä',
+    noChildren: 'Ei lapsia',
+    addChildren: 'Lisää lapsia hallintanäkymässä',
+    overview: 'Yleiskuva',
+    payments: 'Maksut',
+    management: 'Hallinta',
+    children: 'Lapset',
+    openTasks: 'Avoimet tehtävät',
+    completions: 'Suoritukset',
+    all: 'Kaikki',
+    allChildren: 'Kaikki lapset',
+    openPayments: 'Avoimet maksut',
+    paymentHistory: 'Maksuhistoria',
+    total: 'Yhteensä:',
+    paidBadge: 'Maksettu',
+    unpaidBadge: 'Maksamatta',
+    pay: 'Maksa',
+    paying: 'Maksetaan...',
+    payAll: 'Maksa kaikki',
+    approve: 'Hyväksy',
+    approveAction: '✓ Hyväksy',
+    reject: 'Hylkää',
+    rejectAction: '✗ Hylkää',
+    addTask: '+ Lisää tehtävä',
+    addChild: 'Lisää lapsi',
+    addMore: '+ Lisää',
+    save: 'Tallenna',
+    saving: 'Tallennetaan...',
+    cancel: 'Peruuta',
+    name: 'Nimi',
+    pinCode: 'PIN-koodi (4 numeroa)',
+    pin: 'PIN:',
+    color: 'Väri',
+    taskName: 'Tehtävän nimi',
+    price: 'Hinta (€)',
+    type: 'Tyyppi',
+    child: 'Lapsi',
+    assignTo: 'Kenelle',
+    readyList: 'Valmis lista',
+    ownTask: 'Oma tehtävä',
+    chooseAvatar: 'Valitse avatar',
+    emoji: 'Emoji',
+    character: 'Hahmo',
+    paymentReceived: 'Maksu vastaanotettu!',
+    paymentSaved: 'Maksu tallennettu!',
+    allPaymentsDone: 'Kaikki maksut suoritettu!',
+    taskApproved: 'Tehtävä hyväksytty!',
+    taskRejected: 'Tehtävä hylätty',
+    taskDone: 'Tehtävä merkitty tehdyksi! ✅',
+    taskReservedMsg: 'Tehtävä varattu! 🔒',
+    reservationFreed: 'Varaus vapautettu',
+    childAdded: 'Lapsi lisätty! 👶',
+    childDeleted: 'Lapsi poistettu',
+    taskAdded: 'Tehtävä lisätty! ✅',
+    taskDeleted: 'Tehtävä poistettu',
+    avatarUpdated: 'Avatar päivitetty!',
+    markedDone: 'merkitsi tehdyksi',
+    familyCreated: 'Perhe luotu!',
+    fillAllFields: 'Täytä kaikki kentät',
+    wrongEmailOrPassword: 'Väärä sähköposti tai salasana',
+    passwordTooShort: 'Salasanan tulee olla vähintään 6 merkkiä',
+    passwordsMismatch: 'Salasanat eivät täsmää',
+    emailInUse: 'Sähköposti on jo käytössä',
+    enterName: 'Syötä nimi',
+    pinMustBe4: 'PIN-koodin tulee olla 4 numeroa',
+    chooseTask: 'Valitse tehtävä listalta',
+    enterTaskName: 'Syötä tehtävän nimi',
+    enterPrice: 'Syötä hinta',
+    enterValidPrice: 'Syötä kelvollinen hinta',
+    chooseAvatarFirst: 'Valitse ensin avatar',
+    noOpenPayments: 'Ei avoimia maksuja',
+    confirmSwitchFamily: 'Vaihdetaanko perhettä? Sinut kirjataan ulos nykyisestä perheestä.',
+    confirmDeleteChild: 'Poistetaanko lapsi? Tämä ei poista suorituksia.',
+    confirmDeleteTask: 'Poistetaanko tehtävä?',
+    confirmPayAll: 'Maksetaanko kaikki avoimet maksut?',
+    somePaymentsFailed: 'Maksuja epäonnistui',
+    loggingIn: 'Kirjaudutaan...',
+    creating: 'Luodaan...',
+    loading: 'Ladataan...',
+    installApp: 'Asenna Homey kotinäytölle',
+    installSub: 'Toimii myös offline-tilassa',
+    install: 'Asenna',
+    gotIt: 'Selvä, kiitos!',
+    loggedInAs: 'Kirjautunut perheenä:',
+    changeFamily: 'Vaihda perhettä',
+    taskList: [
+      'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
+      'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
+      'Nurmikon leikkuu','Lumityöt','Auton pesu','WC:n siivous',
+      'Yläkerran WC:n siivous','Kylpyhuoneen siivous','Yläkerran lattiapesu',
+      'Koiran ulkoilutus','Kaupassa käynti','Ruoanlaiton avustaminen',
+      'Pöydän kattaminen','Tiskipöydän siivous',
+    ],
+  },
+  sv: {
+    appName: 'Homey',
+    months: ['Januari','Februari','Mars','April','Maj','Juni','Juli','Augusti','September','Oktober','November','December'],
+    welcome: 'Välkommen!',
+    or: 'eller',
+    loginFamily: 'Logga in',
+    loginAsFamily: 'Logga in som familj',
+    createFamily: 'Skapa ny familj',
+    createFamilyBtn: 'Skapa familj',
+    noAccount: 'Inget konto?',
+    email: 'E-post',
+    password: 'Lösenord',
+    passwordRepeat: 'Lösenord igen',
+    familyName: 'Familjens namn',
+    register: 'Registrera',
+    whoAreYou: 'Vem är du?',
+    chooseYourIcon: 'Välj din egen ikon',
+    parentLogin: 'Förälderns inloggning',
+    parent: 'Förälder',
+    parentView: 'Förälderns vy',
+    parentPin: 'Förälderns PIN-kod',
+    hi: 'Hej',
+    enterPin: 'Ange PIN-kod',
+    wrongPin: 'Fel PIN, försök igen',
+    logOut: 'Logga ut',
+    tasks: 'Uppgifter',
+    history: 'Historik',
+    myTasks: 'Egna',
+    freeTasks: 'Fria',
+    openBalance: 'Öppet saldo',
+    saldoSuffix: 's öppna saldo',
+    tasksDone: 'uppgifter gjorda',
+    pending: 'Väntar',
+    approved: 'Godkänd',
+    rejected: 'Avvisad',
+    pendingPlural: 'Väntande',
+    approvedPlural: 'Godkända',
+    rejectedPlural: 'Avvisade',
+    reserve: 'Reservera',
+    reserving: 'Reserverar...',
+    reserved: 'Reserverad',
+    reservedFor: 'Reserverad',
+    markDone: 'Markera som klar',
+    done: 'Klar',
+    release: 'Frigör',
+    releasing: 'Frigör...',
+    free: 'Fri',
+    openStatus: 'Fri',
+    openAmount: 'utestående',
+    noCompletions: 'Inga utföranden',
+    noCompletionsYet: 'Inga utföranden ännu',
+    noOpenTasks: 'Inga aktiva uppgifter',
+    noTasks: 'Inga uppgifter',
+    noChildren: 'Inga barn',
+    addChildren: 'Lägg till barn i hanteringsvyn',
+    overview: 'Översikt',
+    payments: 'Betalningar',
+    management: 'Hantering',
+    children: 'Barn',
+    openTasks: 'Öppna uppgifter',
+    completions: 'Utföranden',
+    all: 'Alla',
+    allChildren: 'Alla barn',
+    openPayments: 'Öppna betalningar',
+    paymentHistory: 'Betalningshistorik',
+    total: 'Totalt:',
+    paidBadge: 'Betald',
+    unpaidBadge: 'Obetald',
+    pay: 'Betala',
+    paying: 'Betalar...',
+    payAll: 'Betala alla',
+    approve: 'Godkänn',
+    approveAction: '✓ Godkänn',
+    reject: 'Avvisa',
+    rejectAction: '✗ Avvisa',
+    addTask: '+ Lägg till uppgift',
+    addChild: 'Lägg till barn',
+    addMore: '+ Lägg till',
+    save: 'Spara',
+    saving: 'Sparar...',
+    cancel: 'Avbryt',
+    name: 'Namn',
+    pinCode: 'PIN-kod (4 siffror)',
+    pin: 'PIN:',
+    color: 'Färg',
+    taskName: 'Uppgiftens namn',
+    price: 'Pris (€)',
+    type: 'Typ',
+    child: 'Barn',
+    assignTo: 'Till vem',
+    readyList: 'Färdig lista',
+    ownTask: 'Egen uppgift',
+    chooseAvatar: 'Välj avatar',
+    emoji: 'Emoji',
+    character: 'Figur',
+    paymentReceived: 'Betalning mottagen!',
+    paymentSaved: 'Betalning sparad!',
+    allPaymentsDone: 'Alla betalningar genomförda!',
+    taskApproved: 'Uppgift godkänd!',
+    taskRejected: 'Uppgift avvisad',
+    taskDone: 'Uppgift markerad som klar! ✅',
+    taskReservedMsg: 'Uppgift reserverad! 🔒',
+    reservationFreed: 'Reservation frigjord',
+    childAdded: 'Barn tillagt! 👶',
+    childDeleted: 'Barn borttaget',
+    taskAdded: 'Uppgift tillagd! ✅',
+    taskDeleted: 'Uppgift borttagen',
+    avatarUpdated: 'Avatar uppdaterad!',
+    markedDone: 'markerade som klar',
+    familyCreated: 'Familj skapad!',
+    fillAllFields: 'Fyll i alla fält',
+    wrongEmailOrPassword: 'Fel e-post eller lösenord',
+    passwordTooShort: 'Lösenordet måste vara minst 6 tecken',
+    passwordsMismatch: 'Lösenorden matchar inte',
+    emailInUse: 'E-postadressen används redan',
+    enterName: 'Ange namn',
+    pinMustBe4: 'PIN-koden måste vara 4 siffror',
+    chooseTask: 'Välj uppgift från listan',
+    enterTaskName: 'Ange uppgiftens namn',
+    enterPrice: 'Ange pris',
+    enterValidPrice: 'Ange ett giltigt pris',
+    chooseAvatarFirst: 'Välj avatar först',
+    noOpenPayments: 'Inga öppna betalningar',
+    confirmSwitchFamily: 'Byta familj? Du loggas ut från den aktuella familjen.',
+    confirmDeleteChild: 'Ta bort barnet? Utföranden raderas inte.',
+    confirmDeleteTask: 'Ta bort uppgiften?',
+    confirmPayAll: 'Betala alla öppna betalningar?',
+    somePaymentsFailed: 'Betalningar misslyckades',
+    loggingIn: 'Loggar in...',
+    creating: 'Skapar...',
+    loading: 'Laddar...',
+    installApp: 'Installera Homey på hemskärmen',
+    installSub: 'Fungerar även offline',
+    install: 'Installera',
+    gotIt: 'OK, tack!',
+    loggedInAs: 'Inloggad som familj:',
+    changeFamily: 'Byt familj',
+    taskList: [
+      'Diska i maskinen','Tömma diskmaskinen','Diska för hand','Damma','Dammsuga',
+      'Dammsuga övervåningen','Ta ut soporna','Tvätta','Vika och lägga undan tvätt',
+      'Klippa gräset','Skotta snö','Tvätta bilen','Städa toaletten',
+      'Städa toaletten övervåningen','Städa badrummet','Moppa övervåningen',
+      'Rasta hunden','Handla','Hjälpa till att laga mat',
+      'Duka bordet','Städa diskbänken',
+    ],
+  },
+};
+
+function t(key) {
+  const lang = localStorage.getItem('homey_lang') || 'fi';
+  const val = translations[lang]?.[key];
+  if (val !== undefined) return val;
+  return translations['fi']?.[key] ?? key;
+}
+
+function switchLanguage(lang) {
+  localStorage.setItem('homey_lang', lang);
+  renderCurrentView();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const lang = localStorage.getItem('homey_lang') || 'fi';
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+}
+
+function renderCurrentView() {
+  applyTranslations();
+  const active = document.querySelector('.view.active');
+  if (!active) return;
+  const id = active.id;
+  if (id === 'view-login') {
+    renderChildGrid();
+  } else if (id === 'view-child') {
+    renderAssignedTasks();
+    renderFreeTasks();
+    renderChildHistory();
+  } else if (id === 'view-parent') {
+    renderParentOverview();
+    renderParentTasks();
+    renderParentPayments();
+    renderParentManage();
+    updatePendingBadge();
+  }
 }
 
 const ADMIN_PIN = '1987';
@@ -1285,14 +1657,14 @@ async function familyLogin(btn) {
   const password = document.getElementById('fl-password').value;
   const errEl = document.getElementById('fl-error');
   errEl.textContent = '';
-  if (!email || !password) { errEl.textContent = 'Täytä kaikki kentät'; return; }
+  if (!email || !password) { errEl.textContent = t('fillAllFields'); return; }
 
   const origText = btn.textContent;
   try {
-    btn.disabled = true; btn.textContent = 'Kirjaudutaan...';
+    btn.disabled = true; btn.textContent = t('loggingIn');
     const { data: result, error } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
     if (error) throw error;
-    if (!result) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
+    if (!result) { errEl.textContent = t('wrongEmailOrPassword'); return; }
     currentFamilyId = result.id;
     localStorage.setItem('homey_family_id', result.id);
     localStorage.setItem('homey_family_name', result.name);
@@ -1313,13 +1685,13 @@ async function familyRegister(btn) {
   const password2 = document.getElementById('fr-password2').value;
   const errEl = document.getElementById('fr-error');
   errEl.textContent = '';
-  if (!name || !email || !password || !password2) { errEl.textContent = 'Täytä kaikki kentät'; return; }
-  if (password.length < 6) { errEl.textContent = 'Salasanan tulee olla vähintään 6 merkkiä'; return; }
-  if (password !== password2) { errEl.textContent = 'Salasanat eivät täsmää'; return; }
+  if (!name || !email || !password || !password2) { errEl.textContent = t('fillAllFields'); return; }
+  if (password.length < 6) { errEl.textContent = t('passwordTooShort'); return; }
+  if (password !== password2) { errEl.textContent = t('passwordsMismatch'); return; }
 
   const origText = btn.textContent;
   try {
-    btn.disabled = true; btn.textContent = 'Luodaan...';
+    btn.disabled = true; btn.textContent = t('creating');
     const { data: result, error } = await sb.rpc('create_family', { p_name: name, p_email: email, p_password: password });
     if (error) throw error;
     currentFamilyId = result.id;
@@ -1329,11 +1701,11 @@ async function familyRegister(btn) {
     document.getElementById('fr-email').value = '';
     document.getElementById('fr-password').value = '';
     document.getElementById('fr-password2').value = '';
-    showNotif('Perhe luotu!', 'success', result.name);
+    showNotif(t('familyCreated'), 'success', result.name);
     initLogin();
   } catch (err) {
     errEl.textContent = err.message?.includes('unique') || err.message?.includes('duplicate')
-      ? 'Sähköposti on jo käytössä'
+      ? t('emailInUse')
       : friendlyError(err);
   } finally {
     btn.disabled = false; btn.textContent = origText;
@@ -1341,7 +1713,7 @@ async function familyRegister(btn) {
 }
 
 function switchFamily() {
-  if (!confirm('Vaihdetaanko perhettä? Sinut kirjataan ulos nykyisestä perheestä.')) return;
+  if (!confirm(t('confirmSwitchFamily'))) return;
   localStorage.removeItem('homey_family_id');
   localStorage.removeItem('homey_family_name');
   currentFamilyId = null;
@@ -1382,8 +1754,7 @@ function monthKey(dateStr) {
 }
 function monthLabel(key) {
   const [y, m] = key.split('-');
-  const months = ['Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu',
-                  'Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu'];
+  const months = t('months');
   return months[parseInt(m) - 1] + ' ' + y;
 }
 function avatarInitial(name) {
@@ -1501,7 +1872,7 @@ async function initLogin() {
 function renderChildGrid() {
   const grid = document.getElementById('child-grid');
   if (!state.children.length) {
-    grid.innerHTML = '<p class="text-muted text-center" style="grid-column:1/-1">Ei lapsia. Kirjaudu vanhempana lisätäksesi.</p>';
+    grid.innerHTML = `<p class="text-muted text-center" style="grid-column:1/-1">${t('noChildren')}</p>`;
     return;
   }
   grid.innerHTML = state.children.map(child => `
@@ -1522,14 +1893,14 @@ function selectChild(id) {
     b.classList.toggle('selected', b.dataset.childId === String(id));
   });
   const child = state.children.find(c => String(c.id) === String(id));
-  document.getElementById('pin-title').textContent = `Hei ${child.name}! Syötä PIN`;
+  document.getElementById('pin-title').textContent = `${t('hi')} ${child.name}! ${t('enterPin')}`;
   showPinStep();
 }
 
 function showAdminLogin() {
   state.isAdminLogin = true;
   state.selectedChildId = null;
-  document.getElementById('pin-title').textContent = 'Vanhemman PIN-koodi';
+  document.getElementById('pin-title').textContent = t('parentPin');
   showPinStep();
 }
 
@@ -1596,7 +1967,7 @@ async function checkPin() {
 }
 
 function wrongPin() {
-  document.getElementById('pin-error').textContent = 'Väärä PIN-koodi';
+  document.getElementById('pin-error').textContent = t('wrongPin');
   state.pinInput = '';
   updatePinDots();
   // shake animation
@@ -1638,7 +2009,7 @@ function setupRealtime() {
         await loadAll();
         showPaymentPopup(payload.new);
         renderChildSaldo();
-        showNotif('Maksu vastaanotettu!', 'payment', fmt(payload.new.amount), true);
+        showNotif(t('paymentReceived'), 'payment', fmt(payload.new.amount), true);
       })
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -1653,9 +2024,9 @@ function setupRealtime() {
         renderChildHistory();
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
         if (payload.new.status === 'approved') {
-          showNotif('Tehtävä hyväksytty!', 'success', '+' + fmt(task?.amount ?? 0));
+          showNotif(t('taskApproved'), 'success', '+' + fmt(task?.amount ?? 0));
         } else if (payload.new.status === 'rejected') {
-          showNotif('Tehtävä hylätty', 'error', task?.title || 'tehtävä');
+          showNotif(t('taskRejected'), 'error', task?.title || '');
         }
       })
       .subscribe();
@@ -1673,7 +2044,7 @@ function setupRealtime() {
         updatePendingBadge();
         const child = state.children.find(c => c.id === payload.new.child_id);
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
-        showNotif((child?.name || 'Lapsi') + ' merkitsi tehdyksi', 'info', task?.title || 'tehtävä');
+        showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', task?.title || '');
       })
       .subscribe();
   }
@@ -1711,7 +2082,7 @@ function closePaymentPopup() {
 async function initChildView() {
   const child = state.currentUser;
   document.getElementById('child-header-name').textContent = child.name;
-  document.getElementById('child-saldo-name').textContent = child.name + 'n avoin saldo';
+  document.getElementById('child-saldo-name').textContent = child.name + t('saldoSuffix');
   renderChildSaldo();
   renderAssignedTasks();
   renderFreeTasks();
@@ -1747,7 +2118,7 @@ function renderAssignedTasks() {
   const container = document.getElementById('assigned-tasks-list');
 
   if (!myTasks.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei omia tehtäviä</p></div>';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noCompletions')}</p></div>`;
     return;
   }
 
@@ -1761,11 +2132,11 @@ function renderAssignedTasks() {
       (c.status === 'pending' || c.status === 'approved')
     );
     const statusBadge = doneTodayComp
-      ? `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? 'Odottaa' : 'Hyväksytty'}</span>`
+      ? `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`
       : '';
     const btn = doneTodayComp
-      ? `<button class="btn btn-sm" disabled style="opacity:0.4">Tehty</button>`
-      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Merkitse tehdyksi</button>`;
+      ? `<button class="btn btn-sm" disabled style="opacity:0.4">${t('done')}</button>`
+      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('markDone')}</button>`;
     return `
       <div class="task-item">
         <div class="task-icon">✅</div>
@@ -1786,7 +2157,7 @@ function renderFreeTasks() {
   const container = document.getElementById('free-tasks-list');
 
   if (!freeTasks.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🆓</div><p>Ei vapaita tehtäviä</p></div>';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🆓</div><p>${t('noOpenTasks')}</p></div>`;
     return;
   }
 
@@ -1806,18 +2177,18 @@ function renderFreeTasks() {
 
     let actionsHtml = '';
     if (doneTodayComp) {
-      actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? 'Odottaa' : 'Hyväksytty'}</span>`;
+      actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Tehty</button>
-        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}', this)">Vapauta</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('done')}</button>
+        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}', this)">${t('release')}</button>
       `;
     } else if (isReservedByOther) {
-      actionsHtml = `<span class="badge badge-reserved">Varattu: ${esc(reservedByChild?.name || '?')}</span>`;
+      actionsHtml = `<span class="badge badge-reserved">${t('reservedFor')}: ${esc(reservedByChild?.name || '?')}</span>`;
     } else {
       actionsHtml = `
-        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}', this)">Varaa</button>
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">Tehty</button>
+        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}', this)">${t('reserve')}</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('done')}</button>
       `;
     }
 
@@ -1837,12 +2208,12 @@ function renderFreeTasks() {
 async function markDone(taskId, btn) {
   const origText = btn ? btn.textContent : null;
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const childId = state.currentUser.id;
     const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
     const { error } = await sb.from('homey_completions').insert(payload);
     if (error) throw error;
-    showToast('Tehtävä merkitty tehdyksi! ✅', 'success');
+    showToast(t('taskDone'), 'success');
     await loadAll();
     renderAssignedTasks();
     renderFreeTasks();
@@ -1856,32 +2227,32 @@ async function markDone(taskId, btn) {
 
 async function reserveTask(taskId, btn) {
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Varataan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('reserving'); }
     const childId = state.currentUser.id;
     const { error } = await sb.from('homey_tasks').update({ reserved_by: childId }).eq('id', taskId);
     if (error) throw error;
-    showToast('Tehtävä varattu! 🔒', 'success');
+    showToast(t('taskReservedMsg'), 'success');
     await loadAll();
     renderFreeTasks();
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Varaa'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('reserve'); }
   }
 }
 
 async function unreserveTask(taskId, btn) {
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Vapautetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('releasing'); }
     const { error } = await sb.from('homey_tasks').update({ reserved_by: null }).eq('id', taskId);
     if (error) throw error;
-    showToast('Varaus vapautettu');
+    showToast(t('reservationFreed'));
     await loadAll();
     renderFreeTasks();
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Vapauta'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('release'); }
   }
 }
 
@@ -1903,7 +2274,7 @@ async function renderChildHistory() {
   const months = Object.keys(byMonth).sort().reverse();
 
   if (!months.length) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>Ei suorituksia vielä</p></div>';
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><p>${t('noCompletionsYet')}</p></div>`;
     return;
   }
 
@@ -1917,8 +2288,8 @@ async function renderChildHistory() {
       }, 0);
     const isPaid = paidMonths.has(mk);
     const badge = isPaid
-      ? '<span class="badge badge-paid">Maksettu</span>'
-      : '<span class="badge badge-unpaid">Maksamatta</span>';
+      ? `<span class="badge badge-paid">${t('paidBadge')}</span>`
+      : `<span class="badge badge-unpaid">${t('unpaidBadge')}</span>`;
 
     const rows = monthComps.map(c => {
       const task = state.tasks.find(t => t.id === c.task_id);
@@ -1952,9 +2323,9 @@ async function renderChildHistory() {
 }
 
 function statusLabel(s) {
-  if (s === 'pending') return 'Odottaa';
-  if (s === 'approved') return 'Hyväksytty';
-  if (s === 'rejected') return 'Hylätty';
+  if (s === 'pending') return t('pending');
+  if (s === 'approved') return t('approved');
+  if (s === 'rejected') return t('rejected');
   return s;
 }
 
@@ -1990,7 +2361,7 @@ function updatePendingBadge() {
 function renderParentOverview() {
   const panel = document.getElementById('parent-panel-overview');
   if (!state.children.length) {
-    panel.innerHTML = '<div class="empty-state"><div class="empty-icon">👶</div><p>Lisää lapsia hallintanäkymässä</p></div>';
+    panel.innerHTML = `<div class="empty-state"><div class="empty-icon">👶</div><p>${t('addChildren')}</p></div>`;
     return;
   }
 
@@ -2011,7 +2382,7 @@ function renderParentOverview() {
         <div class="child-summary-info">
           <div class="child-summary-name">${esc(child.name)}</div>
           <div class="child-summary-saldo">${fmt(saldo)}</div>
-          <div class="child-summary-meta">${doneCount} tehtyä tehtävää</div>
+          <div class="child-summary-meta">${doneCount} ${t('tasksDone')}</div>
           <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" style="width:${pct}%;background:${childColor(child)}"></div></div>
         </div>
       </div>
@@ -2020,10 +2391,10 @@ function renderParentOverview() {
 
   panel.innerHTML = `
     <div class="card">
-      <div class="card-title">Lapset</div>
+      <div class="card-title">${t('children')}</div>
       ${childCards}
     </div>
-    <footer>Homey v3.7</footer>
+    <footer>Homey v3.8</footer>
   `;
 }
 
@@ -2038,16 +2409,16 @@ function renderParentTasks() {
     const assignedChild = task.assigned_to ? state.children.find(c => c.id === task.assigned_to) : null;
     const reservedChild = task.reserved_by ? state.children.find(c => c.id === task.reserved_by) : null;
     const typeBadge = task.type === 'free'
-      ? '<span class="badge badge-unpaid" style="font-size:0.7rem;">vapaa</span>'
-      : '<span class="badge badge-pending" style="font-size:0.7rem;">lapsi</span>';
+      ? `<span class="badge badge-unpaid" style="font-size:0.7rem;">${t('free')}</span>`
+      : `<span class="badge badge-pending" style="font-size:0.7rem;">${t('child')}</span>`;
 
     let infoHtml = '';
     if (task.type === 'assigned' && assignedChild) {
       infoHtml = `<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">${renderAvatar(assignedChild, 22)}<span style="font-size:0.8rem;color:var(--text-muted)">${esc(assignedChild.name)}</span></div>`;
     } else if (task.type === 'free' && reservedChild) {
-      infoHtml = `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Varattu: ${esc(reservedChild.name)}</div>`;
+      infoHtml = `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">${t('reservedFor')}: ${esc(reservedChild.name)}</div>`;
     } else if (task.type === 'free') {
-      infoHtml = `<div style="font-size:0.8rem;color:var(--success);margin-top:2px;">Vapaa</div>`;
+      infoHtml = `<div style="font-size:0.8rem;color:var(--success);margin-top:2px;">${t('openStatus')}</div>`;
     }
 
     return `
@@ -2063,21 +2434,21 @@ function renderParentTasks() {
         </div>
       </div>
     `;
-  }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei aktiivisia tehtäviä</p></div>';
+  }).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noOpenTasks')}</p></div>`;
 
   // ---- OSIO 2: Suoritukset filtterit ----
   const statusBtns = [
-    { key: 'all', label: 'Kaikki' },
-    { key: 'pending', label: 'Odottavat' },
-    { key: 'approved', label: 'Hyväksytyt' },
-    { key: 'rejected', label: 'Hylätyt' },
+    { key: 'all', label: t('all') },
+    { key: 'pending', label: t('pendingPlural') },
+    { key: 'approved', label: t('approvedPlural') },
+    { key: 'rejected', label: t('rejectedPlural') },
   ].map(s => {
     const active = tasksFilter.status === s.key ? ' active' : '';
     return `<button class="filter-btn${active}" onclick="setTasksFilter('status','${s.key}',this)">${s.label}</button>`;
   }).join('');
 
   const childBtns = [
-    `<button class="filter-btn${tasksFilter.childId === 'all' ? ' active' : ''}" onclick="setTasksFilter('childId','all',this)">Kaikki lapset</button>`,
+    `<button class="filter-btn${tasksFilter.childId === 'all' ? ' active' : ''}" onclick="setTasksFilter('childId','all',this)">${t('allChildren')}</button>`,
     ...state.children.map(child => {
       const active = tasksFilter.childId === child.id ? ' active' : '';
       return `<button class="filter-btn${active}" onclick="setTasksFilter('childId','${child.id}',this)">${esc(child.name)}</button>`;
@@ -2101,8 +2472,8 @@ function renderParentTasks() {
     const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
     const actions = comp.status === 'pending' ? `
       <div class="pending-actions">
-        <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">✓ Hyväksy</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">✗ Hylkää</button>
+        <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">${t('approveAction')}</button>
+        <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">${t('rejectAction')}</button>
       </div>` : '';
     return `
       <div class="pending-item">
@@ -2123,11 +2494,11 @@ function renderParentTasks() {
         ${actions}
       </div>
     `;
-  }).join('') : '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei suorituksia</p></div>';
+  }).join('') : `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noCompletions')}</p></div>`;
 
   panel.innerHTML = `
     <div class="card">
-      <div class="card-title">Avoimet tehtävät (${state.tasks.length})</div>
+      <div class="card-title">${t('openTasks')} (${state.tasks.length})</div>
       ${openTaskItems}
     </div>
     <div class="card" style="margin-bottom:10px;">
@@ -2135,7 +2506,7 @@ function renderParentTasks() {
       <div style="display:flex;flex-wrap:wrap;gap:6px;">${childBtns}</div>
     </div>
     <div class="card">
-      <div class="card-title">Suoritukset${pendingCount > 0 ? ` <span class="badge badge-pending">${pendingCount} odottaa</span>` : ''}</div>
+      <div class="card-title">${t('completions')}${pendingCount > 0 ? ` <span class="badge badge-pending">${pendingCount} ${t('pending')}</span>` : ''}</div>
       ${compItems}
     </div>
   `;
@@ -2155,10 +2526,10 @@ function renderParentPending() { renderParentTasks(); }
 
 async function approveComp(id, btn) {
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
     if (error) throw error;
-    showToast('Hyväksytty ✓', 'success');
+    showToast(t('taskApproved'), 'success');
     await loadAll();
     renderParentPending();
     renderParentOverview();
@@ -2166,16 +2537,16 @@ async function approveComp(id, btn) {
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Hyväksy'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('approveAction'); }
   }
 }
 
 async function rejectComp(id, btn) {
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Tallennetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
     if (error) throw error;
-    showToast('Hylätty');
+    showToast(t('taskRejected'));
     await loadAll();
     renderParentPending();
     renderParentOverview();
@@ -2183,7 +2554,7 @@ async function rejectComp(id, btn) {
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✗ Hylkää'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('rejectAction'); }
   }
 }
 
@@ -2199,9 +2570,9 @@ function renderParentPayments() {
         ${renderAvatar(child, 48)}
         <div class="child-summary-info" style="flex:1;">
           <div class="child-summary-name">${esc(child.name)}</div>
-          <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
+          <div class="child-summary-saldo">${fmt(saldo)} ${t('openAmount')}</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}', this)">Maksa</button>
+        <button class="btn btn-primary btn-sm" onclick="payChild('${child.id}', this)">${t('pay')}</button>
       </div>
     `;
   }).filter(Boolean);
@@ -2220,7 +2591,7 @@ function renderParentPayments() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-weight:700;color:var(--success)">${fmt(p.amount)}</span>
-          <span class="badge badge-paid">Maksettu</span>
+          <span class="badge badge-paid">${t('paidBadge')}</span>
         </div>
       </div>
     `;
@@ -2229,18 +2600,18 @@ function renderParentPayments() {
   panel.innerHTML = `
     ${openCards.length ? `
     <div class="card">
-      <div class="card-title">Avoimet maksut</div>
+      <div class="card-title">${t('openPayments')}</div>
       ${openCards.join('')}
       ${totalOpen > 0 ? `
       <div class="divider"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <strong>Yhteensä: ${fmt(totalOpen)}</strong>
-        <button class="btn btn-primary btn-sm" onclick="payAll(this)">Maksa kaikki</button>
+        <strong>${t('total')} ${fmt(totalOpen)}</strong>
+        <button class="btn btn-primary btn-sm" onclick="payAll(this)">${t('payAll')}</button>
       </div>` : ''}
-    </div>` : `<div class="card"><div class="empty-state"><div class="empty-icon">💶</div><p>Ei avoimia maksuja</p></div></div>`}
+    </div>` : `<div class="card"><div class="empty-state"><div class="empty-icon">💶</div><p>${t('noOpenPayments')}</p></div></div>`}
     ${histItems ? `
     <div class="card">
-      <div class="card-title">Maksuhistoria</div>
+      <div class="card-title">${t('paymentHistory')}</div>
       ${histItems}
     </div>` : ''}
   `;
@@ -2248,29 +2619,29 @@ function renderParentPayments() {
 
 async function payChild(childId, btn) {
   const saldo = calcOpenSaldo(childId);
-  if (saldo <= 0) { showToast('Ei avoimia maksuja'); return; }
+  if (saldo <= 0) { showToast(t('noOpenPayments')); return; }
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('paying'); }
     const currentMonth = monthKey(new Date().toISOString());
     const { error } = await sb.from('homey_payments').insert({ child_id: childId, month: currentMonth, amount: saldo, paid_at: new Date().toISOString() });
     if (error) throw error;
-    showNotif('Maksu tallennettu!', 'payment', fmt(saldo));
+    showNotif(t('paymentSaved'), 'payment', fmt(saldo));
     await loadAll();
     renderParentPayments();
     renderParentOverview();
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Maksa'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('pay'); }
   }
 }
 
 async function payAll(btn) {
-  if (!confirm('Maksetaanko kaikki avoimet maksut?')) return;
+  if (!confirm(t('confirmPayAll'))) return;
   const toPay = state.children.filter(c => calcOpenSaldo(c.id) > 0);
-  if (!toPay.length) { showToast('Ei avoimia maksuja'); return; }
+  if (!toPay.length) { showToast(t('noOpenPayments')); return; }
   try {
-    if (btn) { btn.disabled = true; btn.textContent = 'Maksetaan...'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('paying'); }
     const currentMonth = monthKey(new Date().toISOString());
     const failed = [];
     for (const child of toPay) {
@@ -2279,9 +2650,9 @@ async function payAll(btn) {
       if (error) failed.push(child.name);
     }
     if (failed.length > 0) {
-      showNotif('Maksuja epäonnistui', 'error', `${toPay.length - failed.length} onnistui, epäonnistui: ${failed.join(', ')}`);
+      showNotif(t('somePaymentsFailed'), 'error', `${toPay.length - failed.length} ok, epäonnistui: ${failed.join(', ')}`);
     } else {
-      showNotif('Kaikki maksut suoritettu!', 'payment');
+      showNotif(t('allPaymentsDone'), 'payment');
     }
     await loadAll();
     renderParentPayments();
@@ -2289,7 +2660,7 @@ async function payAll(btn) {
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Maksa kaikki'; }
+    if (btn) { btn.disabled = false; btn.textContent = t('payAll'); }
   }
 }
 
@@ -2305,10 +2676,10 @@ function renderParentManage() {
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn btn-sm btn-outline" onclick="openAvatarModal('${child.id}')">Avatar</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">✕</button>
       </div>
     </div>
-  `).join('') || '<div class="empty-state"><div class="empty-icon">👶</div><p>Ei lapsia</p></div>';
+  `).join('') || `<div class="empty-state"><div class="empty-icon">👶</div><p>${t('noChildren')}</p></div>`;
 
   const allTasks = [...state.tasks]; // already filtered active=true
   const taskItems = allTasks.map(task => {
@@ -2318,42 +2689,42 @@ function renderParentManage() {
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
           <div class="task-name">${esc(task.title)}</div>
-          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? 'Vapaa' : 'Lapsi'}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? t('free') : t('child')}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">Poista</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">✕</button>
       </div>
     `;
-  }).join('') || '<div class="empty-state"><div class="empty-icon">📋</div><p>Ei tehtäviä</p></div>';
+  }).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noTasks')}</p></div>`;
 
   const familyName = localStorage.getItem('homey_family_name') || 'Perhe';
   panel.innerHTML = `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0">Lapset</div>
-        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-child')">+ Lisää</button>
+        <div class="card-title" style="margin-bottom:0">${t('children')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-child')">${t('addMore')}</button>
       </div>
       ${childItems}
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0">Tehtävät</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">+ Lisää</button>
+        <div class="card-title" style="margin-bottom:0">${t('tasks')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">${t('addMore')}</button>
       </div>
       ${taskItems}
     </div>
     <div class="card" style="text-align:center;">
-      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">Kirjautunut perheenä: <strong>${esc(familyName)}</strong></div>
-      <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 Vaihda perhettä</button>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">${t('loggedInAs')} <strong>${esc(familyName)}</strong></div>
+      <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 ${t('changeFamily')}</button>
     </div>
   `;
 }
 
 async function deleteChild(id) {
-  if (!confirm('Poistetaanko lapsi? Tämä ei poista suorituksia.')) return;
+  if (!confirm(t('confirmDeleteChild'))) return;
   try {
     const { error } = await sb.from('homey_children').delete().eq('id', id);
     if (error) throw error;
-    showToast('Lapsi poistettu');
+    showToast(t('childDeleted'));
     await loadAll();
     renderParentManage();
     renderParentOverview();
@@ -2367,11 +2738,11 @@ async function deleteChild(id) {
 }
 
 async function deleteTask(id) {
-  if (!confirm('Poistetaanko tehtävä?')) return;
+  if (!confirm(t('confirmDeleteTask'))) return;
   try {
     const { error } = await sb.from('homey_tasks').update({ active: false }).eq('id', id);
     if (error) throw error;
-    showToast('Tehtävä poistettu');
+    showToast(t('taskDeleted'));
     await loadAll();
     renderParentManage();
   } catch (err) {
@@ -2392,15 +2763,15 @@ function selectColor(el) {
 async function saveChild() {
   const name = document.getElementById('new-child-name').value.trim();
   const pin = document.getElementById('new-child-pin').value.trim();
-  if (!name) { showToast('Syötä nimi', 'error'); return; }
-  if (!/^\d{4}$/.test(pin)) { showToast('PIN-koodin tulee olla 4 numeroa', 'error'); return; }
+  if (!name) { showToast(t('enterName'), 'error'); return; }
+  if (!/^\d{4}$/.test(pin)) { showToast(t('pinMustBe4'), 'error'); return; }
 
   const saveBtn = document.querySelector('#modal-add-child .btn-primary');
   try {
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
     const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor, family_id: currentFamilyId });
     if (error) throw error;
-    showToast('Lapsi lisätty! 👶', 'success');
+    showToast(t('childAdded'), 'success');
     document.getElementById('new-child-name').value = '';
     document.getElementById('new-child-pin').value = '';
     closeModal('modal-add-child');
@@ -2410,19 +2781,11 @@ async function saveChild() {
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = t('save'); }
   }
 }
 
 // ===== ADD TASK =====
-const TASK_TEMPLATES = [
-  'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
-  'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
-  'Nurmikon leikkuu','Lumityöt','Auton pesu','WC:n siivous',
-  'Yläkerran WC:n siivous','Kylpyhuoneen siivous','Yläkerran lattiapesu',
-  'Koiran ulkoilutus','Kaupassa käynti','Ruoanlaiton avustaminen',
-  'Pöydän kattaminen','Tiskipöydän siivous',
-];
 
 let taskModalTab = 'template';
 let selectedTemplateName = null;
@@ -2443,7 +2806,7 @@ function openAddTaskModal() {
 
 function renderTaskTemplateGrid() {
   const grid = document.getElementById('task-template-grid');
-  grid.innerHTML = TASK_TEMPLATES.map(name => {
+  grid.innerHTML = t('taskList').map(name => {
     const sel = selectedTemplateName === name ? ' selected' : '';
     const escaped = name.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return `<button class="task-template-btn${sel}" onclick="selectTemplate('${escaped}')">${escaped}</button>`;
@@ -2475,16 +2838,16 @@ async function saveTask() {
   let name = '';
   if (taskModalTab === 'template') {
     name = selectedTemplateName || '';
-    if (!name) { showToast('Valitse tehtävä listalta', 'error'); return; }
+    if (!name) { showToast(t('chooseTask'), 'error'); return; }
   } else {
     name = document.getElementById('new-task-custom-name').value.trim();
-    if (!name) { showToast('Syötä tehtävän nimi', 'error'); return; }
+    if (!name) { showToast(t('enterTaskName'), 'error'); return; }
   }
 
   const priceVal = document.getElementById('new-task-price').value;
-  if (priceVal === '' || priceVal === null) { showToast('Syötä hinta', 'error'); return; }
+  if (priceVal === '' || priceVal === null) { showToast(t('enterPrice'), 'error'); return; }
   const price = parseFloat(priceVal);
-  if (isNaN(price) || price < 0) { showToast('Syötä kelvollinen hinta', 'error'); return; }
+  if (isNaN(price) || price < 0) { showToast(t('enterValidPrice'), 'error'); return; }
 
   const type = document.querySelector('input[name="task-type"]:checked')?.value || 'free';
   const assignedRaw = document.getElementById('new-task-assigned').value;
@@ -2493,17 +2856,17 @@ async function saveTask() {
   const payload = { title: name, amount: Number(price), type, assigned_to, active: true, family_id: currentFamilyId };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   try {
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Tallennetaan...'; }
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
     const { error } = await sb.from('homey_tasks').insert(payload);
     if (error) throw error;
-    showToast('Tehtävä lisätty! ✅', 'success');
+    showToast(t('taskAdded'), 'success');
     closeModal('modal-add-task');
     await loadAll();
     renderParentManage();
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Tallenna'; }
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = t('save'); }
   }
 }
 
@@ -2564,12 +2927,12 @@ function selectAvatarDicebear(style, el) {
 
 async function saveAvatar() {
   if (!avatarModalChildId) { closeModal('modal-avatar'); return; }
-  if (!selectedAvatarValue) { showNotif('Valitse ensin avatar', 'error'); return; }
+  if (!selectedAvatarValue) { showNotif(t('chooseAvatarFirst'), 'error'); return; }
   const { error } = await sb.from('homey_children')
     .update({ avatar: selectedAvatarValue })
     .eq('id', avatarModalChildId);
   if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
-  showNotif('Avatar päivitetty!', 'success');
+  showNotif(t('avatarUpdated'), 'success');
   closeModal('modal-avatar');
   await loadAll();
   renderParentManage();
@@ -2614,6 +2977,7 @@ if ('serviceWorker' in navigator) {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  applyTranslations();
   document.querySelectorAll('.tab-content').forEach(el => {
     el.style.display = el.classList.contains('active') ? 'block' : 'none';
   });
