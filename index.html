@@ -1158,12 +1158,6 @@ function showView(name) {
 }
 
 // ===== FAMILY AUTH =====
-async function hashPassword(password) {
-  const data = new TextEncoder().encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 async function familyLogin(btn) {
   const email = document.getElementById('fl-email').value.trim();
   const password = document.getElementById('fl-password').value;
@@ -1175,20 +1169,20 @@ async function familyLogin(btn) {
   const origText = btn.textContent;
   btn.disabled = true; btn.textContent = 'Kirjaudutaan...';
 
-  const hash = await hashPassword(password);
-  const { data, error } = await sb.from('homey_families')
-    .select('id, name')
-    .eq('email', email)
-    .eq('password_hash', hash)
-    .single();
+  const { data: result, error } = await sb.rpc('verify_family_password', {
+    p_email: email,
+    p_password: password,
+  });
 
   btn.disabled = false; btn.textContent = origText;
 
-  if (error || !data) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
+  if (error || !result) { errEl.textContent = 'Väärä sähköposti tai salasana'; return; }
 
-  currentFamilyId = data.id;
-  localStorage.setItem('homey_family_id', data.id);
-  localStorage.setItem('homey_family_name', data.name);
+  const familyId = result.id;
+  const familyName = result.name;
+  currentFamilyId = familyId;
+  localStorage.setItem('homey_family_id', familyId);
+  localStorage.setItem('homey_family_name', familyName);
   document.getElementById('fl-email').value = '';
   document.getElementById('fl-password').value = '';
   initLogin();
@@ -1209,11 +1203,11 @@ async function familyRegister(btn) {
   const origText = btn.textContent;
   btn.disabled = true; btn.textContent = 'Luodaan...';
 
-  const hash = await hashPassword(password);
-  const { data, error } = await sb.from('homey_families')
-    .insert({ name, email, password_hash: hash })
-    .select('id, name')
-    .single();
+  const { data: result, error } = await sb.rpc('create_family', {
+    p_name: name,
+    p_email: email,
+    p_password: password,
+  });
 
   btn.disabled = false; btn.textContent = origText;
 
@@ -1224,14 +1218,14 @@ async function familyRegister(btn) {
     return;
   }
 
-  currentFamilyId = data.id;
-  localStorage.setItem('homey_family_id', data.id);
-  localStorage.setItem('homey_family_name', data.name);
+  currentFamilyId = result.id;
+  localStorage.setItem('homey_family_id', result.id);
+  localStorage.setItem('homey_family_name', result.name);
   document.getElementById('fr-name').value = '';
   document.getElementById('fr-email').value = '';
   document.getElementById('fr-password').value = '';
   document.getElementById('fr-password2').value = '';
-  showNotif('Perhe luotu!', 'success', data.name);
+  showNotif('Perhe luotu!', 'success', result.name);
   initLogin();
 }
 
