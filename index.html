@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Homey</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#F59C00">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Homey">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     /* ===== RESET & ROOT ===== */
@@ -703,6 +709,72 @@
     }
 
 
+    /* ===== AVATAR MODAL ===== */
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .avatar-option {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+      background: var(--primary-light);
+    }
+    .avatar-option:hover { transform: scale(1.08); }
+    .avatar-option.selected { border-color: var(--primary-dark); transform: scale(1.12); }
+    .avatar-color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .avatar-color-option {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .avatar-color-option:hover { transform: scale(1.08); }
+    .avatar-color-option.selected { border-color: var(--text); transform: scale(1.12); }
+
+    /* ===== PWA INSTALL BANNER ===== */
+    #pwa-banner {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9990;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.15);
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    #pwa-banner.show { transform: translateY(0); }
+    #pwa-banner .pwa-text { flex: 1; font-size: 0.9rem; font-weight: 600; }
+    #pwa-banner .pwa-text span { display: block; font-size: 0.75rem; font-weight: 400; opacity: 0.85; }
+    #pwa-install-btn {
+      background: #fff; color: var(--primary-dark);
+      border: none; border-radius: var(--radius-pill);
+      padding: 9px 18px; font-weight: 800; font-size: 0.85rem;
+      cursor: pointer; flex-shrink: 0;
+    }
+    #pwa-dismiss-btn {
+      background: none; border: none; color: #fff;
+      font-size: 1.1rem; cursor: pointer; opacity: 0.7; flex-shrink: 0;
+    }
+
     /* ===== FAB ===== */
     .fab {
       position: fixed;
@@ -844,6 +916,37 @@
   </div>
 </div>
 
+<!-- ===== AVATAR MODAL ===== -->
+<div id="modal-avatar" class="modal-overlay hidden">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;">
+    <div class="modal-title">Valitse avatar</div>
+    <div class="tabs" style="margin-bottom:14px;">
+      <button class="tab-btn active" id="avatar-tab-btn-emoji" onclick="switchAvatarTab('emoji', this)">Emoji</button>
+      <button class="tab-btn" id="avatar-tab-btn-color" onclick="switchAvatarTab('color', this)">Hahmo</button>
+    </div>
+    <div id="avatar-tab-emoji">
+      <div class="avatar-grid" id="avatar-emoji-grid"></div>
+    </div>
+    <div id="avatar-tab-color" style="display:none;">
+      <div class="avatar-color-grid" id="avatar-color-grid"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-avatar')">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveAvatar()">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PWA INSTALL BANNER ===== -->
+<div id="pwa-banner">
+  <div class="pwa-text">
+    Asenna Homey kotinäytölle
+    <span>Toimii myös offline-tilassa</span>
+  </div>
+  <button id="pwa-install-btn" onclick="pwsInstall()">Asenna</button>
+  <button id="pwa-dismiss-btn" onclick="pwaDismiss()">✕</button>
+</div>
+
 <!-- ===== VIEW: WELCOME ===== -->
 <div id="view-welcome" class="view active">
   <div class="login-logo">
@@ -921,7 +1024,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.0</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.1</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1002,7 +1105,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.0</footer>
+  <footer>Homey v3.1</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1040,7 +1143,7 @@
       <span class="nav-icon">⚙️</span>Hallinta
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.0</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.1</footer>
 </div>
 
 <script>
@@ -1265,6 +1368,40 @@ function childColor(child) {
   return child?.color || '#6C5CE7';
 }
 
+// ===== AVATAR RENDER =====
+const AVATAR_COLORS = [
+  { bg: '#FAEEDA', fg: '#F59C00' },
+  { bg: '#E1F5EE', fg: '#1D9E75' },
+  { bg: '#E6F1FB', fg: '#378ADD' },
+  { bg: '#FBEAF0', fg: '#D4537E' },
+  { bg: '#EDE9FB', fg: '#7F77DD' },
+  { bg: '#FAECE7', fg: '#D85A30' },
+  { bg: '#E1F5EE', fg: '#0F6E56' },
+  { bg: '#FAEEDA', fg: '#BA7517' },
+];
+const AVATAR_EMOJIS = ['🦁','🐻','🦊','🐼','🐨','🐯','🦋','🐸','🐧','🦄','🐶','🐱','🐭','🐹','🐰','🦝','🐮','🐷','🐙','🦖'];
+
+function renderAvatar(child, size = 58) {
+  const av = child?.avatar || null;
+  const sz = `width:${size}px;height:${size}px;`;
+  const base = `border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+
+  if (av && av.startsWith('emoji:')) {
+    const emoji = av.slice(6);
+    const emojiSize = Math.round(size * 0.55);
+    return `<div style="${sz}${base}background:var(--primary-light);font-size:${emojiSize}px;line-height:1;">${emoji}</div>`;
+  }
+  if (av && av.startsWith('color:')) {
+    const parts = av.split(':');
+    const bg = parts[1], fg = parts[2];
+    const fontSize = Math.round(size * 0.45);
+    return `<div style="${sz}${base}background:${bg};color:${fg};font-size:${fontSize}px;font-weight:900;">${avatarInitial(child?.name)}</div>`;
+  }
+  // default: color circle
+  const fontSize = Math.round(size * 0.45);
+  return `<div style="${sz}${base}background:${childColor(child)};color:#fff;font-size:${fontSize}px;font-weight:900;box-shadow:0 3px 10px rgba(0,0,0,0.15);">${avatarInitial(child?.name)}</div>`;
+}
+
 // ===== LOAD DATA =====
 async function loadAll() {
   try {
@@ -1329,7 +1466,7 @@ function renderChildGrid() {
   }
   grid.innerHTML = state.children.map(child => `
     <button class="child-select-btn" data-child-id="${child.id}">
-      <div class="child-avatar" style="background:${childColor(child)}">${avatarInitial(child.name)}</div>
+      ${renderAvatar(child, 58)}
       <span>${child.name}</span>
     </button>
   `).join('');
@@ -1828,7 +1965,7 @@ function renderParentOverview() {
 
     return `
       <div class="child-summary-card">
-        <div class="child-avatar" style="background:${childColor(child)};width:52px;height:52px;font-size:1.4rem;">${avatarInitial(child.name)}</div>
+        ${renderAvatar(child, 52)}
         <div class="child-summary-info">
           <div class="child-summary-name">${child.name}</div>
           <div class="child-summary-saldo">${fmt(saldo)}</div>
@@ -1844,7 +1981,7 @@ function renderParentOverview() {
       <div class="card-title">Lapset</div>
       ${childCards}
     </div>
-    <footer>Homey v3.0</footer>
+    <footer>Homey v3.1</footer>
   `;
 }
 
@@ -1866,7 +2003,7 @@ function renderParentPending() {
       <div class="pending-item">
         <div class="pending-item-header">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="child-avatar" style="background:${childColor(child)};width:38px;height:38px;font-size:1rem;flex-shrink:0;">${avatarInitial(child?.name)}</div>
+            ${renderAvatar(child, 38)}
             <div>
               <div class="pending-child-name" style="color:${childColor(child)}">${child?.name || '?'}</div>
               <div class="pending-task-name">${task?.title || 'Tehtävä'}</div>
@@ -1932,7 +2069,7 @@ function renderParentPayments() {
     if (saldo <= 0) return '';
     return `
       <div class="child-summary-card">
-        <div class="child-avatar" style="background:${childColor(child)};width:48px;height:48px;">${avatarInitial(child.name)}</div>
+        ${renderAvatar(child, 48)}
         <div class="child-summary-info" style="flex:1;">
           <div class="child-summary-name">${child.name}</div>
           <div class="child-summary-saldo">${fmt(saldo)} avoinna</div>
@@ -2039,12 +2176,15 @@ function renderParentManage() {
 
   const childItems = state.children.map(child => `
     <div class="task-item">
-      <div class="child-avatar" style="background:${childColor(child)};width:42px;height:42px;font-size:1.1rem;">${avatarInitial(child.name)}</div>
+      ${renderAvatar(child, 42)}
       <div class="task-info">
         <div class="task-name">${child.name}</div>
         <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ****</div>
       </div>
-      <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm btn-outline" onclick="openAvatarModal('${child.id}')">Avatar</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">Poista</button>
+      </div>
     </div>
   `).join('') || '<div class="empty-state"><div class="empty-icon">👶</div><p>Ei lapsia</p></div>';
 
@@ -2225,6 +2365,107 @@ async function saveTask() {
   closeModal('modal-add-task');
   await loadAll();
   renderParentManage();
+}
+
+// ===== AVATAR MODAL =====
+let avatarModalChildId = null;
+let selectedAvatarValue = null;
+
+function openAvatarModal(childId) {
+  avatarModalChildId = childId;
+  const child = state.children.find(c => c.id === childId);
+  selectedAvatarValue = child?.avatar || null;
+
+  // Render emoji grid
+  const emojiGrid = document.getElementById('avatar-emoji-grid');
+  emojiGrid.innerHTML = AVATAR_EMOJIS.map(e => {
+    const sel = selectedAvatarValue === 'emoji:' + e ? ' selected' : '';
+    return `<div class="avatar-option${sel}" onclick="selectAvatarEmoji('${e}', this)">${e}</div>`;
+  }).join('');
+
+  // Render color grid
+  const colorGrid = document.getElementById('avatar-color-grid');
+  const initial = avatarInitial(child?.name);
+  colorGrid.innerHTML = AVATAR_COLORS.map((c, i) => {
+    const val = `color:${c.bg}:${c.fg}`;
+    const sel = selectedAvatarValue === val ? ' selected' : '';
+    return `<div class="avatar-color-option${sel}" style="background:${c.bg};color:${c.fg};" onclick="selectAvatarColor('${c.bg}','${c.fg}',this)">${initial}</div>`;
+  }).join('');
+
+  // Switch to correct tab
+  const isColor = selectedAvatarValue?.startsWith('color:');
+  switchAvatarTab(isColor ? 'color' : 'emoji',
+    document.getElementById(isColor ? 'avatar-tab-btn-color' : 'avatar-tab-btn-emoji'));
+
+  openModal('modal-avatar');
+}
+
+function switchAvatarTab(tab, btn) {
+  document.querySelectorAll('#modal-avatar .tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('avatar-tab-emoji').style.display = tab === 'emoji' ? 'block' : 'none';
+  document.getElementById('avatar-tab-color').style.display = tab === 'color' ? 'block' : 'none';
+}
+
+function selectAvatarEmoji(emoji, el) {
+  selectedAvatarValue = 'emoji:' + emoji;
+  document.querySelectorAll('#avatar-emoji-grid .avatar-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectAvatarColor(bg, fg, el) {
+  selectedAvatarValue = `color:${bg}:${fg}`;
+  document.querySelectorAll('#avatar-color-grid .avatar-color-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function saveAvatar() {
+  if (!avatarModalChildId || !selectedAvatarValue) { closeModal('modal-avatar'); return; }
+  const { error } = await sb.from('homey_children')
+    .update({ avatar: selectedAvatarValue })
+    .eq('id', avatarModalChildId);
+  if (error) { showNotif(friendlyError(error), 'error', error.message); return; }
+  showNotif('Avatar päivitetty!', 'success');
+  closeModal('modal-avatar');
+  await loadAll();
+  renderParentManage();
+  renderParentOverview();
+  renderChildGrid();
+}
+
+// ===== PWA =====
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  setTimeout(() => document.getElementById('pwa-banner').classList.add('show'), 3000);
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner').classList.remove('show');
+  deferredInstallPrompt = null;
+});
+
+function pwsInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    document.getElementById('pwa-banner').classList.remove('show');
+  });
+}
+
+function pwaDismiss() {
+  document.getElementById('pwa-banner').classList.remove('show');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Homey/sw.js')
+      .then(() => {})
+      .catch(err => console.warn('SW virhe:', err));
+  });
 }
 
 // ===== INIT =====
