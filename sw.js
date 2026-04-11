@@ -1,4 +1,4 @@
-const CACHE_NAME = 'homey-v4';
+const CACHE_NAME = 'homey-v5';
 const ASSETS = [
   '/Homey/',
   '/Homey/index.html',

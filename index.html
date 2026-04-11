@@ -1000,12 +1000,114 @@
     }
     .notif-permission-btn:hover { background: rgba(255,255,255,0.28); }
 
+    /* ===== DEADLINE BADGE ===== */
+    .deadline-badge {
+      font-size: 0.68rem; font-weight: 700;
+      border-radius: 5px; padding: 1px 6px;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .deadline-ok { background: #D1FAE5; color: #065f46; }
+    .deadline-soon { background: #FFF3CD; color: #854F0B; }
+    .deadline-today { background: #FEE2E2; color: #991b1b; animation: dlblink 1s step-end infinite; }
+    .deadline-expired { background: #E5E7EB; color: #6B7280; }
+    @keyframes dlblink { 50% { opacity: 0.4; } }
+    [data-theme="dark"] .deadline-ok { background: #064e3b; color: #6ee7b7; }
+    [data-theme="dark"] .deadline-soon { background: #3A2E00; color: #FAEEDA; }
+    [data-theme="dark"] .deadline-expired { background: #3D3D3A; color: #9B9A94; }
+
+    /* ===== OFFLINE BANNER ===== */
+    #offline-banner {
+      background: #854F0B; color: #fff;
+      text-align: center; padding: 6px 16px;
+      font-size: 0.8rem; font-weight: 600;
+      display: none; position: sticky; top: 52px; z-index: 90;
+    }
+    #offline-banner.show { display: block; }
+
+    /* ===== REMINDER CARD ===== */
+    .reminder-card {
+      background: #FFF3CD; border: 1px solid var(--primary-mid);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      margin-bottom: 8px; display: flex;
+      align-items: flex-start; gap: 8px;
+    }
+    [data-theme="dark"] .reminder-card { background: #3A2E00; border-color: #4A3900; }
+    .reminder-text { flex: 1; font-size: 0.82rem; font-weight: 600; color: #412402; line-height: 1.4; }
+    [data-theme="dark"] .reminder-text { color: #FAEEDA; }
+    .reminder-close { background: none; border: none; cursor: pointer; color: #854F0B; opacity: 0.55; font-size: 0.85rem; padding: 0; flex-shrink: 0; margin-top: 1px; }
+    .reminder-close:hover { opacity: 1; }
+
+    /* ===== CHALLENGE CARD ===== */
+    .challenge-card {
+      background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%);
+      border-radius: var(--radius); padding: 18px 20px;
+      color: #fff; margin-bottom: 14px; position: relative; overflow: hidden;
+    }
+    .challenge-card::after {
+      content: ''; position: absolute; right: -20px; top: -20px;
+      width: 100px; height: 100px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); pointer-events: none;
+    }
+    .challenge-card .ch-label { font-size: 0.8rem; opacity: 0.85; font-weight: 600; margin-bottom: 2px; }
+    .challenge-card .ch-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; line-height: 1.25; }
+    .challenge-card .ch-progress { font-size: 0.88rem; margin-bottom: 6px; font-weight: 600; }
+    .challenge-card .ch-bonus { font-size: 0.8rem; opacity: 0.9; margin-top: 8px; }
+    .ch-progress-bar { height: 8px; background: rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden; }
+    .ch-progress-fill { height: 100%; background: #fff; border-radius: 4px; transition: width 0.4s; }
+    .ch-done-badge { display: inline-block; background: #fff; color: #6C5CE7; font-weight: 800; font-size: 0.85rem; border-radius: var(--radius-pill); padding: 3px 12px; margin-top: 8px; }
+
+    /* ===== RANKING ===== */
+    .rank-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .rank-item:last-child { border-bottom: none; }
+    .rank-item.rank-me { background: var(--primary-light); border-radius: 10px; padding: 12px 10px; margin: 4px -10px; border-bottom: none; }
+    .rank-medal { font-size: 1.4rem; width: 28px; text-align: center; flex-shrink: 0; }
+    .rank-name { flex: 1; font-weight: 700; font-size: 0.95rem; }
+    .rank-amount { font-weight: 800; color: var(--success); font-size: 1.05rem; }
+    .rank-item.rank-me .rank-amount { color: var(--primary-dark); }
+
+    /* ===== CONFETTI ===== */
+    #confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9998; }
+    .confetti-piece {
+      position: absolute; width: 10px; height: 10px; border-radius: 2px;
+      animation: confetti-fall 3s ease-in forwards;
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-30px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ===== EXPIRED TASKS ===== */
+    .expired-task-item {
+      opacity: 0.55;
+    }
+    .task-item.expired { cursor: default; }
+
+    /* ===== PARENT COMMENT ===== */
+    .child-comment-box {
+      background: var(--primary-light); border-radius: 8px;
+      padding: 8px 10px; margin-top: 6px; font-size: 0.82rem;
+      color: var(--primary-dark); font-style: italic;
+    }
+    .parent-reply-box {
+      background: #EEF2FF; border-radius: 8px;
+      padding: 8px 10px; margin-top: 4px; font-size: 0.82rem;
+      color: #3730a3;
+    }
+    [data-theme="dark"] .child-comment-box { background: #3A2E00; color: #FAEEDA; }
+    [data-theme="dark"] .parent-reply-box { background: #2E2B4A; color: #a5b4fc; }
+
   </style>
 </head>
 <body>
 
 <!-- ===== NOTIFICATIONS ===== -->
 <div id="notif-container"></div>
+
+<!-- ===== CONFETTI ===== -->
+<div id="confetti-container"></div>
 
 <!-- ===== PAYMENT POPUP ===== -->
 <div id="payment-popup" class="modal-overlay hidden">
@@ -1107,6 +1209,10 @@
       <label class="input-label" data-i18n="assignTo">Kenelle</label>
       <select id="new-task-assigned" class="input"></select>
     </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="deadlineOptional">Aikaraja (vapaaehtoinen)</label>
+      <input type="date" id="new-task-deadline" class="input" />
+    </div>
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-add-task')" data-i18n="cancel">Peruuta</button>
       <button class="btn btn-primary w-full" onclick="saveTask()" data-i18n="save">Tallenna</button>
@@ -1188,6 +1294,10 @@
       <label class="input-label" data-i18n="assignTo">Kenelle</label>
       <select id="edit-task-assigned" class="input"></select>
     </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="deadlineOptional">Aikaraja (vapaaehtoinen)</label>
+      <input type="date" id="edit-task-deadline" class="input" />
+    </div>
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-edit-task')" data-i18n="cancel">Peruuta</button>
       <button class="btn btn-primary w-full" onclick="saveEditTask(this)" data-i18n="save">Tallenna</button>
@@ -1249,6 +1359,105 @@
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-change-pin')" data-i18n="cancel">Peruuta</button>
       <button class="btn btn-primary w-full" onclick="saveChangePin(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMMENT MODAL (Feature 2) ===== -->
+<div id="modal-comment" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="addComment">Haluatko lisätä kommentin?</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="yourComment">Kommenttisi (vapaaehtoinen)</label>
+      <textarea id="comment-text" class="input" rows="3" style="resize:vertical;" placeholder="Esim. Tein tämän hyvin!"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(false)" data-i18n="sendWithoutComment">Ilman kommenttia</button>
+      <button class="btn btn-primary w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(true)" data-i18n="sendWithComment">Lähetä kommentilla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PARENT REPLY MODAL (Feature 2) ===== -->
+<div id="modal-parent-reply" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="addParentReply">Vastaa lapselle</div>
+    <div id="pr-child-comment" class="child-comment-box" style="margin-bottom:14px;"></div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="parentReply">Vastauksesi</label>
+      <textarea id="parent-reply-text" class="input" rows="3" style="resize:vertical;" placeholder="Hyvä työ! 👏"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-parent-reply')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveParentReply(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD CHALLENGE MODAL (Feature 3) ===== -->
+<div id="modal-add-challenge" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="addChallenge">+ Lisää haaste</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="challengeName">Haasteen nimi</label>
+      <input type="text" id="ch-name-input" class="input" placeholder="Esim. Superviikko!" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="challengeGoal">Tavoite (tehtävää viikossa)</label>
+      <input type="number" id="ch-goal-input" class="input" min="1" step="1" placeholder="5" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="challengeBonus">Bonus (€)</label>
+      <input type="number" id="ch-bonus-input" class="input" min="0" step="0.50" placeholder="2,00" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-challenge')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveChallenge(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD PARENT MODAL (Feature 5) ===== -->
+<div id="modal-add-parent" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="addParent">Lisää vanhempi</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="name">Nimi</label>
+      <input type="text" id="ap-name-input" class="input" placeholder="Esim. Maija" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="email">Sähköposti</label>
+      <input type="email" id="ap-email-input" class="input" placeholder="maija@esimerkki.fi" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="password">Salasana</label>
+      <input type="password" id="ap-password-input" class="input" placeholder="••••••••" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="parentRole">Rooli</label>
+      <select id="ap-role-input" class="input">
+        <option value="parent" data-i18n="parentRoleLabel">Vanhempi</option>
+        <option value="admin" data-i18n="adminRole">Admin</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-add-parent')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveParent(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SAVE TEMPLATE MODAL (Feature 6) ===== -->
+<div id="modal-save-template" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="saveAsTemplate">Tallenna mallipohjaksi</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="templateName">Mallipohjan nimi</label>
+      <input type="text" id="tmpl-name-input" class="input" placeholder="Esim. Arjen perustehtävät" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-save-template')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveTaskTemplate(this)" data-i18n="save">Tallenna</button>
     </div>
   </div>
 </div>
@@ -1362,7 +1571,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v4.3</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.0</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1420,6 +1629,9 @@
       <button class="header-icon-btn" onclick="logout()" title="Kirjaudu ulos">🚪</button>
     </div>
   </div>
+  <!-- Offline banner -->
+  <div id="offline-banner" data-i18n="offlineBanner">Offline-tila — muutokset synkronoidaan kun yhteys palaa</div>
+
   <div class="main-content">
     <!-- Saldo -->
     <div class="saldo-card">
@@ -1431,13 +1643,17 @@
     <!-- Säästötavoite -->
     <div id="child-goal-card" class="card" style="margin-bottom:14px;"></div>
 
+    <!-- Viikkohaaste -->
+    <div id="child-challenge-card" style="margin-bottom:0;"></div>
+
     <!-- Streak + saavutukset -->
     <div id="child-gamification-card" class="card" style="margin-bottom:14px;"></div>
 
     <!-- Välilehdet -->
-    <div class="tabs">
+    <div class="tabs" id="child-main-tabs">
       <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
       <button class="tab-btn" onclick="switchChildTab('history', this)" data-i18n="history">Historia</button>
+      <button class="tab-btn" onclick="switchChildTab('results', this)" data-i18n="results">Tulokset</button>
     </div>
 
     <!-- Tehtävät -->
@@ -1448,14 +1664,20 @@
       </div>
       <div id="assigned-tasks-list" class="card"></div>
       <div id="free-tasks-list" class="card hidden"></div>
+      <div id="expired-tasks-section"></div>
     </div>
 
     <!-- Historia -->
     <div id="child-tab-history" class="tab-content">
       <div id="child-history-list"></div>
     </div>
+
+    <!-- Tulokset -->
+    <div id="child-tab-results" class="tab-content">
+      <div id="child-results-list"></div>
+    </div>
   </div>
-  <footer>Homey v4.3</footer>
+  <footer>Homey v5.0</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1499,7 +1721,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v4.3</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.0</footer>
 </div>
 
 <script>
@@ -1707,6 +1929,74 @@ const translations = {
     notifApproved: 'Tehtävä hyväksytty! 🎉',
     notifRejected: 'Tehtävä hylätty',
     notifPayment: 'Maksu vastaanotettu! 💶',
+    // Feature 1: Deadlines
+    deadline: 'Aikaraja',
+    deadlineOptional: 'Aikaraja (vapaaehtoinen)',
+    deadlineDaysLeft: 'päivää jäljellä',
+    deadlineToday: 'Tänään!',
+    deadlineExpired: 'Vanhentunut',
+    expiredTasks: 'Vanhentuneet tehtävät',
+    // Feature 2: Comments
+    addComment: 'Haluatko lisätä kommentin?',
+    yourComment: 'Kommenttisi (vapaaehtoinen)',
+    sendWithComment: 'Lähetä kommentilla',
+    sendWithoutComment: 'Ilman kommenttia',
+    childComment: 'Lapsen kommentti',
+    parentReply: 'Vastauksesi',
+    addParentReply: 'Vastaa lapselle',
+    parentReplySaved: 'Vastaus tallennettu!',
+    // Feature 3: Weekly challenge
+    weeklyChallenge: 'Viikkohaaste',
+    weeklyChallenges: 'Viikkohaasteet',
+    addChallenge: '+ Lisää haaste',
+    challengeName: 'Haasteen nimi',
+    challengeGoal: 'Tavoite (tehtävää viikossa)',
+    challengeBonus: 'Bonus (€)',
+    challengeProgress: 'tehtävää',
+    challengeSaved: 'Haaste tallennettu!',
+    challengeDeleted: 'Haaste poistettu',
+    challengeCompleted: 'Haaste saavutettu! 🎉',
+    challengeBonusEarned: 'Bonus lisätty automaattisesti!',
+    noChallenges: 'Ei aktiivisia haasteita',
+    noChallenge: 'Ei aktiivista haastetta tällä viikolla',
+    confirmDeleteChallenge: 'Poistetaanko haaste?',
+    challengeBonusHint: 'Bonus:',
+    challengeDone: 'Suoritettu! ✓',
+    // Feature 4: Ranking
+    results: 'Tulokset',
+    weeklyEarnings: 'Viikon ansiot',
+    // Feature 5: Second parent
+    parents: 'Vanhemmat',
+    addParent: 'Lisää vanhempi',
+    parentRole: 'Rooli',
+    parentRoleLabel: 'Vanhempi',
+    adminRole: 'Admin',
+    parentAdded: 'Vanhempi lisätty! 👤',
+    parentDeleted: 'Vanhempi poistettu',
+    confirmDeleteParent: 'Poistetaanko vanhempi?',
+    // Feature 6: Templates
+    taskTemplates: 'Mallipohjat',
+    saveAsTemplate: 'Tallenna nykyiset tehtävät malliksi',
+    templateName: 'Mallipohjan nimi',
+    loadTemplate: 'Lataa',
+    deleteTemplate: 'Poista',
+    templateSaved: 'Mallipohja tallennettu!',
+    templateLoaded: 'Mallipohja ladattu!',
+    templateDeleted: 'Mallipohja poistettu',
+    noTemplates: 'Ei mallipohjia',
+    confirmLoadTemplate: 'Ladataanko mallipohja? Tämä luo uudet tehtävät nykyisten lisäksi.',
+    confirmDeleteTemplate: 'Poistetaanko mallipohja?',
+    enterTemplateName: 'Syötä mallipohjan nimi',
+    // Feature 7: Reminders
+    remindersTitle: 'Muistutukset',
+    reminderInactive: 'ei ole tehnyt tehtäviä',
+    reminderInactiveDays: 'päivään',
+    reminderDeadlineTmrw: 'vanhenee huomenna!',
+    reminderPending: 'suoritusta odottaa hyväksyntää',
+    // Feature 8: Offline
+    offlineBanner: 'Offline-tila — muutokset synkronoidaan kun yhteys palaa',
+    offlineSyncing: 'Synkronoidaan...',
+    offlineSynced: 'Synkronoitu! ✓',
     taskList: [
       'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
       'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
@@ -1906,6 +2196,74 @@ const translations = {
     notifApproved: 'Uppgift godkänd! 🎉',
     notifRejected: 'Uppgift avvisad',
     notifPayment: 'Betalning mottagen! 💶',
+    // Feature 1: Deadlines
+    deadline: 'Deadline',
+    deadlineOptional: 'Deadline (valfritt)',
+    deadlineDaysLeft: 'dagar kvar',
+    deadlineToday: 'Idag!',
+    deadlineExpired: 'Utgången',
+    expiredTasks: 'Utgångna uppgifter',
+    // Feature 2: Comments
+    addComment: 'Vill du lägga till en kommentar?',
+    yourComment: 'Din kommentar (valfritt)',
+    sendWithComment: 'Skicka med kommentar',
+    sendWithoutComment: 'Utan kommentar',
+    childComment: 'Barnets kommentar',
+    parentReply: 'Ditt svar',
+    addParentReply: 'Svara barnet',
+    parentReplySaved: 'Svar sparat!',
+    // Feature 3: Weekly challenge
+    weeklyChallenge: 'Veckoutmaning',
+    weeklyChallenges: 'Veckoutmaningar',
+    addChallenge: '+ Lägg till utmaning',
+    challengeName: 'Utmaningens namn',
+    challengeGoal: 'Mål (uppgifter per vecka)',
+    challengeBonus: 'Bonus (€)',
+    challengeProgress: 'uppgifter',
+    challengeSaved: 'Utmaning sparad!',
+    challengeDeleted: 'Utmaning borttagen',
+    challengeCompleted: 'Utmaning klar! 🎉',
+    challengeBonusEarned: 'Bonus tillagd automatiskt!',
+    noChallenges: 'Inga aktiva utmaningar',
+    noChallenge: 'Ingen aktiv utmaning denna vecka',
+    confirmDeleteChallenge: 'Ta bort utmaning?',
+    challengeBonusHint: 'Bonus:',
+    challengeDone: 'Klar! ✓',
+    // Feature 4: Ranking
+    results: 'Resultat',
+    weeklyEarnings: 'Veckans intjänat',
+    // Feature 5: Second parent
+    parents: 'Föräldrar',
+    addParent: 'Lägg till förälder',
+    parentRole: 'Roll',
+    parentRoleLabel: 'Förälder',
+    adminRole: 'Admin',
+    parentAdded: 'Förälder tillagd! 👤',
+    parentDeleted: 'Förälder borttagen',
+    confirmDeleteParent: 'Ta bort förälder?',
+    // Feature 6: Templates
+    taskTemplates: 'Mallar',
+    saveAsTemplate: 'Spara nuvarande uppgifter som mall',
+    templateName: 'Mallens namn',
+    loadTemplate: 'Ladda',
+    deleteTemplate: 'Ta bort',
+    templateSaved: 'Mall sparad!',
+    templateLoaded: 'Mall laddad!',
+    templateDeleted: 'Mall borttagen',
+    noTemplates: 'Inga mallar',
+    confirmLoadTemplate: 'Ladda mallen? Det skapar nya uppgifter utöver de befintliga.',
+    confirmDeleteTemplate: 'Ta bort mallen?',
+    enterTemplateName: 'Ange mallens namn',
+    // Feature 7: Reminders
+    remindersTitle: 'Påminnelser',
+    reminderInactive: 'har inte gjort uppgifter på',
+    reminderInactiveDays: 'dagar',
+    reminderDeadlineTmrw: 'går ut imorgon!',
+    reminderPending: 'utföranden väntar på godkännande',
+    // Feature 8: Offline
+    offlineBanner: 'Offline-läge — ändringar synkroniseras när anslutning återupprättas',
+    offlineSyncing: 'Synkroniserar...',
+    offlineSynced: 'Synkroniserat! ✓',
     taskList: [
       'Diska i maskinen','Tömma diskmaskinen','Diska för hand','Damma','Dammsuga',
       'Dammsuga övervåningen','Ta ut soporna','Tvätta','Vika och lägga undan tvätt',
@@ -1949,10 +2307,13 @@ function renderCurrentView() {
   } else if (id === 'view-child') {
     renderChildSaldo();
     renderGoal();
+    renderChallenge();
     renderGamification();
     renderAssignedTasks();
     renderFreeTasks();
+    renderExpiredTasks();
     renderChildHistory();
+    renderRanking();
   } else if (id === 'view-parent') {
     renderParentOverview();
     renderParentTasks();
@@ -1975,6 +2336,13 @@ const state = {
   completions: [],
   payments: [],
   bonuses: [],
+  comments: [],          // Feature 2
+  challenges: [],        // Feature 3
+  parents: [],           // Feature 5
+  templates: [],         // Feature 6
+  challengeBonusGiven: new Set(), // Feature 3: track given bonuses in session
+  dismissedReminders: new Set(),  // Feature 7
+  isOffline: !navigator.onLine,   // Feature 8
   selectedChildId: null, // login step
   pinInput: '',
   isAdminLogin: false,
@@ -2079,7 +2447,21 @@ async function familyLogin(btn) {
     btn.disabled = true; btn.textContent = t('loggingIn');
     const { data: result, error } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
     if (error) throw error;
-    if (!result) { errEl.textContent = t('wrongEmailOrPassword'); return; }
+    if (!result) {
+      // Feature 5: check homey_parents table for secondary parents
+      const { data: parents2 } = await sb.from('homey_parents').select('*, homey_families(id, name)').eq('email', email);
+      const matched = (parents2 || []).find(p => p.password === password);
+      if (matched && matched.homey_families) {
+        currentFamilyId = matched.family_id;
+        localStorage.setItem('homey_family_id', matched.family_id);
+        localStorage.setItem('homey_family_name', matched.homey_families.name);
+        document.getElementById('fl-email').value = '';
+        document.getElementById('fl-password').value = '';
+        initLogin();
+        return;
+      }
+      errEl.textContent = t('wrongEmailOrPassword'); return;
+    }
     currentFamilyId = result.id;
     localStorage.setItem('homey_family_id', result.id);
     localStorage.setItem('homey_family_name', result.name);
@@ -2143,6 +2525,12 @@ function switchFamily() {
   state.allTasks = [];
   state.completions = [];
   state.payments = [];
+  state.comments = [];
+  state.challenges = [];
+  state.parents = [];
+  state.templates = [];
+  state.challengeBonusGiven = new Set();
+  state.dismissedReminders = new Set();
   document.getElementById('fab-add-task').classList.add('hidden');
   showView('family-login');
 }
@@ -2246,7 +2634,7 @@ async function loadAll() {
       return;
     }
 
-    const [co, p, b] = await Promise.all([
+    const [co, p, b, ch, par, tmpl] = await Promise.all([
       sb.from('homey_completions')
         .select('*, homey_children(id, name, avatar, color), homey_tasks(id, title, amount)')
         .in('child_id', childIds)
@@ -2259,6 +2647,19 @@ async function loadAll() {
         .select('*')
         .in('child_id', childIds)
         .order('created_at', { ascending: false }),
+      sb.from('homey_challenges')
+        .select('*')
+        .eq('family_id', currentFamilyId)
+        .eq('active', true)
+        .order('created_at', { ascending: false }),
+      sb.from('homey_parents')
+        .select('id, name, email, role')
+        .eq('family_id', currentFamilyId)
+        .order('created_at'),
+      sb.from('homey_task_templates')
+        .select('*')
+        .eq('family_id', currentFamilyId)
+        .order('created_at'),
     ]);
     if (co.error) console.error('homey_completions:', co.error.message);
     if (p.error) console.error('homey_payments:', p.error.message);
@@ -2266,6 +2667,19 @@ async function loadAll() {
     state.completions = co.data || [];
     state.payments = p.data || [];
     state.bonuses = b.data || [];
+    state.challenges = ch.data || [];
+    state.parents = par.data || [];
+    state.templates = tmpl.data || [];
+
+    // Load comments for loaded completions
+    const compIds = state.completions.map(c => c.id);
+    if (compIds.length > 0) {
+      const { data: cmData, error: cmErr } = await sb.from('homey_comments').select('*').in('completion_id', compIds);
+      if (cmErr) console.error('homey_comments:', cmErr.message);
+      state.comments = cmData || [];
+    } else {
+      state.comments = [];
+    }
   } catch (err) {
     console.error('loadAll error:', err);
   }
@@ -2528,11 +2942,15 @@ async function initChildView() {
   document.getElementById('child-saldo-name').textContent = child.name + t('saldoSuffix');
   renderChildSaldo();
   renderGoal();
+  renderChallenge();
   renderGamification();
   renderAssignedTasks();
   renderFreeTasks();
+  renderExpiredTasks();
   await renderChildHistory();
+  renderRanking();
   updateNotifButtons();
+  updateOfflineBanner();
 }
 
 function renderChildSaldo() {
@@ -2542,13 +2960,14 @@ function renderChildSaldo() {
 }
 
 function switchChildTab(tab, btn) {
-  document.querySelectorAll('#view-child .tabs:first-of-type .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#child-main-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('child-tab-tasks').classList.toggle('active', tab === 'tasks');
-  document.getElementById('child-tab-history').classList.toggle('active', tab === 'history');
-  document.getElementById('child-tab-tasks').style.display = tab === 'tasks' ? 'block' : 'none';
-  document.getElementById('child-tab-history').style.display = tab === 'history' ? 'block' : 'none';
+  ['tasks','history','results'].forEach(tabName => {
+    const el = document.getElementById('child-tab-' + tabName);
+    if (el) { el.classList.toggle('active', tab === tabName); el.style.display = tab === tabName ? 'block' : 'none'; }
+  });
   if (tab === 'history') renderChildHistory();
+  if (tab === 'results') renderRanking();
 }
 
 function switchTaskTab(tab, btn) {
@@ -2561,7 +2980,12 @@ function switchTaskTab(tab, btn) {
 
 function renderAssignedTasks() {
   const childId = state.currentUser.id;
-  const myTasks = state.tasks.filter(t => t.type === 'assigned' && String(t.assigned_to) === String(childId));
+  // Only show non-expired assigned tasks
+  const myTasks = state.tasks.filter(t => {
+    if (t.type !== 'assigned' || String(t.assigned_to) !== String(childId)) return false;
+    if (t.deadline) { const info = getDeadlineInfo(t.deadline); if (info.isExpired) return false; }
+    return true;
+  });
   const container = document.getElementById('assigned-tasks-list');
 
   if (!myTasks.length) {
@@ -2582,14 +3006,15 @@ function renderAssignedTasks() {
       : '';
     const actionBtn = doneTodayComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4" onclick="event.stopPropagation()">${t('done')}</button>`
-      : `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();markDone('${task.id}',this)">${t('markDone')}</button>`;
+      : `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openCommentModal('${task.id}')">${t('markDone')}</button>`;
     const recBadge = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const dlBadge = deadlineBadgeHtml(task.deadline);
     const typeBadge = `<span class="badge badge-pending" style="font-size:0.68rem;">📌 ${t('child')}</span>`;
     return `
       <div class="task-item" onclick="openTaskDetail('${task.id}')">
         <div class="task-row1">
           <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
-          ${recBadge}
+          ${recBadge}${dlBadge}
         </div>
         <div class="task-row2">
           <div class="task-row2-left">
@@ -2607,7 +3032,11 @@ function renderAssignedTasks() {
 
 function renderFreeTasks() {
   const childId = state.currentUser.id;
-  const freeTasks = state.tasks.filter(t => t.type === 'free');
+  const freeTasks = state.tasks.filter(t => {
+    if (t.type !== 'free') return false;
+    if (t.deadline) { const info = getDeadlineInfo(t.deadline); if (info.isExpired) return false; }
+    return true;
+  });
   const container = document.getElementById('free-tasks-list');
 
   if (!freeTasks.length) {
@@ -2634,7 +3063,7 @@ function renderFreeTasks() {
       actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}',this)">${t('done')}</button>
+        <button class="btn btn-sm btn-primary" onclick="openCommentModal('${task.id}')">${t('done')}</button>
         <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}',this)">${t('release')}</button>
       `;
     } else if (isReservedByOther) {
@@ -2642,17 +3071,18 @@ function renderFreeTasks() {
     } else {
       actionsHtml = `
         <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}',this)">${t('reserve')}</button>
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}',this)">${t('done')}</button>
+        <button class="btn btn-sm btn-primary" onclick="openCommentModal('${task.id}')">${t('done')}</button>
       `;
     }
 
     const recBadgeF = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const dlBadgeF = deadlineBadgeHtml(task.deadline);
     const typeBadge = `<span class="badge badge-unpaid" style="font-size:0.68rem;">🔓 ${t('free')}</span>`;
     return `
       <div class="task-item" onclick="openTaskDetail('${task.id}')">
         <div class="task-row1">
           <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
-          ${recBadgeF}
+          ${recBadgeF}${dlBadgeF}
         </div>
         <div class="task-row2">
           <div class="task-row2-left">
@@ -2666,19 +3096,55 @@ function renderFreeTasks() {
   }).join('');
 }
 
-async function markDone(taskId, btn) {
+// Feature 2: pending task id for comment modal
+let _commentTaskId = null;
+let _commentFromDetail = false;
+
+function openCommentModal(taskId, fromDetail = false) {
+  _commentTaskId = taskId;
+  _commentFromDetail = fromDetail;
+  document.getElementById('comment-text').value = '';
+  openModal('modal-comment');
+}
+
+async function submitMarkDoneFromModal(withComment) {
+  const taskId = _commentTaskId;
+  const comment = withComment ? document.getElementById('comment-text').value.trim() : '';
+  closeModal('modal-comment');
+  _commentTaskId = null;
+  await markDone(taskId, null, comment);
+  if (_commentFromDetail) closeModal('modal-task-detail');
+  _commentFromDetail = false;
+}
+
+async function markDone(taskId, btn, comment = '') {
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const childId = state.currentUser.id;
+
+    // Feature 8: offline support
+    if (state.isOffline) {
+      await queueOfflineCompletion({ task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString(), _comment: comment });
+      showNotif(t('offlineBanner'), 'info');
+      return;
+    }
+
     const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
-    const { error } = await sb.from('homey_completions').insert(payload);
+    const { data: inserted, error } = await sb.from('homey_completions').insert(payload).select().single();
     if (error) throw error;
+
+    // Save comment if provided
+    if (comment && inserted?.id) {
+      await sb.from('homey_comments').insert({ completion_id: inserted.id, child_comment: comment });
+    }
+
     showToast(t('taskDone'), 'success');
     await loadAll();
     renderAssignedTasks();
     renderFreeTasks();
     renderChildSaldo();
+    renderChallenge();
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
@@ -2827,6 +3293,8 @@ async function initParentView() {
   renderParentManage();
   updatePendingBadge();
   updateNotifButtons();
+  // Sync offline queue when parent logs in (parent doesn't use offline queue directly but child might have queued)
+  if (!state.isOffline) syncOfflineQueue().catch(() => {});
   const fab = document.getElementById('fab-add-task');
   fab.classList.remove('hidden');
   fab.onclick = openAddTaskModal;
@@ -2881,12 +3349,13 @@ function renderParentOverview() {
   }).join('');
 
   panel.innerHTML = `
+    ${renderReminders()}
     <div class="card">
       <div class="card-title">${t('children')}</div>
       ${childCards}
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v4.3</footer>
+    <footer>Homey v5.0</footer>
   `;
 }
 
@@ -2965,13 +3434,26 @@ function renderParentTasks() {
     const d = comp.completed_at ? new Date(comp.completed_at) : null;
     const amount = task?.amount ?? 0;
     const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
+    // Feature 2: show child comment + parent reply
+    const compComment = state.comments.find(c => c.completion_id === comp.id);
+    const commentHtml = compComment?.child_comment
+      ? `<div class="child-comment-box">💬 ${esc(compComment.child_comment)}</div>`
+      : '';
+    const parentReplyHtml = compComment?.parent_comment
+      ? `<div class="parent-reply-box">👩‍💼 ${esc(compComment.parent_comment)}</div>`
+      : '';
+    const replyBtn = compComment && !compComment.parent_comment
+      ? `<button class="btn btn-outline btn-sm" onclick="openParentReplyModal('${compComment.id}','${esc(compComment.child_comment || '')}')">💬 ${t('addParentReply')}</button>`
+      : '';
     const actions = comp.status === 'pending' ? `
       <div class="pending-actions">
         <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">${t('approveAction')}</button>
         <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">${t('rejectAction')}</button>
-      </div>` : '';
+        ${replyBtn}
+      </div>` : (replyBtn ? `<div style="margin-top:8px;">${replyBtn}</div>` : '');
     return `
       <div class="pending-item">
+        ${commentHtml}${parentReplyHtml}
         <div class="pending-item-header">
           <div style="display:flex;align-items:center;gap:10px;">
             ${renderAvatar(child, 38)}
@@ -3238,6 +3720,44 @@ function renderParentManage() {
     `;
   }).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noTasks')}</p></div>`;
 
+  // Feature 3: Challenges
+  const challengeItems = state.challenges.map(ch => `
+    <div class="task-item" style="cursor:default;">
+      <div class="task-info" style="flex:1;">
+        <div class="task-name">🏁 ${esc(ch.name)}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">${t('challengeGoal')}: ${ch.goal_tasks} ${t('challengeProgress')} · ${t('challengeBonus')}: ${fmt(ch.bonus_amount)}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteChallenge('${ch.id}')">✕</button>
+    </div>
+  `).join('') || `<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">${t('noChallenges')}</div>`;
+
+  // Feature 5: Parents
+  const parentItems = state.parents.map(p => `
+    <div class="task-item" style="cursor:default;">
+      <div class="task-info" style="flex:1;">
+        <div class="task-name">👤 ${esc(p.name)}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">${esc(p.email)} · ${p.role === 'admin' ? t('adminRole') : t('parentRoleLabel')}</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteParent('${p.id}')">✕</button>
+    </div>
+  `).join('') || `<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">${t('noChildren')}</div>`;
+
+  // Feature 6: Templates
+  const templateItems = state.templates.map(tmpl => {
+    const tasks = JSON.parse(tmpl.tasks_json || '[]');
+    return `
+    <div class="task-item" style="cursor:default;">
+      <div class="task-info" style="flex:1;">
+        <div class="task-name">📦 ${esc(tmpl.name)}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">${tasks.length} tehtävää</div>
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button class="btn btn-sm btn-outline" onclick="loadTaskTemplate('${tmpl.id}')">${t('loadTemplate')}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTaskTemplate('${tmpl.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('') || `<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">${t('noTemplates')}</div>`;
+
   const familyName = localStorage.getItem('homey_family_name') || 'Perhe';
   panel.innerHTML = `
     <div class="card">
@@ -3253,6 +3773,27 @@ function renderParentManage() {
         <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">${t('addMore')}</button>
       </div>
       ${taskItems}
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0">🏁 ${t('weeklyChallenges')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-challenge')">${t('addChallenge')}</button>
+      </div>
+      ${challengeItems}
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0">📦 ${t('taskTemplates')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-save-template')">${t('saveAsTemplate')}</button>
+      </div>
+      ${templateItems}
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0">👤 ${t('parents')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-parent')">${t('addParent')}</button>
+      </div>
+      ${parentItems}
     </div>
     <div class="card" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">${t('loggedInAs')} <strong>${esc(familyName)}</strong></div>
@@ -3338,6 +3879,7 @@ function openAddTaskModal() {
   document.getElementById('new-task-price').value = '';
   document.getElementById('new-task-custom-name').value = '';
   document.getElementById('new-task-recurrence').value = '';
+  document.getElementById('new-task-deadline').value = '';
   document.getElementById('assigned-to-group').style.display = 'none';
   document.querySelectorAll('input[name="task-type"]').forEach(r => { r.checked = r.value === 'free'; });
   selectedTemplateName = null;
@@ -3396,8 +3938,10 @@ async function saveTask() {
   const assignedRaw = document.getElementById('new-task-assigned').value;
   const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
   const recurrence = document.getElementById('new-task-recurrence').value || null;
+  const deadlineRaw = document.getElementById('new-task-deadline').value;
+  const deadline = deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
 
-  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, active: true, family_id: currentFamilyId };
+  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, deadline, active: true, family_id: currentFamilyId };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   try {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
@@ -3605,6 +4149,7 @@ function openEditTaskModal(taskId) {
   document.getElementById('edit-task-name').value = translateTaskTitle(task.title);
   document.getElementById('edit-task-price').value = task.amount;
   document.getElementById('edit-task-recurrence').value = task.recurrence || '';
+  document.getElementById('edit-task-deadline').value = task.deadline ? task.deadline.slice(0, 10) : '';
 
   const sel = document.getElementById('edit-task-assigned');
   sel.innerHTML = state.children.map(c => `<option value="${c.id}"${String(c.id) === String(task.assigned_to) ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
@@ -3632,12 +4177,14 @@ async function saveEditTask(btn) {
   const assignedRaw = document.getElementById('edit-task-assigned').value;
   const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
   const recurrence = document.getElementById('edit-task-recurrence').value || null;
+  const editDeadlineRaw = document.getElementById('edit-task-deadline').value;
+  const deadline = editDeadlineRaw ? new Date(editDeadlineRaw).toISOString() : null;
 
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const { error } = await sb.from('homey_tasks')
-      .update({ title: name, amount: Number(price), type, assigned_to, recurrence })
+      .update({ title: name, amount: Number(price), type, assigned_to, recurrence, deadline })
       .eq('id', _editTaskId);
     if (error) throw error;
     showToast(t('taskUpdated'), 'success');
@@ -3751,25 +4298,9 @@ function openTaskDetail(taskId) {
   markBtn.disabled = !!doneTodayComp;
   markBtn.textContent = doneTodayComp ? t('done') : t('markDone');
   markBtn.style.opacity = doneTodayComp ? '0.4' : '1';
-  markBtn.onclick = async () => {
+  markBtn.onclick = () => {
     if (doneTodayComp) return;
-    markBtn.disabled = true;
-    markBtn.textContent = t('saving');
-    try {
-      const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
-      const { error } = await sb.from('homey_completions').insert(payload);
-      if (error) throw error;
-      closeModal('modal-task-detail');
-      showToast(t('taskDone'), 'success');
-      await loadAll();
-      renderAssignedTasks();
-      renderFreeTasks();
-      renderChildSaldo();
-    } catch (err) {
-      showNotif(friendlyError(err), 'error', err.message);
-      markBtn.disabled = false;
-      markBtn.textContent = t('markDone');
-    }
+    openCommentModal(taskId, true);
   };
 
   openModal('modal-task-detail');
@@ -3948,6 +4479,466 @@ async function saveChangePin(btn) {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
     _changePinChildId = null;
+  }
+}
+
+// ===== FEATURE 1: DEADLINE HELPERS =====
+function getDeadlineInfo(deadline) {
+  if (!deadline) return null;
+  const dl = new Date(deadline); dl.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diffDays = Math.round((dl - today) / 86400000);
+  return { diffDays, isExpired: diffDays < 0, isToday: diffDays === 0, isSoon: diffDays >= 1 && diffDays <= 3, isOk: diffDays > 3 };
+}
+
+function deadlineBadgeHtml(deadline) {
+  if (!deadline) return '';
+  const info = getDeadlineInfo(deadline);
+  if (info.isExpired) return `<span class="deadline-badge deadline-expired">⌛ ${t('deadlineExpired')}</span>`;
+  if (info.isToday) return `<span class="deadline-badge deadline-today">⚡ ${t('deadlineToday')}</span>`;
+  if (info.isSoon) return `<span class="deadline-badge deadline-soon">⏰ ${info.diffDays} ${t('deadlineDaysLeft')}</span>`;
+  return `<span class="deadline-badge deadline-ok">📅 ${info.diffDays} ${t('deadlineDaysLeft')}</span>`;
+}
+
+function renderExpiredTasks() {
+  const container = document.getElementById('expired-tasks-section');
+  if (!container) return;
+  const childId = state.currentUser.id;
+  const expired = state.tasks.filter(task => {
+    if (!task.deadline) return false;
+    const info = getDeadlineInfo(task.deadline);
+    if (!info.isExpired) return false;
+    if (task.type === 'assigned') return String(task.assigned_to) === String(childId);
+    return task.type === 'free';
+  });
+  if (!expired.length) { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="card" style="margin-top:14px;opacity:0.7;">
+      <div style="font-weight:700;font-size:0.875rem;margin-bottom:8px;color:var(--text-muted);">⌛ ${t('expiredTasks')}</div>
+      ${expired.map(task => `
+        <div class="task-item expired" style="opacity:0.55;cursor:default;">
+          <div class="task-row1">
+            <span class="task-name" style="text-decoration:line-through;">${esc(translateTaskTitle(task.title))}</span>
+            <span class="deadline-badge deadline-expired">⌛ ${t('deadlineExpired')}</span>
+          </div>
+          <div class="task-row2">
+            <span class="task-price">${fmt(task.amount)}</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ===== FEATURE 2: PARENT REPLY =====
+let _parentReplyCommentId = null;
+
+function openParentReplyModal(commentId, childComment) {
+  _parentReplyCommentId = commentId;
+  document.getElementById('pr-child-comment').textContent = '💬 ' + childComment;
+  document.getElementById('parent-reply-text').value = '';
+  openModal('modal-parent-reply');
+}
+
+async function saveParentReply(btn) {
+  const reply = document.getElementById('parent-reply-text').value.trim();
+  if (!reply) { showToast(t('fillAllFields'), 'error'); return; }
+  const origText = btn?.textContent;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_comments').update({ parent_comment: reply }).eq('id', _parentReplyCommentId);
+    if (error) throw error;
+    showToast(t('parentReplySaved'), 'success');
+    closeModal('modal-parent-reply');
+    await loadAll();
+    renderParentTasks();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+    _parentReplyCommentId = null;
+  }
+}
+
+// ===== FEATURE 3: WEEKLY CHALLENGE =====
+function getWeekStart() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const day = now.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day; // Monday
+  return new Date(now.getTime() + diff * 86400000);
+}
+
+function getThisWeekCompCount(childId) {
+  const weekStart = getWeekStart();
+  const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+  return state.completions.filter(c =>
+    c.child_id === childId &&
+    (c.status === 'approved' || c.status === 'pending') &&
+    c.completed_at &&
+    new Date(c.completed_at) >= weekStart &&
+    new Date(c.completed_at) < weekEnd
+  ).length;
+}
+
+function renderChallenge() {
+  const container = document.getElementById('child-challenge-card');
+  if (!container) return;
+  const challenge = state.challenges[0]; // most recent active
+  if (!challenge) { container.innerHTML = ''; return; }
+  const childId = state.currentUser.id;
+  const done = getThisWeekCompCount(childId);
+  const goal = challenge.goal_tasks;
+  const pct = Math.min(100, Math.round((done / goal) * 100));
+  const completed = done >= goal;
+
+  // Auto-bonus: if completed and not yet given in this session
+  if (completed && !state.challengeBonusGiven.has(challenge.id)) {
+    checkAndGiveChallengeBonus(challenge, childId);
+  }
+
+  container.innerHTML = `
+    <div class="challenge-card">
+      <div class="ch-label">🏁 ${t('weeklyChallenge')}</div>
+      <div class="ch-name">${esc(challenge.name)}</div>
+      <div class="ch-progress">${done} / ${goal} ${t('challengeProgress')}</div>
+      <div class="ch-progress-bar"><div class="ch-progress-fill" style="width:${pct}%;"></div></div>
+      ${completed
+        ? `<div class="ch-done-badge">✓ ${t('challengeDone')}</div>`
+        : `<div class="ch-bonus">${t('challengeBonusHint')} +${fmt(challenge.bonus_amount)} ${t('challengeCompleted')}</div>`}
+    </div>`;
+}
+
+async function checkAndGiveChallengeBonus(challenge, childId) {
+  // Check if bonus already given this week via homey_bonuses
+  const weekStart = getWeekStart();
+  const alreadyGiven = (state.bonuses || []).some(b =>
+    b.child_id === childId &&
+    b.note === '__challenge_' + challenge.id &&
+    new Date(b.created_at) >= weekStart
+  );
+  if (alreadyGiven) { state.challengeBonusGiven.add(challenge.id); return; }
+  state.challengeBonusGiven.add(challenge.id);
+  try {
+    const { error } = await sb.from('homey_bonuses').insert({
+      family_id: currentFamilyId,
+      child_id: childId,
+      amount: Number(challenge.bonus_amount),
+      note: '__challenge_' + challenge.id,
+      created_at: new Date().toISOString(),
+    });
+    if (!error) {
+      showNotif(t('challengeCompleted'), 'success', '+' + fmt(challenge.bonus_amount), true);
+      showConfetti();
+      await loadAll();
+      renderChildSaldo();
+    }
+  } catch (e) { /* ignore */ }
+}
+
+async function saveChallenge(btn) {
+  const name = document.getElementById('ch-name-input').value.trim();
+  const goal = parseInt(document.getElementById('ch-goal-input').value);
+  const bonus = parseFloat(document.getElementById('ch-bonus-input').value);
+  if (!name) { showToast(t('enterName'), 'error'); return; }
+  if (isNaN(goal) || goal < 1) { showToast(t('enterValidPrice'), 'error'); return; }
+  if (isNaN(bonus) || bonus < 0) { showToast(t('enterValidPrice'), 'error'); return; }
+  const origText = btn?.textContent;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_challenges').insert({
+      family_id: currentFamilyId, name, goal_tasks: goal, bonus_amount: bonus, active: true,
+    });
+    if (error) throw error;
+    showToast(t('challengeSaved'), 'success');
+    closeModal('modal-add-challenge');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+
+async function deleteChallenge(id) {
+  if (!confirm(t('confirmDeleteChallenge'))) return;
+  try {
+    const { error } = await sb.from('homey_challenges').update({ active: false }).eq('id', id);
+    if (error) throw error;
+    showToast(t('challengeDeleted'));
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  }
+}
+
+// ===== FEATURE 4: RANKING =====
+function renderRanking() {
+  const container = document.getElementById('child-results-list');
+  if (!container) return;
+  if (!state.children.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">🏆</div><p>${t('noChildren')}</p></div>`; return; }
+  const myId = state.currentUser.id;
+  const weekStart = getWeekStart();
+  const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+
+  const rankings = state.children.map(child => {
+    const earned = state.completions
+      .filter(c => c.child_id === child.id && c.status === 'approved' && c.completed_at && new Date(c.completed_at) >= weekStart && new Date(c.completed_at) < weekEnd)
+      .reduce((s, c) => {
+        const task = state.allTasks.find(tt => tt.id === c.task_id);
+        return s + Number(task?.amount ?? c.task_price ?? 0);
+      }, 0);
+    return { child, earned };
+  }).sort((a, b) => b.earned - a.earned);
+
+  const medals = ['🥇','🥈','🥉'];
+  const items = rankings.map((r, i) => {
+    const isMe = String(r.child.id) === String(myId);
+    const medal = medals[i] || `${i+1}.`;
+    return `
+      <div class="rank-item${isMe ? ' rank-me' : ''}">
+        <span class="rank-medal">${medal}</span>
+        ${renderAvatar(r.child, 36)}
+        <span class="rank-name">${esc(r.child.name)}${isMe ? ' 👈' : ''}</span>
+        <span class="rank-amount">${fmt(r.earned)}</span>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-title">🏆 ${t('weeklyEarnings')}</div>
+      ${items}
+    </div>`;
+}
+
+// ===== FEATURE 5: SECOND PARENT =====
+async function saveParent(btn) {
+  const name = document.getElementById('ap-name-input').value.trim();
+  const email = document.getElementById('ap-email-input').value.trim();
+  const password = document.getElementById('ap-password-input').value;
+  const role = document.getElementById('ap-role-input').value;
+  if (!name || !email || !password) { showToast(t('fillAllFields'), 'error'); return; }
+  if (password.length < 6) { showToast(t('passwordTooShort'), 'error'); return; }
+  const origText = btn?.textContent;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_parents').insert({ family_id: currentFamilyId, name, email, password, role });
+    if (error) throw error;
+    showToast(t('parentAdded'), 'success');
+    closeModal('modal-add-parent');
+    document.getElementById('ap-name-input').value = '';
+    document.getElementById('ap-email-input').value = '';
+    document.getElementById('ap-password-input').value = '';
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+
+async function deleteParent(id) {
+  if (!confirm(t('confirmDeleteParent'))) return;
+  try {
+    const { error } = await sb.from('homey_parents').delete().eq('id', id);
+    if (error) throw error;
+    showToast(t('parentDeleted'));
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  }
+}
+
+// ===== FEATURE 6: TASK TEMPLATES =====
+async function saveTaskTemplate(btn) {
+  const name = document.getElementById('tmpl-name-input').value.trim();
+  if (!name) { showToast(t('enterTemplateName'), 'error'); return; }
+  if (!state.tasks.length) { showToast(t('noTasks'), 'error'); return; }
+  const tasksJson = JSON.stringify(state.tasks.map(tk => ({
+    title: tk.title, amount: tk.amount, type: tk.type, assigned_to: null, recurrence: tk.recurrence
+  })));
+  const origText = btn?.textContent;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_task_templates').insert({ family_id: currentFamilyId, name, tasks_json: tasksJson });
+    if (error) throw error;
+    showToast(t('templateSaved'), 'success');
+    closeModal('modal-save-template');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+
+async function loadTaskTemplate(id) {
+  if (!confirm(t('confirmLoadTemplate'))) return;
+  const tmpl = state.templates.find(t => t.id === id);
+  if (!tmpl) return;
+  const tasks = JSON.parse(tmpl.tasks_json || '[]');
+  let ok = 0, fail = 0;
+  for (const tk of tasks) {
+    const { error } = await sb.from('homey_tasks').insert({ ...tk, family_id: currentFamilyId, active: true });
+    error ? fail++ : ok++;
+  }
+  showNotif(t('templateLoaded'), 'success', `${ok} tehtävää lisätty`);
+  await loadAll();
+  renderParentManage();
+  renderParentTasks();
+}
+
+async function deleteTaskTemplate(id) {
+  if (!confirm(t('confirmDeleteTemplate'))) return;
+  try {
+    const { error } = await sb.from('homey_task_templates').delete().eq('id', id);
+    if (error) throw error;
+    showToast(t('templateDeleted'));
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  }
+}
+
+// ===== FEATURE 7: REMINDERS =====
+function renderReminders() {
+  const reminders = [];
+  const now = new Date();
+
+  // Inactive children (no completions in 3 days)
+  state.children.forEach(child => {
+    const last = state.completions.filter(c => c.child_id === child.id).sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))[0];
+    if (!last) return;
+    const daysSince = Math.floor((now - new Date(last.completed_at)) / 86400000);
+    if (daysSince >= 3) {
+      const rid = 'inactive_' + child.id;
+      if (!state.dismissedReminders.has(rid))
+        reminders.push({ id: rid, icon: '😴', text: `${esc(child.name)} ${t('reminderInactive')} ${daysSince} ${t('reminderInactiveDays')}` });
+    }
+  });
+
+  // Deadlines expiring tomorrow
+  state.tasks.forEach(task => {
+    if (!task.deadline) return;
+    const info = getDeadlineInfo(task.deadline);
+    if (info.diffDays === 1) {
+      const rid = 'deadline_' + task.id;
+      if (!state.dismissedReminders.has(rid))
+        reminders.push({ id: rid, icon: '⏰', text: `"${esc(translateTaskTitle(task.title))}" ${t('reminderDeadlineTmrw')}` });
+    }
+  });
+
+  // Pending completions older than 24h
+  const pendingOld = state.completions.filter(c => {
+    if (c.status !== 'pending') return false;
+    return (now - new Date(c.completed_at)) > 86400000;
+  });
+  if (pendingOld.length > 0) {
+    const rid = 'pending_old';
+    if (!state.dismissedReminders.has(rid))
+      reminders.push({ id: rid, icon: '📋', text: `${pendingOld.length} ${t('reminderPending')}` });
+  }
+
+  if (!reminders.length) return '';
+  return reminders.map(r => `
+    <div class="reminder-card" id="reminder-${r.id}">
+      <span style="font-size:1.1rem;flex-shrink:0;">${r.icon}</span>
+      <div class="reminder-text">${r.text}</div>
+      <button class="reminder-close" onclick="dismissReminder('${r.id}')">✕</button>
+    </div>`).join('');
+}
+
+function dismissReminder(id) {
+  state.dismissedReminders.add(id);
+  const el = document.getElementById('reminder-' + id);
+  if (el) el.remove();
+}
+
+// ===== FEATURE 8: OFFLINE SUPPORT =====
+function updateOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.toggle('show', state.isOffline);
+}
+
+let _offlineDB = null;
+async function openOfflineDB() {
+  if (_offlineDB) return _offlineDB;
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('homey_offline', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('pending', { keyPath: 'localId', autoIncrement: true });
+    req.onsuccess = e => { _offlineDB = e.target.result; resolve(_offlineDB); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function queueOfflineCompletion(data) {
+  try {
+    const db = await openOfflineDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction('pending', 'readwrite');
+      const req = tx.objectStore('pending').add(data);
+      req.onsuccess = res; req.onerror = rej;
+    });
+  } catch (e) { console.error('offline queue error:', e); }
+}
+
+async function syncOfflineQueue() {
+  try {
+    const db = await openOfflineDB();
+    const all = await new Promise(res => {
+      const tx = db.transaction('pending', 'readonly');
+      const req = tx.objectStore('pending').getAll();
+      req.onsuccess = () => res(req.result);
+    });
+    if (!all.length) return;
+    showNotif(t('offlineSyncing'), 'info');
+    let synced = 0;
+    for (const item of all) {
+      const { localId, _comment, ...payload } = item;
+      try {
+        const { data: inserted, error } = await sb.from('homey_completions').insert(payload).select().single();
+        if (!error) {
+          if (_comment && inserted?.id) {
+            await sb.from('homey_comments').insert({ completion_id: inserted.id, child_comment: _comment });
+          }
+          const tx2 = db.transaction('pending', 'readwrite');
+          tx2.objectStore('pending').delete(localId);
+          synced++;
+        }
+      } catch (e) { /* keep in queue */ }
+    }
+    if (synced > 0) {
+      showNotif(t('offlineSynced'), 'success', `${synced} tehtävää synkronoitu`);
+      await loadAll();
+      if (state.userRole === 'child') { renderAssignedTasks(); renderFreeTasks(); renderChildSaldo(); renderChallenge(); }
+    }
+  } catch (e) { console.error('sync error:', e); }
+}
+
+window.addEventListener('online', async () => {
+  state.isOffline = false;
+  updateOfflineBanner();
+  if (state.userRole === 'child') await syncOfflineQueue();
+});
+window.addEventListener('offline', () => {
+  state.isOffline = true;
+  updateOfflineBanner();
+});
+
+// ===== CONFETTI =====
+function showConfetti() {
+  const container = document.getElementById('confetti-container');
+  if (!container) return;
+  const colors = ['#F59C00','#6C5CE7','#00b894','#e17055','#fd79a8','#0984e3'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*1.5}s;animation-duration:${2+Math.random()*2}s;`;
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 5000);
   }
 }
 
