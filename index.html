@@ -2836,6 +2836,13 @@ function logout() {
   }
   state.currentUser = null;
   state.userRole = null;
+  // Reset modal state
+  _commentTaskId = null; _commentFromDetail = false;
+  _rejectCompId = null; _rejectCompBtn = null;
+  _editTaskId = null; _changePinChildId = null;
+  _parentReplyCommentId = null;
+  // Close any open modals
+  document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(m => m.classList.add('hidden'));
   document.getElementById('fab-add-task').classList.add('hidden');
   initLogin();
 }
@@ -2926,7 +2933,7 @@ function showPaymentPopup(payment) {
   document.getElementById('popup-amount').textContent = fmt(total);
   document.getElementById('popup-tasks').innerHTML = comps.map(c => {
     const task = state.tasks.find(t => t.id === c.task_id);
-    return `<li><span>${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
+    return `<li><span>${esc(translateTaskTitle(task?.title || ''))}</span><span>${fmt(task?.amount || c.task_price || 0)}</span></li>`;
   }).join('');
   document.getElementById('payment-popup').classList.remove('hidden');
 }
@@ -3443,7 +3450,7 @@ function renderParentTasks() {
       ? `<div class="parent-reply-box">👩‍💼 ${esc(compComment.parent_comment)}</div>`
       : '';
     const replyBtn = compComment && !compComment.parent_comment
-      ? `<button class="btn btn-outline btn-sm" onclick="openParentReplyModal('${compComment.id}','${esc(compComment.child_comment || '')}')">💬 ${t('addParentReply')}</button>`
+      ? `<button class="btn btn-outline btn-sm" data-cid="${esc(compComment.id)}" data-ctxt="${esc(compComment.child_comment || '')}" onclick="openParentReplyModal(this.dataset.cid,this.dataset.ctxt)">💬 ${t('addParentReply')}</button>`
       : '';
     const actions = comp.status === 'pending' ? `
       <div class="pending-actions">
@@ -3459,7 +3466,7 @@ function renderParentTasks() {
             ${renderAvatar(child, 38)}
             <div>
               <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
-              <div class="pending-task-name">${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</div>
+              <div class="pending-task-name">${esc(translateTaskTitle(task?.title || ''))}</div>
             </div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
@@ -3893,8 +3900,8 @@ function renderTaskTemplateGrid() {
   const grid = document.getElementById('task-template-grid');
   grid.innerHTML = t('taskList').map(name => {
     const sel = selectedTemplateName === name ? ' selected' : '';
-    const escaped = name.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<button class="task-template-btn${sel}" onclick="selectTemplate('${escaped}')">${escaped}</button>`;
+    const escaped = esc(name);
+    return `<button class="task-template-btn${sel}" data-name="${escaped}" onclick="selectTemplate(this.dataset.name)">${escaped}</button>`;
   }).join('');
 }
 
