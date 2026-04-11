@@ -34,7 +34,11 @@ test('vanhempi pääsee hallintanäkymään', async ({ page }) => {
   await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
   await expect(page.locator('text=Kuka olet?')).toBeVisible();
   await page.getByRole('button', { name: 'Vanhemman kirjautuminen' }).click();
-  await page.locator('#admin-pin').fill(process.env.HOMEY_ADMIN_PIN);
-  await page.getByRole('button', { name: 'Kirjaudu' }).click();
+
+  const pin = process.env.HOMEY_ADMIN_PIN;
+  for (const digit of pin) {
+    await page.getByRole('button', { name: digit, exact: true }).first().click();
+  }
+
   await expect(page.locator('text=Yleiskuva')).toBeVisible();
 });
