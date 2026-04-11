@@ -857,6 +857,110 @@
     }
     .lang-btn:hover { opacity: 0.75; }
     .lang-btn.active { border-color: var(--primary); opacity: 1; }
+    /* ===== STREAK BADGE ===== */
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(135deg,#ff6b35,#f7c948);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 5px 14px;
+      border-radius: var(--radius-pill);
+      box-shadow: 0 2px 8px rgba(255,107,53,0.35);
+    }
+
+    /* ===== ACHIEVEMENTS ===== */
+    .ach-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(80px,1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .ach-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-align: center;
+      padding: 10px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem;
+      font-weight: 600;
+      line-height: 1.25;
+      transition: transform 0.15s;
+    }
+    .ach-item.earned {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+    .ach-item.locked {
+      background: var(--border);
+      color: var(--text-muted);
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+    .ach-icon { font-size: 1.8rem; line-height: 1; }
+
+    /* ===== ANALYTICS CHART ===== */
+    .chart-wrap { overflow-x: auto; margin-top: 10px; }
+    .chart-bar-label { font-size: 0.7rem; fill: var(--text-muted); }
+    .chart-value-label { font-size: 0.7rem; fill: var(--text); font-weight: 700; }
+    .chart-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chart-legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+    .chart-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ===== DARK MODE ===== */
+    [data-theme="dark"] {
+      --bg: #1C1C1A;
+      --card: #2C2C2A;
+      --text: #F0EFE8;
+      --text-muted: #9B9A94;
+      --border: #3D3D3A;
+      --primary-light: #3A2E00;
+      --primary-mid: #4A3900;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    [data-theme="dark"] body { background: var(--bg); }
+    [data-theme="dark"] .login-card,
+    [data-theme="dark"] .modal { background: #2C2C2A; color: var(--text); }
+    [data-theme="dark"] .input { background: #3D3D3A; border-color: #555552; color: var(--text); }
+    [data-theme="dark"] .input:focus { border-color: var(--primary); }
+    [data-theme="dark"] .tab-btn.active { background: #3D3D3A; color: #fff; }
+    [data-theme="dark"] .tabs { background: #3D3D3A; }
+    [data-theme="dark"] .filter-btn { background: #2C2C2A; border-color: #555552; color: var(--text-muted); }
+    [data-theme="dark"] .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    [data-theme="dark"] .parent-nav { background: #2C2C2A; border-color: #3D3D3A; }
+    [data-theme="dark"] footer { background: #2C2C2A !important; border-color: #3D3D3A !important; }
+    [data-theme="dark"] .ach-item.earned { background: var(--primary-light); }
+    [data-theme="dark"] .ach-item.locked { background: #3D3D3A; }
+    .dark-toggle {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .dark-toggle:hover { background: rgba(255,255,255,0.25); }
+
+    /* ===== NOTIF PERMISSION BTN ===== */
+    .notif-permission-btn {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .notif-permission-btn:hover { background: rgba(255,255,255,0.25); }
+
   </style>
 </head>
 <body>
@@ -1100,6 +1204,22 @@
   </div>
 </div>
 
+<!-- ===== CHANGE PIN MODAL ===== -->
+<div id="modal-change-pin" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="changePin">Vaihda PIN</div>
+    <div id="change-pin-child-name" style="text-align:center;font-weight:700;margin-bottom:14px;color:var(--text-muted);"></div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="newPin">Uusi PIN-koodi (4 numeroa)</label>
+      <input type="password" id="new-pin-input" class="input" maxlength="4" placeholder="****" inputmode="numeric" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-change-pin')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveChangePin(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== PWA INSTALL BANNER ===== -->
 <div id="pwa-banner">
   <div class="pwa-text">
@@ -1237,7 +1357,11 @@
       <div class="app-header h1" style="font-size:1.25rem;font-weight:800;">Homey</div>
       <div class="subtitle" id="child-header-name"></div>
     </div>
-    <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="dark-toggle" onclick="toggleDarkMode()" id="dark-toggle-child" title="Dark mode">🌙</button>
+      <button class="notif-permission-btn hidden" id="notif-btn-child" onclick="requestNotifPermission()"></button>
+      <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+    </div>
   </div>
   <div class="main-content">
     <!-- Saldo -->
@@ -1249,6 +1373,9 @@
 
     <!-- Säästötavoite -->
     <div id="child-goal-card" class="card" style="margin-bottom:14px;"></div>
+
+    <!-- Streak + saavutukset -->
+    <div id="child-gamification-card" class="card" style="margin-bottom:14px;"></div>
 
     <!-- Välilehdet -->
     <div class="tabs">
@@ -1284,7 +1411,11 @@
       <div style="font-size:1.25rem;font-weight:800;color:#fff;">Homey</div>
       <div class="subtitle" data-i18n="parentView">Vanhemman näkymä</div>
     </div>
-    <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="dark-toggle" onclick="toggleDarkMode()" id="dark-toggle-parent" title="Dark mode">🌙</button>
+      <button class="notif-permission-btn hidden" id="notif-btn-parent" onclick="requestNotifPermission()"></button>
+      <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+    </div>
   </div>
 
   <!-- Parent content panels -->
@@ -1492,6 +1623,31 @@ const translations = {
     bonusNote: 'Viesti (vapaaehtoinen)',
     bonusSaved: 'Bonus lisätty! 🎉',
     bonusLabel: 'Bonus',
+    streak: 'päivän putki',
+    streakDays: 'päivää peräkkäin',
+    achievementsTitle: 'Saavutukset',
+    ach_first: 'Ensimmäinen tehtävä',
+    ach_tasks5: '5 tehtävää tehty',
+    ach_tasks10: '10 tehtävää tehty',
+    ach_tasks25: '25 tehtävää tehty',
+    ach_tasks50: '50 tehtävää tehty',
+    ach_earn10: 'Yli 10 € ansaittu',
+    ach_earn50: 'Yli 50 € ansaittu',
+    ach_earn100: 'Yli 100 € ansaittu',
+    ach_streak3: '3 päivän putki',
+    ach_streak7: 'Viikon putki 🔥',
+    darkMode: 'Tumma tila',
+    lightMode: 'Vaalea tila',
+    changePin: 'Vaihda PIN',
+    newPin: 'Uusi PIN-koodi (4 numeroa)',
+    pinChanged: 'PIN vaihdettu!',
+    analyticsTitle: 'Ansiot kuukausittain',
+    enableNotifications: 'Ota ilmoitukset käyttöön',
+    notificationsOn: 'Ilmoitukset päällä ✓',
+    notifNewTask: 'Uusi suoritus odottaa',
+    notifApproved: 'Tehtävä hyväksytty! 🎉',
+    notifRejected: 'Tehtävä hylätty',
+    notifPayment: 'Maksu vastaanotettu! 💶',
     taskList: [
       'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
       'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
@@ -1666,6 +1822,31 @@ const translations = {
     bonusNote: 'Meddelande (valfritt)',
     bonusSaved: 'Bonus tillagd! 🎉',
     bonusLabel: 'Bonus',
+    streak: 'dagars streak',
+    streakDays: 'dagar i rad',
+    achievementsTitle: 'Prestationer',
+    ach_first: 'Första uppgiften',
+    ach_tasks5: '5 uppgifter gjorda',
+    ach_tasks10: '10 uppgifter gjorda',
+    ach_tasks25: '25 uppgifter gjorda',
+    ach_tasks50: '50 uppgifter gjorda',
+    ach_earn10: 'Över 10 € tjänat',
+    ach_earn50: 'Över 50 € tjänat',
+    ach_earn100: 'Över 100 € tjänat',
+    ach_streak3: '3 dagars streak',
+    ach_streak7: 'En veckas streak 🔥',
+    darkMode: 'Mörkt läge',
+    lightMode: 'Ljust läge',
+    changePin: 'Ändra PIN',
+    newPin: 'Ny PIN-kod (4 siffror)',
+    pinChanged: 'PIN ändrad!',
+    analyticsTitle: 'Intjänat per månad',
+    enableNotifications: 'Aktivera notiser',
+    notificationsOn: 'Notiser på ✓',
+    notifNewTask: 'Nytt utförande väntar',
+    notifApproved: 'Uppgift godkänd! 🎉',
+    notifRejected: 'Uppgift avvisad',
+    notifPayment: 'Betalning mottagen! 💶',
     taskList: [
       'Diska i maskinen','Tömma diskmaskinen','Diska för hand','Damma','Dammsuga',
       'Dammsuga övervåningen','Ta ut soporna','Tvätta','Vika och lägga undan tvätt',
@@ -1709,6 +1890,7 @@ function renderCurrentView() {
   } else if (id === 'view-child') {
     renderChildSaldo();
     renderGoal();
+    renderGamification();
     renderAssignedTasks();
     renderFreeTasks();
     renderChildHistory();
@@ -2207,6 +2389,7 @@ function setupRealtime() {
         showPaymentPopup(payload.new);
         renderChildSaldo();
         showNotif(t('paymentReceived'), 'payment', fmt(payload.new.amount), true);
+        sendNativeNotif(t('notifPayment'), fmt(payload.new.amount));
       })
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -2222,8 +2405,11 @@ function setupRealtime() {
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
         if (payload.new.status === 'approved') {
           showNotif(t('taskApproved'), 'success', '+' + fmt(task?.amount ?? 0));
+          sendNativeNotif(t('notifApproved'), translateTaskTitle(task?.title || '') + ' +' + fmt(task?.amount ?? 0));
+          renderGamification();
         } else if (payload.new.status === 'rejected') {
           showNotif(t('taskRejected'), 'error', translateTaskTitle(task?.title || ''));
+          sendNativeNotif(t('notifRejected'), translateTaskTitle(task?.title || '') + (payload.new.rejection_reason ? ': ' + payload.new.rejection_reason : ''));
         }
       })
       .subscribe();
@@ -2242,6 +2428,7 @@ function setupRealtime() {
         const child = state.children.find(c => c.id === payload.new.child_id);
         const task = state.allTasks.find(t => t.id === payload.new.task_id);
         showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', translateTaskTitle(task?.title || ''));
+        sendNativeNotif(t('notifNewTask'), (child?.name || '') + ': ' + translateTaskTitle(task?.title || ''));
       })
       .subscribe();
   }
@@ -2282,9 +2469,11 @@ async function initChildView() {
   document.getElementById('child-saldo-name').textContent = child.name + t('saldoSuffix');
   renderChildSaldo();
   renderGoal();
+  renderGamification();
   renderAssignedTasks();
   renderFreeTasks();
   await renderChildHistory();
+  updateNotifButtons();
 }
 
 function renderChildSaldo() {
@@ -2566,6 +2755,7 @@ async function initParentView() {
   renderParentPayments();
   renderParentManage();
   updatePendingBadge();
+  updateNotifButtons();
   const fab = document.getElementById('fab-add-task');
   fab.classList.remove('hidden');
   fab.onclick = openAddTaskModal;
@@ -2624,6 +2814,7 @@ function renderParentOverview() {
       <div class="card-title">${t('children')}</div>
       ${childCards}
     </div>
+    ${renderAnalytics(panel)}
     <footer>Homey v4.0</footer>
   `;
 }
@@ -2944,8 +3135,9 @@ function renderParentManage() {
         <div class="task-name">${esc(child.name)}</div>
         <div style="color:var(--text-muted);font-size:0.8rem;">PIN: ****</div>
       </div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:4px;">
         <button class="btn btn-sm btn-outline" onclick="openAvatarModal('${child.id}')">Avatar</button>
+        <button class="btn btn-sm btn-outline" onclick="openChangePinModal('${child.id}')" data-i18n="changePin" title="${t('changePin')}">🔑</button>
         <button class="btn btn-sm btn-danger" onclick="deleteChild('${child.id}')">✕</button>
       </div>
     </div>
@@ -3427,8 +3619,211 @@ async function saveBonus(btn) {
   }
 }
 
+// ===== DARK MODE =====
+function applyDarkMode() {
+  const isDark = localStorage.getItem('homey_theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : '');
+  const icon = isDark ? '☀️' : '🌙';
+  document.querySelectorAll('.dark-toggle').forEach(b => b.textContent = icon);
+}
+function toggleDarkMode() {
+  const isDark = localStorage.getItem('homey_theme') === 'dark';
+  localStorage.setItem('homey_theme', isDark ? 'light' : 'dark');
+  applyDarkMode();
+}
+
+// ===== STREAK =====
+function calcStreak(childId) {
+  const approved = state.completions
+    .filter(c => c.child_id === childId && c.status === 'approved' && c.completed_at)
+    .map(c => c.completed_at.slice(0, 10));
+  const uniqueDays = [...new Set(approved)].sort().reverse();
+  if (!uniqueDays.length) return 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = today.toISOString().slice(0, 10);
+  const yesterdayStr = new Date(today - 86400000).toISOString().slice(0, 10);
+  if (!uniqueDays.includes(todayStr) && !uniqueDays.includes(yesterdayStr)) return 0;
+  let cursor = uniqueDays.includes(todayStr) ? new Date(today) : new Date(today - 86400000);
+  let streak = 0;
+  for (let i = 0; i < 365; i++) {
+    if (uniqueDays.includes(cursor.toISOString().slice(0, 10))) {
+      streak++;
+      cursor = new Date(cursor - 86400000);
+    } else break;
+  }
+  return streak;
+}
+
+// ===== ACHIEVEMENTS =====
+const ACHIEVEMENTS = [
+  { id: 'first',    icon: '🌟', key: 'ach_first',    check: (comps, earned) => comps >= 1 },
+  { id: 'tasks5',   icon: '⭐', key: 'ach_tasks5',   check: (comps, earned) => comps >= 5 },
+  { id: 'tasks10',  icon: '🏆', key: 'ach_tasks10',  check: (comps, earned) => comps >= 10 },
+  { id: 'tasks25',  icon: '💎', key: 'ach_tasks25',  check: (comps, earned) => comps >= 25 },
+  { id: 'tasks50',  icon: '👑', key: 'ach_tasks50',  check: (comps, earned) => comps >= 50 },
+  { id: 'earn10',   icon: '💰', key: 'ach_earn10',   check: (comps, earned) => earned >= 10 },
+  { id: 'earn50',   icon: '🎩', key: 'ach_earn50',   check: (comps, earned) => earned >= 50 },
+  { id: 'earn100',  icon: '🚀', key: 'ach_earn100',  check: (comps, earned) => earned >= 100 },
+  { id: 'streak3',  icon: '🔥', key: 'ach_streak3',  check: (comps, earned, streak) => streak >= 3 },
+  { id: 'streak7',  icon: '⚡', key: 'ach_streak7',  check: (comps, earned, streak) => streak >= 7 },
+];
+
+function renderGamification() {
+  const card = document.getElementById('child-gamification-card');
+  if (!card) return;
+  const childId = state.currentUser.id;
+  const approved = state.completions.filter(c => c.child_id === childId && c.status === 'approved');
+  const earned = approved.reduce((s, c) => {
+    const task = state.allTasks.find(tt => tt.id === c.task_id);
+    return s + Number(task?.amount ?? c.task_price ?? 0);
+  }, 0);
+  const streak = calcStreak(childId);
+  const compCount = approved.length;
+
+  const streakHtml = streak >= 2
+    ? `<div style="margin-bottom:12px;"><span class="streak-badge">🔥 ${streak} ${t('streak')}</span></div>`
+    : '';
+
+  const achItems = ACHIEVEMENTS.map(a => {
+    const unlocked = a.check(compCount, earned, streak);
+    return `
+      <div class="ach-item ${unlocked ? 'earned' : 'locked'}" title="${t(a.key)}">
+        <div class="ach-icon">${a.icon}</div>
+        <div>${t(a.key)}</div>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    ${streakHtml}
+    <div style="font-weight:700;font-size:0.95rem;margin-bottom:10px;">🏅 ${t('achievementsTitle')}</div>
+    <div class="ach-grid">${achItems}</div>
+  `;
+}
+
+// ===== ANALYTICS CHART =====
+function renderAnalytics(panel) {
+  if (!state.children.length) return '';
+  const COLORS = ['#F59C00','#6C5CE7','#00b894','#e17055','#fd79a8','#0984e3'];
+
+  // Last 6 months
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+    months.push(monthKey(d.toISOString()));
+  }
+
+  // Per child per month: sum approved completions + bonuses
+  const childData = state.children.map((child, ci) => {
+    const values = months.map(mk => {
+      const fromComps = state.completions
+        .filter(c => c.child_id === child.id && c.status === 'approved' && c.completed_at && monthKey(c.completed_at) === mk)
+        .reduce((s, c) => { const task = state.allTasks.find(tt => tt.id === c.task_id); return s + Number(task?.amount ?? c.task_price ?? 0); }, 0);
+      const fromBonus = (state.bonuses || [])
+        .filter(b => b.child_id === child.id && b.created_at && monthKey(b.created_at) === mk)
+        .reduce((s, b) => s + Number(b.amount ?? 0), 0);
+      return fromComps + fromBonus;
+    });
+    return { child, values, color: child.color || COLORS[ci % COLORS.length] };
+  });
+
+  const maxVal = Math.max(...childData.flatMap(d => d.values), 1);
+  const chartW = Math.max(300, months.length * 60);
+  const chartH = 120;
+  const barW = Math.floor((chartW / months.length) / (state.children.length + 0.5));
+  const gap = 4;
+
+  let bars = '';
+  months.forEach((mk, mi) => {
+    childData.forEach((cd, ci) => {
+      const val = cd.values[mi];
+      const barH = val > 0 ? Math.max(4, Math.round((val / maxVal) * chartH)) : 0;
+      const x = mi * (chartW / months.length) + ci * (barW + gap) + 6;
+      const y = chartH - barH + 20;
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${cd.color}" rx="3" opacity="0.85"/>`;
+      if (val > 0) bars += `<text x="${x + barW/2}" y="${y - 3}" text-anchor="middle" class="chart-value-label">${fmt(val).replace(' €','')}</text>`;
+    });
+  });
+
+  const labels = months.map((mk, mi) => {
+    const x = mi * (chartW / months.length) + (state.children.length * (barW + gap)) / 2;
+    const [y, m] = mk.split('-');
+    return `<text x="${x}" y="${chartH + 34}" text-anchor="middle" class="chart-bar-label">${t('months')[Number(m)-1].slice(0,3)}</text>`;
+  }).join('');
+
+  const legend = childData.map(cd =>
+    `<div class="chart-legend-item"><div class="chart-legend-dot" style="background:${cd.color}"></div>${esc(cd.child.name)}</div>`
+  ).join('');
+
+  return `
+    <div class="card">
+      <div class="card-title">📊 ${t('analyticsTitle')}</div>
+      <div class="chart-wrap">
+        <svg width="${chartW}" height="${chartH + 40}" xmlns="http://www.w3.org/2000/svg">
+          ${bars}${labels}
+        </svg>
+      </div>
+      <div class="chart-legend">${legend}</div>
+    </div>`;
+}
+
+// ===== PIN CHANGE =====
+let _changePinChildId = null;
+
+function openChangePinModal(childId) {
+  _changePinChildId = childId;
+  const child = state.children.find(c => c.id === childId);
+  document.getElementById('change-pin-child-name').textContent = child?.name || '';
+  document.getElementById('new-pin-input').value = '';
+  openModal('modal-change-pin');
+}
+
+async function saveChangePin(btn) {
+  const pin = document.getElementById('new-pin-input').value.trim();
+  if (!/^\d{4}$/.test(pin)) { showToast(t('pinMustBe4'), 'error'); return; }
+  const origText = btn ? btn.textContent : null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_children').update({ pin }).eq('id', _changePinChildId);
+    if (error) throw error;
+    showToast(t('pinChanged'), 'success');
+    closeModal('modal-change-pin');
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+    _changePinChildId = null;
+  }
+}
+
+// ===== PUSH / NOTIFICATION API =====
+function updateNotifButtons() {
+  const perm = Notification?.permission;
+  const show = 'Notification' in window && perm !== 'granted';
+  const label = perm === 'granted' ? t('notificationsOn') : t('enableNotifications');
+  document.querySelectorAll('.notif-permission-btn').forEach(btn => {
+    btn.textContent = perm === 'granted' ? label : label;
+    btn.classList.toggle('hidden', !show || perm === 'denied');
+  });
+}
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  const perm = await Notification.requestPermission();
+  updateNotifButtons();
+  if (perm === 'granted') showToast(t('notificationsOn'), 'success');
+}
+
+function sendNativeNotif(title, body, icon) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (document.visibilityState === 'visible') return; // in-app notifs handle this
+  try {
+    new Notification(title, { body, icon: icon || '/Homey/icon-192.png', badge: '/Homey/icon-192.png' });
+  } catch (e) { /* silently ignore */ }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  applyDarkMode();
   applyTranslations();
   document.querySelectorAll('.tab-content').forEach(el => {
     el.style.display = el.classList.contains('active') ? 'block' : 'none';
