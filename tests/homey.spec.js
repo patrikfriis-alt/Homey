@@ -25,11 +25,11 @@ async function loginAsParent(page) {
 
 async function loginAsChild(page) {
   await loginAsFamily(page);
-  await page.getByRole('button', { name: childName }).click();
+  await page.locator('.child-card', { hasText: childName }).first().click();
   for (const digit of childPin) {
     await page.getByRole('button', { name: digit, exact: true }).first().click();
   }
-  await expect(page.locator('text=Omat')).toBeVisible();
+  await expect(page.locator('.tab-btn', { hasText: 'Omat' }).first()).toBeVisible();
 }
 
 test('kirjautumissivu latautuu', async ({ page }) => {
@@ -60,36 +60,36 @@ test('lapsi voi kirjautua sisään', async ({ page }) => {
 
 test('lapsi näkee omat tehtävät', async ({ page }) => {
   await loginAsChild(page);
-  await expect(page.locator('text=Omat')).toBeVisible();
-  await expect(page.locator('text=Vapaat')).toBeVisible();
+  await expect(page.locator('.tab-btn', { hasText: 'Omat' }).first()).toBeVisible();
+  await expect(page.locator('.tab-btn', { hasText: 'Vapaat' }).first()).toBeVisible();
 });
 
 test('lapsi voi vaihtaa vapaat tehtävät välilehdelle', async ({ page }) => {
   await loginAsChild(page);
-  await page.getByRole('button', { name: 'Vapaat' }).click();
-  await expect(page.locator('text=Vapaat')).toBeVisible();
+  await page.locator('.tab-btn', { hasText: 'Vapaat' }).first().click();
+  await expect(page.locator('.tab-btn.active', { hasText: 'Vapaat' })).toBeVisible();
 });
 
 test('lapsi näkee historian', async ({ page }) => {
   await loginAsChild(page);
-  await page.getByRole('button', { name: 'Historia' }).click();
+  await page.locator('.nav-btn', { hasText: 'Historia' }).first().click();
   await expect(page.locator('text=Historia')).toBeVisible();
 });
 
 test('vanhempi näkee tehtävät-välilehden', async ({ page }) => {
   await loginAsParent(page);
   await page.getByRole('button', { name: 'Tehtävät' }).first().click();
-  await expect(page.locator('text=Kaikki')).toBeVisible();
+  await expect(page.locator('.filter-btn', { hasText: 'Kaikki' }).first()).toBeVisible();
 });
 
 test('vanhempi näkee maksut-välilehden', async ({ page }) => {
   await loginAsParent(page);
   await page.getByRole('button', { name: 'Maksut' }).click();
-  await expect(page.locator('text=Maksut')).toBeVisible();
+  await expect(page.locator('#parent-panel-payments')).toBeVisible();
 });
 
 test('vanhempi näkee hallinta-välilehden', async ({ page }) => {
   await loginAsParent(page);
   await page.getByRole('button', { name: 'Hallinta' }).click();
-  await expect(page.locator('text=Hallinta')).toBeVisible();
+  await expect(page.locator('#parent-panel-manage')).toBeVisible();
 });
