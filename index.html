@@ -945,6 +945,15 @@
       <input type="number" id="new-task-price" class="input" placeholder="Syötä hinta" min="0" step="0.10" />
     </div>
     <div class="form-group">
+      <label class="input-label" data-i18n="recurrence">Toistuvuus</label>
+      <select id="new-task-recurrence" class="input">
+        <option value="" data-i18n="recurrenceNone">Ei toistu</option>
+        <option value="daily" data-i18n="recurrenceDaily">Päivittäin</option>
+        <option value="weekly" data-i18n="recurrenceWeekly">Viikoittain</option>
+        <option value="monthly" data-i18n="recurrenceMonthly">Kuukausittain</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label class="input-label" data-i18n="type">Tyyppi</label>
       <div style="display:flex;gap:10px;">
         <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;" id="type-free-label">
@@ -985,6 +994,108 @@
     <div style="display:flex;gap:10px;margin-top:16px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-avatar')" data-i18n="cancel">Peruuta</button>
       <button class="btn btn-primary w-full" onclick="saveAvatar()" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REJECT REASON MODAL ===== -->
+<div id="modal-reject" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="confirmRejectTitle">Hylkää suoritus</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="rejectionReason">Hylkäyksen syy (vapaaehtoinen)</label>
+      <textarea id="reject-reason-input" class="input" rows="3" style="resize:vertical;" data-i18n-placeholder="rejectionReasonPlaceholder" placeholder="Miksi tämä hylätään?"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-reject')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-danger w-full" onclick="confirmReject(this)" data-i18n="rejectAction">✗ Hylkää</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EDIT TASK MODAL ===== -->
+<div id="modal-edit-task" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="editTask">Muokkaa tehtävää</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="taskName">Tehtävän nimi</label>
+      <input type="text" id="edit-task-name" class="input" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="price">Hinta (€)</label>
+      <input type="number" id="edit-task-price" class="input" min="0" step="0.10" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="recurrence">Toistuvuus</label>
+      <select id="edit-task-recurrence" class="input">
+        <option value="" data-i18n="recurrenceNone">Ei toistu</option>
+        <option value="daily" data-i18n="recurrenceDaily">Päivittäin</option>
+        <option value="weekly" data-i18n="recurrenceWeekly">Viikoittain</option>
+        <option value="monthly" data-i18n="recurrenceMonthly">Kuukausittain</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="type">Tyyppi</label>
+      <div style="display:flex;gap:10px;">
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="edit-task-type" value="free" style="accent-color:var(--primary);width:18px;height:18px;" onchange="toggleEditAssignedTo()" />
+          <span style="font-weight:600;font-size:0.9rem;" data-i18n="free">Vapaa</span>
+        </label>
+        <label style="flex:1;display:flex;align-items:center;gap:8px;padding:12px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="edit-task-type" value="assigned" style="accent-color:var(--primary);width:18px;height:18px;" onchange="toggleEditAssignedTo()" />
+          <span style="font-weight:600;font-size:0.9rem;" data-i18n="child">Lapsi</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group" id="edit-assigned-to-group" style="display:none">
+      <label class="input-label" data-i18n="assignTo">Kenelle</label>
+      <select id="edit-task-assigned" class="input"></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-edit-task')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveEditTask(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BONUS MODAL ===== -->
+<div id="modal-bonus" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="bonus">Bonusmaksu</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="bonusSelectChild">Valitse lapsi</label>
+      <select id="bonus-child-select" class="input"></select>
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="bonusAmount">Summa (€)</label>
+      <input type="number" id="bonus-amount-input" class="input" min="0.01" step="0.50" placeholder="0,00" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="bonusNote">Viesti (vapaaehtoinen)</label>
+      <input type="text" id="bonus-note-input" class="input" placeholder="Esim. Hyvä työ! 🌟" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-bonus')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveBonus(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GOAL MODAL ===== -->
+<div id="modal-goal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" data-i18n="savingsGoal">Säästötavoite</div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="goalName">Mihin säästät?</label>
+      <input type="text" id="goal-name-input" class="input" placeholder="Esim. Uusi polkupyörä" />
+    </div>
+    <div class="form-group">
+      <label class="input-label" data-i18n="goalAmount">Tavoitesumma (€)</label>
+      <input type="number" id="goal-amount-input" class="input" min="1" step="1" placeholder="50" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-goal')" data-i18n="cancel">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="saveGoal(this)" data-i18n="save">Tallenna</button>
     </div>
   </div>
 </div>
@@ -1076,7 +1187,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v3.8</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v4.0</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1136,6 +1247,9 @@
       <div class="saldo-name" id="child-saldo-name"></div>
     </div>
 
+    <!-- Säästötavoite -->
+    <div id="child-goal-card" class="card" style="margin-bottom:14px;"></div>
+
     <!-- Välilehdet -->
     <div class="tabs">
       <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
@@ -1157,7 +1271,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v3.8</footer>
+  <footer>Homey v4.0</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1195,7 +1309,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v3.8</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v4.0</footer>
 </div>
 
 <script>
@@ -1350,6 +1464,34 @@ const translations = {
     gotIt: 'Selvä, kiitos!',
     loggedInAs: 'Kirjautunut perheenä:',
     changeFamily: 'Vaihda perhettä',
+    recurrence: 'Toistuvuus',
+    recurrenceNone: 'Ei toistu',
+    recurrenceDaily: 'Päivittäin',
+    recurrenceWeekly: 'Viikoittain',
+    recurrenceMonthly: 'Kuukausittain',
+    rejectionReason: 'Hylkäyksen syy (vapaaehtoinen)',
+    rejectionReasonPlaceholder: 'Miksi tämä hylätään?',
+    confirmRejectTitle: 'Hylkää suoritus',
+    rejectedReason: 'Syy:',
+    rejectNoReason: 'Ei syytä annettu',
+    savingsGoal: 'Säästötavoite',
+    setGoal: 'Aseta tavoite',
+    editGoal: 'Muokkaa',
+    goalName: 'Mihin säästät?',
+    goalAmount: 'Tavoitesumma (€)',
+    goalSaved: 'Tavoite tallennettu!',
+    goalReached: 'Tavoite saavutettu! 🎉',
+    noGoal: 'Aseta säästötavoite',
+    goalOf: '/',
+    editTask: 'Muokkaa tehtävää',
+    taskUpdated: 'Tehtävä päivitetty!',
+    bonus: 'Bonusmaksu',
+    addBonus: '+ Bonus',
+    bonusSelectChild: 'Valitse lapsi',
+    bonusAmount: 'Summa (€)',
+    bonusNote: 'Viesti (vapaaehtoinen)',
+    bonusSaved: 'Bonus lisätty! 🎉',
+    bonusLabel: 'Bonus',
     taskList: [
       'Tiskien laitto koneeseen','Astianpesukoneen tyhjennys','Astioiden käsinpesu','Pölyn pyyhintä','Imurointi',
       'Yläkerran imurointi','Roskat ulos','Pyykin laitto','Pyykin kuivaus ja viikkaus',
@@ -1496,6 +1638,34 @@ const translations = {
     gotIt: 'OK, tack!',
     loggedInAs: 'Inloggad som familj:',
     changeFamily: 'Byt familj',
+    recurrence: 'Upprepning',
+    recurrenceNone: 'Upprepas inte',
+    recurrenceDaily: 'Dagligen',
+    recurrenceWeekly: 'Varje vecka',
+    recurrenceMonthly: 'Varje månad',
+    rejectionReason: 'Avvisningsorsak (valfritt)',
+    rejectionReasonPlaceholder: 'Varför avvisas detta?',
+    confirmRejectTitle: 'Avvisa utförande',
+    rejectedReason: 'Orsak:',
+    rejectNoReason: 'Ingen anledning angiven',
+    savingsGoal: 'Sparmål',
+    setGoal: 'Sätt mål',
+    editGoal: 'Ändra',
+    goalName: 'Vad sparar du till?',
+    goalAmount: 'Målsumma (€)',
+    goalSaved: 'Mål sparat!',
+    goalReached: 'Mål uppnått! 🎉',
+    noGoal: 'Sätt ett sparmål',
+    goalOf: '/',
+    editTask: 'Redigera uppgift',
+    taskUpdated: 'Uppgift uppdaterad!',
+    bonus: 'Bonusbetalning',
+    addBonus: '+ Bonus',
+    bonusSelectChild: 'Välj barn',
+    bonusAmount: 'Belopp (€)',
+    bonusNote: 'Meddelande (valfritt)',
+    bonusSaved: 'Bonus tillagd! 🎉',
+    bonusLabel: 'Bonus',
     taskList: [
       'Diska i maskinen','Tömma diskmaskinen','Diska för hand','Damma','Dammsuga',
       'Dammsuga övervåningen','Ta ut soporna','Tvätta','Vika och lägga undan tvätt',
@@ -1537,6 +1707,8 @@ function renderCurrentView() {
   if (id === 'view-login') {
     renderChildGrid();
   } else if (id === 'view-child') {
+    renderChildSaldo();
+    renderGoal();
     renderAssignedTasks();
     renderFreeTasks();
     renderChildHistory();
@@ -1561,6 +1733,7 @@ const state = {
   allTasks: [],
   completions: [],
   payments: [],
+  bonuses: [],
   selectedChildId: null, // login step
   pinInput: '',
   isAdminLogin: false,
@@ -1832,7 +2005,7 @@ async function loadAll() {
       return;
     }
 
-    const [co, p] = await Promise.all([
+    const [co, p, b] = await Promise.all([
       sb.from('homey_completions')
         .select('*, homey_children(id, name, avatar, color), homey_tasks(id, title, amount)')
         .in('child_id', childIds)
@@ -1841,11 +2014,17 @@ async function loadAll() {
         .select('*')
         .in('child_id', childIds)
         .order('paid_at', { ascending: false }),
+      sb.from('homey_bonuses')
+        .select('*')
+        .in('child_id', childIds)
+        .order('created_at', { ascending: false }),
     ]);
     if (co.error) console.error('homey_completions:', co.error.message);
     if (p.error) console.error('homey_payments:', p.error.message);
+    if (b.error) console.error('homey_bonuses:', b.error.message);
     state.completions = co.data || [];
     state.payments = p.data || [];
+    state.bonuses = b.data || [];
   } catch (err) {
     console.error('loadAll error:', err);
   }
@@ -1861,11 +2040,15 @@ function calcOpenSaldo(childId) {
       const amount = task?.amount ?? c.task_price ?? 0;
       return sum + Number(amount);
     }, 0);
+  // Bonuses
+  const totalBonuses = (state.bonuses || [])
+    .filter(b => b.child_id === childId)
+    .reduce((sum, b) => sum + Number(b.amount ?? 0), 0);
   // Total paid: all payment rows
   const totalPaid = state.payments
     .filter(p => p.child_id === childId)
     .reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
-  return Math.max(0, totalEarned - totalPaid);
+  return Math.max(0, totalEarned + totalBonuses - totalPaid);
 }
 
 // ===== LOGIN =====
@@ -2098,6 +2281,7 @@ async function initChildView() {
   document.getElementById('child-header-name').textContent = child.name;
   document.getElementById('child-saldo-name').textContent = child.name + t('saldoSuffix');
   renderChildSaldo();
+  renderGoal();
   renderAssignedTasks();
   renderFreeTasks();
   await renderChildHistory();
@@ -2106,6 +2290,7 @@ async function initChildView() {
 function renderChildSaldo() {
   const saldo = calcOpenSaldo(state.currentUser.id);
   document.getElementById('child-saldo').textContent = fmt(saldo);
+  renderGoal();
 }
 
 function switchChildTab(tab, btn) {
@@ -2151,12 +2336,13 @@ function renderAssignedTasks() {
     const btn = doneTodayComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4">${t('done')}</button>`
       : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('markDone')}</button>`;
+    const recBadgeA = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     return `
       <div class="task-item">
         <div class="task-icon">✅</div>
         <div class="task-info">
           <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
-          <div class="task-price">${fmt(task.amount)}</div>
+          <div class="task-price">${fmt(task.amount)}${recBadgeA ? ' ' + recBadgeA : ''}</div>
           ${statusBadge ? '<div style="margin-top:4px">' + statusBadge + '</div>' : ''}
         </div>
         <div class="task-actions">${btn}</div>
@@ -2206,12 +2392,13 @@ function renderFreeTasks() {
       `;
     }
 
+    const recBadgeF = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     return `
       <div class="task-item">
         <div class="task-icon">🔓</div>
         <div class="task-info">
           <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
-          <div class="task-price">${fmt(task.amount)}</div>
+          <div class="task-price">${fmt(task.amount)}${recBadgeF ? ' ' + recBadgeF : ''}</div>
         </div>
         <div class="task-actions" style="flex-wrap:wrap;justify-content:flex-end;gap:4px;">${actionsHtml}</div>
       </div>
@@ -2274,14 +2461,21 @@ async function renderChildHistory() {
   const childId = state.currentUser.id;
   const comps = state.completions.filter(c => c.child_id === childId && c.status !== 'rejected');
   const paidMonths = new Set(state.payments.filter(p => p.child_id === childId).map(p => p.month));
+  const myBonuses = (state.bonuses || []).filter(b => b.child_id === childId);
 
-  // group by month
+  // group by month (completions + bonuses)
   const byMonth = {};
   comps.forEach(c => {
     if (!c.completed_at) return;
     const mk = monthKey(c.completed_at);
-    if (!byMonth[mk]) byMonth[mk] = [];
-    byMonth[mk].push(c);
+    if (!byMonth[mk]) byMonth[mk] = { comps: [], bonuses: [] };
+    byMonth[mk].comps.push(c);
+  });
+  myBonuses.forEach(b => {
+    if (!b.created_at) return;
+    const mk = monthKey(b.created_at);
+    if (!byMonth[mk]) byMonth[mk] = { comps: [], bonuses: [] };
+    byMonth[mk].bonuses.push(b);
   });
 
   const container = document.getElementById('child-history-list');
@@ -2293,30 +2487,52 @@ async function renderChildHistory() {
   }
 
   container.innerHTML = months.map(mk => {
-    const monthComps = byMonth[mk];
-    const total = monthComps
+    const { comps: monthComps, bonuses: monthBonuses } = byMonth[mk];
+    const totalComps = monthComps
       .filter(c => c.status === 'approved')
       .reduce((s, c) => {
-        const task = state.tasks.find(t => t.id === c.task_id);
+        const task = state.allTasks.find(tt => tt.id === c.task_id);
         return s + Number(task?.amount || c.task_price || 0);
       }, 0);
+    const totalBonusMonth = monthBonuses.reduce((s, b) => s + Number(b.amount || 0), 0);
+    const total = totalComps + totalBonusMonth;
     const isPaid = paidMonths.has(mk);
     const badge = isPaid
       ? `<span class="badge badge-paid">${t('paidBadge')}</span>`
       : `<span class="badge badge-unpaid">${t('unpaidBadge')}</span>`;
 
-    const rows = monthComps.map(c => {
-      const task = state.tasks.find(t => t.id === c.task_id);
+    const compRows = monthComps.map(c => {
+      const task = state.allTasks.find(tt => tt.id === c.task_id);
       const d = new Date(c.completed_at);
+      const reasonHtml = (c.status === 'rejected' && c.rejection_reason)
+        ? `<div style="font-size:0.75rem;color:var(--danger);margin-top:2px;">${t('rejectedReason')} ${esc(c.rejection_reason)}</div>`
+        : '';
       return `
         <div class="completion-item">
-          <div>
-            <div>${esc(translateTaskTitle(translateTaskTitle(task?.title || '')))}</div>
+          <div style="flex:1;min-width:0;">
+            <div>${esc(translateTaskTitle(task?.title || ''))}</div>
             <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
+            ${reasonHtml}
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span style="font-weight:700;color:var(--success)">${fmt(task?.amount || c.task_price || 0)}</span>
             <span class="badge badge-${c.status}" style="font-size:0.7rem">${statusLabel(c.status)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const bonusRows = monthBonuses.map(b => {
+      const d = new Date(b.created_at);
+      return `
+        <div class="completion-item">
+          <div style="flex:1;min-width:0;">
+            <div>⭐ ${t('bonusLabel')}${b.note ? ': ' + esc(b.note) : ''}</div>
+            <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span style="font-weight:700;color:var(--success)">${fmt(b.amount)}</span>
+            <span class="badge badge-approved" style="font-size:0.7rem">${t('approved')}</span>
           </div>
         </div>
       `;
@@ -2329,7 +2545,7 @@ async function renderChildHistory() {
             <span class="month-title">${monthLabel(mk)}</span>
             <div style="display:flex;align-items:center;gap:8px;">${badge}<strong>${fmt(total)}</strong></div>
           </div>
-          ${rows}
+          ${compRows}${bonusRows}
         </div>
       </div>
     `;
@@ -2408,7 +2624,7 @@ function renderParentOverview() {
       <div class="card-title">${t('children')}</div>
       ${childCards}
     </div>
-    <footer>Homey v3.8</footer>
+    <footer>Homey v4.0</footer>
   `;
 }
 
@@ -2555,11 +2771,25 @@ async function approveComp(id, btn) {
   }
 }
 
-async function rejectComp(id, btn) {
+let _rejectCompId = null;
+let _rejectCompBtn = null;
+
+function rejectComp(id, btn) {
+  _rejectCompId = id;
+  _rejectCompBtn = btn;
+  document.getElementById('reject-reason-input').value = '';
+  openModal('modal-reject');
+}
+
+async function confirmReject(confirmBtn) {
+  const reason = document.getElementById('reject-reason-input').value.trim();
   try {
-    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
-    const { error } = await sb.from('homey_completions').update({ status: 'rejected' }).eq('id', id);
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = t('saving'); }
+    const update = { status: 'rejected' };
+    if (reason) update.rejection_reason = reason;
+    const { error } = await sb.from('homey_completions').update(update).eq('id', _rejectCompId);
     if (error) throw error;
+    closeModal('modal-reject');
     showToast(t('taskRejected'));
     await loadAll();
     renderParentPending();
@@ -2568,7 +2798,9 @@ async function rejectComp(id, btn) {
   } catch (err) {
     showNotif(friendlyError(err), 'error', err.message);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = t('rejectAction'); }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = t('rejectAction'); }
+    _rejectCompId = null;
+    _rejectCompBtn = null;
   }
 }
 
@@ -2611,7 +2843,31 @@ function renderParentPayments() {
     `;
   }).join('');
 
+  // Bonus history
+  const bonusItems = (state.bonuses || []).map(b => {
+    const child = state.children.find(c => c.id === b.child_id);
+    const d = new Date(b.created_at);
+    return `
+      <div class="completion-item">
+        <div>
+          <div style="font-weight:600">${esc(child?.name || '?')} ⭐</div>
+          <div class="completion-date">${b.note ? esc(b.note) + ' · ' : ''}${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-weight:700;color:var(--success)">${fmt(b.amount)}</span>
+          <span class="badge badge-approved" style="font-size:0.7rem">${t('bonusLabel')}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
   panel.innerHTML = `
+    <div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" style="margin-bottom:0">${t('bonus')}</div>
+        <button class="btn btn-primary btn-sm" onclick="openBonusModal()">${t('addBonus')}</button>
+      </div>
+    </div>
     ${openCards.length ? `
     <div class="card">
       <div class="card-title">${t('openPayments')}</div>
@@ -2623,10 +2879,10 @@ function renderParentPayments() {
         <button class="btn btn-primary btn-sm" onclick="payAll(this)">${t('payAll')}</button>
       </div>` : ''}
     </div>` : `<div class="card"><div class="empty-state"><div class="empty-icon">💶</div><p>${t('noOpenPayments')}</p></div></div>`}
-    ${histItems ? `
+    ${histItems || bonusItems ? `
     <div class="card">
       <div class="card-title">${t('paymentHistory')}</div>
-      ${histItems}
+      ${histItems}${bonusItems}
     </div>` : ''}
   `;
 }
@@ -2698,14 +2954,20 @@ function renderParentManage() {
   const allTasks = [...state.tasks]; // already filtered active=true
   const taskItems = allTasks.map(task => {
     const assignedTo = task.assigned_to ? state.children.find(c => c.id === task.assigned_to) : null;
+    const recBadge = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;margin-left:4px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     return `
       <div class="task-item">
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
-          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">
+            <div class="task-name">${esc(translateTaskTitle(task.title))}</div>${recBadge}
+          </div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? t('free') : t('child')}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">✕</button>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-sm btn-outline" onclick="openEditTaskModal('${task.id}')">✏️</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">✕</button>
+        </div>
       </div>
     `;
   }).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noTasks')}</p></div>`;
@@ -2809,6 +3071,7 @@ function openAddTaskModal() {
   sel.innerHTML = state.children.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
   document.getElementById('new-task-price').value = '';
   document.getElementById('new-task-custom-name').value = '';
+  document.getElementById('new-task-recurrence').value = '';
   document.getElementById('assigned-to-group').style.display = 'none';
   document.querySelectorAll('input[name="task-type"]').forEach(r => { r.checked = r.value === 'free'; });
   selectedTemplateName = null;
@@ -2866,8 +3129,9 @@ async function saveTask() {
   const type = document.querySelector('input[name="task-type"]:checked')?.value || 'free';
   const assignedRaw = document.getElementById('new-task-assigned').value;
   const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
+  const recurrence = document.getElementById('new-task-recurrence').value || null;
 
-  const payload = { title: name, amount: Number(price), type, assigned_to, active: true, family_id: currentFamilyId };
+  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, active: true, family_id: currentFamilyId };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   try {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
@@ -2987,6 +3251,180 @@ if ('serviceWorker' in navigator) {
       .then(() => {})
       .catch(err => console.warn('SW virhe:', err));
   });
+}
+
+// ===== RECURRENCE HELPER =====
+function recurrenceLabel(r) {
+  if (!r) return '';
+  if (r === 'daily') return t('recurrenceDaily');
+  if (r === 'weekly') return t('recurrenceWeekly');
+  if (r === 'monthly') return t('recurrenceMonthly');
+  return '';
+}
+
+// ===== SAVINGS GOAL =====
+function renderGoal() {
+  const card = document.getElementById('child-goal-card');
+  if (!card) return;
+  const child = state.children.find(c => String(c.id) === String(state.currentUser.id)) || state.currentUser;
+  const saldo = calcOpenSaldo(state.currentUser.id);
+
+  if (!child.goal_name || !child.goal_amount) {
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:0.95rem;">🎯 ${t('savingsGoal')}</div>
+          <div class="text-muted" style="font-size:0.8rem;margin-top:2px;">${t('noGoal')}</div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="openGoalModal()">${t('setGoal')}</button>
+      </div>
+    `;
+    return;
+  }
+
+  const goal = Number(child.goal_amount);
+  const pct = Math.min(100, Math.round((saldo / goal) * 100));
+  const reached = saldo >= goal;
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div>
+        <div style="font-weight:700;font-size:0.95rem;">🎯 ${esc(child.goal_name)}</div>
+        <div class="text-muted" style="font-size:0.8rem;margin-top:2px;">${fmt(saldo)} ${t('goalOf')} ${fmt(goal)} (${pct}%)</div>
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="openGoalModal()">${t('editGoal')}</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${reached ? 'var(--success)' : 'var(--primary)'}"></div></div>
+    ${reached ? `<div style="text-align:center;margin-top:8px;font-weight:700;color:var(--success);">${t('goalReached')}</div>` : ''}
+  `;
+}
+
+function openGoalModal() {
+  const child = state.children.find(c => String(c.id) === String(state.currentUser.id)) || state.currentUser;
+  document.getElementById('goal-name-input').value = child.goal_name || '';
+  document.getElementById('goal-amount-input').value = child.goal_amount || '';
+  openModal('modal-goal');
+}
+
+async function saveGoal(btn) {
+  const name = document.getElementById('goal-name-input').value.trim();
+  const amount = parseFloat(document.getElementById('goal-amount-input').value);
+  if (!name) { showToast(t('enterName'), 'error'); return; }
+  if (isNaN(amount) || amount <= 0) { showToast(t('enterValidPrice'), 'error'); return; }
+  const origText = btn ? btn.textContent : null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_children')
+      .update({ goal_name: name, goal_amount: amount })
+      .eq('id', state.currentUser.id);
+    if (error) throw error;
+    showToast(t('goalSaved'), 'success');
+    closeModal('modal-goal');
+    await loadAll();
+    renderGoal();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+
+// ===== EDIT TASK =====
+let _editTaskId = null;
+
+function openEditTaskModal(taskId) {
+  _editTaskId = taskId;
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  document.getElementById('edit-task-name').value = translateTaskTitle(task.title);
+  document.getElementById('edit-task-price').value = task.amount;
+  document.getElementById('edit-task-recurrence').value = task.recurrence || '';
+
+  const sel = document.getElementById('edit-task-assigned');
+  sel.innerHTML = state.children.map(c => `<option value="${c.id}"${String(c.id) === String(task.assigned_to) ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+
+  document.querySelectorAll('input[name="edit-task-type"]').forEach(r => { r.checked = r.value === task.type; });
+  document.getElementById('edit-assigned-to-group').style.display = task.type === 'assigned' ? 'block' : 'none';
+
+  openModal('modal-edit-task');
+}
+
+function toggleEditAssignedTo() {
+  const type = document.querySelector('input[name="edit-task-type"]:checked')?.value;
+  document.getElementById('edit-assigned-to-group').style.display = type === 'assigned' ? 'block' : 'none';
+}
+
+async function saveEditTask(btn) {
+  const name = document.getElementById('edit-task-name').value.trim();
+  const priceVal = document.getElementById('edit-task-price').value;
+  if (!name) { showToast(t('enterTaskName'), 'error'); return; }
+  if (priceVal === '') { showToast(t('enterPrice'), 'error'); return; }
+  const price = parseFloat(priceVal);
+  if (isNaN(price) || price < 0) { showToast(t('enterValidPrice'), 'error'); return; }
+
+  const type = document.querySelector('input[name="edit-task-type"]:checked')?.value || 'free';
+  const assignedRaw = document.getElementById('edit-task-assigned').value;
+  const assigned_to = (type === 'assigned' && assignedRaw) ? assignedRaw : null;
+  const recurrence = document.getElementById('edit-task-recurrence').value || null;
+
+  const origText = btn ? btn.textContent : null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_tasks')
+      .update({ title: name, amount: Number(price), type, assigned_to, recurrence })
+      .eq('id', _editTaskId);
+    if (error) throw error;
+    showToast(t('taskUpdated'), 'success');
+    closeModal('modal-edit-task');
+    await loadAll();
+    renderParentManage();
+    renderParentTasks();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+    _editTaskId = null;
+  }
+}
+
+// ===== BONUS PAYMENT =====
+function openBonusModal() {
+  const sel = document.getElementById('bonus-child-select');
+  sel.innerHTML = state.children.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('bonus-amount-input').value = '';
+  document.getElementById('bonus-note-input').value = '';
+  openModal('modal-bonus');
+}
+
+async function saveBonus(btn) {
+  const childId = document.getElementById('bonus-child-select').value;
+  const amountVal = document.getElementById('bonus-amount-input').value;
+  const note = document.getElementById('bonus-note-input').value.trim();
+  if (!childId) { showToast(t('bonusSelectChild'), 'error'); return; }
+  const amount = parseFloat(amountVal);
+  if (isNaN(amount) || amount <= 0) { showToast(t('enterValidPrice'), 'error'); return; }
+
+  const origText = btn ? btn.textContent : null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.from('homey_bonuses').insert({
+      family_id: currentFamilyId,
+      child_id: childId,
+      amount: Number(amount),
+      note: note || null,
+      created_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    showToast(t('bonusSaved'), 'success');
+    closeModal('modal-bonus');
+    await loadAll();
+    renderParentPayments();
+    renderParentOverview();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
 }
 
 // ===== INIT =====
