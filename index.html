@@ -60,7 +60,7 @@
     #view-child .app-header {
       background: var(--primary);
       color: #fff;
-      padding: 16px 20px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -68,34 +68,42 @@
       top: 0;
       z-index: 100;
       box-shadow: 0 2px 8px rgba(245,156,0,0.25);
+      min-height: 52px;
     }
 
     /* ===== APP HEADER — PARENT (dark) ===== */
     #view-parent .app-header {
       background: var(--dark-bg);
       color: #fff;
-      padding: 20px 20px 16px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
+      min-height: 52px;
     }
 
-    .app-header .subtitle { font-size: 0.75rem; opacity: 0.6; margin-top: 2px; }
-    .logout-btn {
+    .app-header .subtitle { font-size: 0.72rem; opacity: 0.6; margin-top: 1px; }
+
+    /* Icon-only header buttons */
+    .header-icon-btn {
+      width: 32px; height: 32px;
       background: rgba(255,255,255,0.15);
       border: none;
       color: #fff;
-      padding: 7px 16px;
-      border-radius: var(--radius-pill);
-      font-size: 0.8rem;
+      border-radius: 8px;
+      font-size: 1rem;
       cursor: pointer;
-      font-weight: 600;
-      letter-spacing: 0.01em;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      line-height: 1;
+      padding: 0;
     }
-    .logout-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-icon-btn:hover { background: rgba(255,255,255,0.28); }
+    .header-actions { display: flex; gap: 5px; align-items: center; }
 
     /* ===== MAIN CONTENT ===== */
     .main-content {
@@ -416,26 +424,60 @@
     /* ===== TASK ITEM ===== */
     .task-item {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 0;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border);
+      cursor: pointer;
     }
     .task-item:last-child { border-bottom: none; }
+    .task-item:active { opacity: 0.85; }
+    .task-row1 {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+    .task-row2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
+    .task-row2-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .task-row2-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    /* Legacy icon kept for parent manage view */
     .task-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
+      width: 36px; height: 36px;
+      border-radius: 10px;
       background: var(--primary-light);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       flex-shrink: 0;
     }
     .task-info { flex: 1; min-width: 0; }
-    .task-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .task-price { color: var(--success); font-weight: 700; font-size: 0.9rem; margin-top: 2px; }
+    .task-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      flex: 1;
+    }
+    .task-price { color: var(--success); font-weight: 700; font-size: 0.9rem; }
     .task-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+    .task-rec-badge {
+      font-size: 0.68rem;
+      background: var(--primary-light);
+      color: var(--primary-muted);
+      border-radius: 5px;
+      padding: 1px 5px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
 
     /* ===== SALDO CARD ===== */
     .saldo-card {
@@ -831,18 +873,19 @@
 
     /* ===== LANGUAGE SWITCHER ===== */
     .lang-btn {
-      font-size: 1.15rem;
-      background: rgba(255,255,255,0.15);
+      font-size: 1rem;
+      background: rgba(255,255,255,0.12);
       border: 2px solid transparent;
       border-radius: 6px;
       cursor: pointer;
-      padding: 3px 5px;
+      padding: 2px 4px;
       line-height: 1;
       transition: border-color 0.15s, background 0.15s, opacity 0.15s;
-      opacity: 0.6;
+      opacity: 0.55;
+      height: 26px;
     }
-    .lang-btn:hover { opacity: 0.9; background: rgba(255,255,255,0.25); }
-    .lang-btn.active { border-color: rgba(255,255,255,0.8); opacity: 1; background: rgba(255,255,255,0.22); }
+    .lang-btn:hover { opacity: 0.85; background: rgba(255,255,255,0.22); }
+    .lang-btn.active { border-color: rgba(255,255,255,0.7); opacity: 1; background: rgba(255,255,255,0.2); }
     /* ===== STREAK BADGE ===== */
     .streak-badge {
       display: inline-flex;
@@ -860,21 +903,21 @@
     /* ===== ACHIEVEMENTS ===== */
     .ach-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill,minmax(80px,1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3,1fr);
+      gap: 6px;
       margin-top: 4px;
     }
     .ach-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       text-align: center;
-      padding: 10px 6px;
+      padding: 7px 4px;
       border-radius: var(--radius-sm);
-      font-size: 0.72rem;
+      font-size: 0.625rem;
       font-weight: 600;
-      line-height: 1.25;
+      line-height: 1.2;
       transition: transform 0.15s;
     }
     .ach-item.earned {
@@ -885,9 +928,11 @@
       background: var(--border);
       color: var(--text-muted);
       filter: grayscale(1);
-      opacity: 0.5;
+      opacity: 0.45;
+      transform: scale(0.88);
+      transform-origin: center;
     }
-    .ach-icon { font-size: 1.8rem; line-height: 1; }
+    .ach-icon { font-size: 2rem; line-height: 1; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
 
     /* ===== ANALYTICS CHART ===== */
     .chart-wrap { overflow-x: auto; margin-top: 10px; }
@@ -923,29 +968,37 @@
     [data-theme="dark"] .ach-item.earned { background: var(--primary-light); }
     [data-theme="dark"] .ach-item.locked { background: #3D3D3A; }
     .dark-toggle {
+      width: 32px; height: 32px;
       background: rgba(255,255,255,0.15);
       border: none;
       color: #fff;
-      padding: 6px 10px;
-      border-radius: var(--radius-pill);
+      border-radius: 8px;
       font-size: 1rem;
       cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
       line-height: 1;
+      padding: 0;
+      transition: background 0.15s;
     }
-    .dark-toggle:hover { background: rgba(255,255,255,0.25); }
+    .dark-toggle:hover { background: rgba(255,255,255,0.28); }
 
     /* ===== NOTIF PERMISSION BTN ===== */
     .notif-permission-btn {
+      width: 32px; height: 32px;
       background: rgba(255,255,255,0.15);
       border: none;
       color: #fff;
-      padding: 6px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 0.78rem;
-      font-weight: 700;
+      border-radius: 8px;
+      font-size: 1rem;
       cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+      padding: 0;
+      transition: background 0.15s;
     }
-    .notif-permission-btn:hover { background: rgba(255,255,255,0.25); }
+    .notif-permission-btn:hover { background: rgba(255,255,255,0.28); }
 
   </style>
 </head>
@@ -1200,6 +1253,28 @@
   </div>
 </div>
 
+<!-- ===== TASK DETAIL MODAL ===== -->
+<div id="modal-task-detail" class="modal-overlay hidden">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div style="text-align:center;margin-bottom:4px;">
+      <div id="td-name" style="font-size:1.3rem;font-weight:800;color:var(--text);line-height:1.25;"></div>
+      <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:8px;">
+        <span id="td-price" style="font-size:1.6rem;font-weight:900;color:var(--success);"></span>
+        <span id="td-type-badge"></span>
+      </div>
+      <div id="td-recurrence" class="hidden" style="margin-top:6px;font-size:0.85rem;color:var(--text-muted);"></div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-weight:700;font-size:0.875rem;margin-bottom:8px;">📅 Historia</div>
+    <div id="td-history"></div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:10px;margin-top:4px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-task-detail')" data-i18n="cancel">Sulje</button>
+      <button id="td-mark-done-btn" class="btn btn-primary w-full">${t ? t('markDone') : 'Merkitse tehdyksi'}</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== PWA INSTALL BANNER ===== -->
 <div id="pwa-banner">
   <div class="pwa-text">
@@ -1287,7 +1362,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v4.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v4.3</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1337,12 +1412,12 @@
       <div class="app-header h1" style="font-size:1.25rem;font-weight:800;">Homey</div>
       <div class="subtitle" id="child-header-name"></div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;">
+    <div class="header-actions">
       <button class="lang-btn" data-lang="fi" onclick="switchLanguage('fi')">🇫🇮</button>
       <button class="lang-btn" data-lang="sv" onclick="switchLanguage('sv')">🇸🇪</button>
       <button class="dark-toggle" onclick="toggleDarkMode()" id="dark-toggle-child" title="Dark mode">🌙</button>
-      <button class="notif-permission-btn hidden" id="notif-btn-child" onclick="requestNotifPermission()"></button>
-      <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+      <button class="notif-permission-btn hidden" id="notif-btn-child" onclick="requestNotifPermission()" title="">🔔</button>
+      <button class="header-icon-btn" onclick="logout()" title="Kirjaudu ulos">🚪</button>
     </div>
   </div>
   <div class="main-content">
@@ -1380,7 +1455,7 @@
       <div id="child-history-list"></div>
     </div>
   </div>
-  <footer>Homey v4.2</footer>
+  <footer>Homey v4.3</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1393,12 +1468,12 @@
       <div style="font-size:1.25rem;font-weight:800;color:#fff;">Homey</div>
       <div class="subtitle" data-i18n="parentView">Vanhemman näkymä</div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;">
+    <div class="header-actions">
       <button class="lang-btn" data-lang="fi" onclick="switchLanguage('fi')">🇫🇮</button>
       <button class="lang-btn" data-lang="sv" onclick="switchLanguage('sv')">🇸🇪</button>
       <button class="dark-toggle" onclick="toggleDarkMode()" id="dark-toggle-parent" title="Dark mode">🌙</button>
-      <button class="notif-permission-btn hidden" id="notif-btn-parent" onclick="requestNotifPermission()"></button>
-      <button class="logout-btn" onclick="logout()" data-i18n="logOut">Kirjaudu ulos</button>
+      <button class="notif-permission-btn hidden" id="notif-btn-parent" onclick="requestNotifPermission()" title="">🔔</button>
+      <button class="header-icon-btn" onclick="logout()" title="Kirjaudu ulos">🚪</button>
     </div>
   </div>
 
@@ -1424,7 +1499,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v4.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v4.3</footer>
 </div>
 
 <script>
@@ -2495,7 +2570,6 @@ function renderAssignedTasks() {
   }
 
   container.innerHTML = myTasks.map(task => {
-    // check if already done today (pending or approved today)
     const today = new Date().toISOString().slice(0, 10);
     const doneTodayComp = state.completions.find(c =>
       c.task_id === task.id &&
@@ -2506,19 +2580,26 @@ function renderAssignedTasks() {
     const statusBadge = doneTodayComp
       ? `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`
       : '';
-    const btn = doneTodayComp
-      ? `<button class="btn btn-sm" disabled style="opacity:0.4">${t('done')}</button>`
-      : `<button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('markDone')}</button>`;
-    const recBadgeA = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const actionBtn = doneTodayComp
+      ? `<button class="btn btn-sm" disabled style="opacity:0.4" onclick="event.stopPropagation()">${t('done')}</button>`
+      : `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();markDone('${task.id}',this)">${t('markDone')}</button>`;
+    const recBadge = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const typeBadge = `<span class="badge badge-pending" style="font-size:0.68rem;">📌 ${t('child')}</span>`;
     return `
-      <div class="task-item">
-        <div class="task-icon">✅</div>
-        <div class="task-info">
-          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
-          <div class="task-price">${fmt(task.amount)}${recBadgeA ? ' ' + recBadgeA : ''}</div>
-          ${statusBadge ? '<div style="margin-top:4px">' + statusBadge + '</div>' : ''}
+      <div class="task-item" onclick="openTaskDetail('${task.id}')">
+        <div class="task-row1">
+          <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
+          ${recBadge}
         </div>
-        <div class="task-actions">${btn}</div>
+        <div class="task-row2">
+          <div class="task-row2-left">
+            <span class="task-price">${fmt(task.amount)}</span>
+            ${typeBadge}
+          </div>
+          <div class="task-row2-right">
+            ${statusBadge}${actionBtn}
+          </div>
+        </div>
       </div>
     `;
   }).join('');
@@ -2553,27 +2634,33 @@ function renderFreeTasks() {
       actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('done')}</button>
-        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}', this)">${t('release')}</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}',this)">${t('done')}</button>
+        <button class="btn btn-sm btn-outline" onclick="unreserveTask('${task.id}',this)">${t('release')}</button>
       `;
     } else if (isReservedByOther) {
       actionsHtml = `<span class="badge badge-reserved">${t('reservedFor')}: ${esc(reservedByChild?.name || '?')}</span>`;
     } else {
       actionsHtml = `
-        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}', this)">${t('reserve')}</button>
-        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}', this)">${t('done')}</button>
+        <button class="btn btn-sm btn-outline" onclick="reserveTask('${task.id}',this)">${t('reserve')}</button>
+        <button class="btn btn-sm btn-primary" onclick="markDone('${task.id}',this)">${t('done')}</button>
       `;
     }
 
-    const recBadgeF = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const recBadgeF = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
+    const typeBadge = `<span class="badge badge-unpaid" style="font-size:0.68rem;">🔓 ${t('free')}</span>`;
     return `
-      <div class="task-item">
-        <div class="task-icon">🔓</div>
-        <div class="task-info">
-          <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
-          <div class="task-price">${fmt(task.amount)}${recBadgeF ? ' ' + recBadgeF : ''}</div>
+      <div class="task-item" onclick="openTaskDetail('${task.id}')">
+        <div class="task-row1">
+          <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
+          ${recBadgeF}
         </div>
-        <div class="task-actions" style="flex-wrap:wrap;justify-content:flex-end;gap:4px;">${actionsHtml}</div>
+        <div class="task-row2">
+          <div class="task-row2-left">
+            <span class="task-price">${fmt(task.amount)}</span>
+            ${typeBadge}
+          </div>
+          <div class="task-row2-right" onclick="event.stopPropagation()">${actionsHtml}</div>
+        </div>
       </div>
     `;
   }).join('');
@@ -2799,7 +2886,7 @@ function renderParentOverview() {
       ${childCards}
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v4.2</footer>
+    <footer>Homey v4.3</footer>
   `;
 }
 
@@ -2826,16 +2913,19 @@ function renderParentTasks() {
       infoHtml = `<div style="font-size:0.8rem;color:var(--success);margin-top:2px;">${t('openStatus')}</div>`;
     }
 
+    const recBadgeP = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     return `
-      <div class="task-item">
-        <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
-        <div class="task-info">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div class="task-name">${esc(translateTaskTitle(task.title))}</div>
+      <div class="task-item" style="cursor:default;">
+        <div class="task-row1">
+          <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
+          ${recBadgeP}
+        </div>
+        <div class="task-row2">
+          <div class="task-row2-left">
+            <span class="task-price">${fmt(task.amount)}</span>
             ${typeBadge}
           </div>
-          <div class="task-price">${fmt(task.amount)}</div>
-          ${infoHtml}
+          <div class="task-row2-right" style="font-size:0.8rem;color:var(--text-muted);">${infoHtml}</div>
         </div>
       </div>
     `;
@@ -3603,6 +3693,88 @@ async function saveBonus(btn) {
   }
 }
 
+// ===== TASK DETAIL MODAL =====
+function openTaskDetail(taskId) {
+  if (state.userRole !== 'child') return;
+  const task = state.tasks.find(tt => tt.id === taskId);
+  if (!task) return;
+  const childId = state.currentUser.id;
+
+  document.getElementById('td-name').textContent = translateTaskTitle(task.title);
+  document.getElementById('td-price').textContent = fmt(task.amount);
+
+  const typeBadgeEl = document.getElementById('td-type-badge');
+  typeBadgeEl.innerHTML = task.type === 'free'
+    ? `<span class="badge badge-unpaid" style="font-size:0.75rem;">🔓 ${t('free')}</span>`
+    : `<span class="badge badge-pending" style="font-size:0.75rem;">📌 ${t('child')}</span>`;
+
+  const recEl = document.getElementById('td-recurrence');
+  if (task.recurrence) {
+    recEl.textContent = '🔁 ' + recurrenceLabel(task.recurrence);
+    recEl.classList.remove('hidden');
+  } else {
+    recEl.classList.add('hidden');
+  }
+
+  // History: last 5 completions for this child + task
+  const history = state.completions
+    .filter(c => c.task_id === taskId && c.child_id === childId)
+    .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
+    .slice(0, 5);
+
+  const histEl = document.getElementById('td-history');
+  if (history.length) {
+    histEl.innerHTML = history.map(c => {
+      const d = new Date(c.completed_at);
+      const dateStr = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+      const reasonHtml = (c.status === 'rejected' && c.rejection_reason)
+        ? `<div style="font-size:0.75rem;color:var(--danger);margin-top:2px;">💬 ${esc(c.rejection_reason)}</div>`
+        : '';
+      return `
+        <div class="completion-item">
+          <div>${dateStr}${reasonHtml}</div>
+          <span class="badge badge-${c.status}" style="font-size:0.7rem;">${statusLabel(c.status)}</span>
+        </div>`;
+    }).join('');
+  } else {
+    histEl.innerHTML = `<div class="text-muted" style="padding:8px 0;font-size:0.875rem;">${t('noCompletionsYet')}</div>`;
+  }
+
+  // Mark done button
+  const today = new Date().toISOString().slice(0, 10);
+  const doneTodayComp = state.completions.find(c =>
+    c.task_id === taskId && c.child_id === childId &&
+    c.completed_at?.slice(0, 10) === today &&
+    (c.status === 'pending' || c.status === 'approved')
+  );
+  const markBtn = document.getElementById('td-mark-done-btn');
+  markBtn.disabled = !!doneTodayComp;
+  markBtn.textContent = doneTodayComp ? t('done') : t('markDone');
+  markBtn.style.opacity = doneTodayComp ? '0.4' : '1';
+  markBtn.onclick = async () => {
+    if (doneTodayComp) return;
+    markBtn.disabled = true;
+    markBtn.textContent = t('saving');
+    try {
+      const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
+      const { error } = await sb.from('homey_completions').insert(payload);
+      if (error) throw error;
+      closeModal('modal-task-detail');
+      showToast(t('taskDone'), 'success');
+      await loadAll();
+      renderAssignedTasks();
+      renderFreeTasks();
+      renderChildSaldo();
+    } catch (err) {
+      showNotif(friendlyError(err), 'error', err.message);
+      markBtn.disabled = false;
+      markBtn.textContent = t('markDone');
+    }
+  };
+
+  openModal('modal-task-detail');
+}
+
 // ===== DARK MODE =====
 function applyDarkMode() {
   const isDark = localStorage.getItem('homey_theme') === 'dark';
@@ -3781,12 +3953,12 @@ async function saveChangePin(btn) {
 
 // ===== PUSH / NOTIFICATION API =====
 function updateNotifButtons() {
-  const perm = Notification?.permission;
-  const show = 'Notification' in window && perm !== 'granted';
-  const label = perm === 'granted' ? t('notificationsOn') : t('enableNotifications');
+  const supported = 'Notification' in window;
+  const perm = supported ? Notification.permission : 'denied';
+  // Show 🔔 only when permission not yet decided
+  const show = supported && perm === 'default';
   document.querySelectorAll('.notif-permission-btn').forEach(btn => {
-    btn.textContent = perm === 'granted' ? label : label;
-    btn.classList.toggle('hidden', !show || perm === 'denied');
+    btn.classList.toggle('hidden', !show);
   });
 }
 
