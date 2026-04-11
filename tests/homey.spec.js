@@ -25,7 +25,7 @@ async function loginAsParent(page) {
 
 async function loginAsChild(page) {
   await loginAsFamily(page);
-  await page.locator('.child-card', { hasText: childName }).first().click();
+  await page.locator('.child-select-btn', { hasText: childName }).first().click();
   for (const digit of childPin) {
     await page.getByRole('button', { name: digit, exact: true }).first().click();
   }
