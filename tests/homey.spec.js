@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+const email = process.env.HOMEY_EMAIL;
+const password = process.env.HOMEY_PASSWORD;
+
 test('kirjautumissivu latautuu', async ({ page }) => {
   await page.goto('https://patrikfriis-alt.github.io/Homey');
   await expect(page.locator('h1').first()).toBeVisible();
@@ -8,8 +11,8 @@ test('kirjautumissivu latautuu', async ({ page }) => {
 test('perhe voi kirjautua sisään', async ({ page }) => {
   await page.goto('https://patrikfriis-alt.github.io/Homey');
   await page.click('text=Kirjaudu sisään');
-  await page.locator('#fl-email').fill('sinun@email.fi');
-  await page.locator('#fl-password').fill('sinun_salasanasi');
+  await page.locator('#fl-email').fill(email);
+  await page.locator('#fl-password').fill(password);
   await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
   await expect(page.locator('text=Kuka olet?')).toBeVisible();
 });
@@ -17,7 +20,7 @@ test('perhe voi kirjautua sisään', async ({ page }) => {
 test('väärä salasana näyttää virheen', async ({ page }) => {
   await page.goto('https://patrikfriis-alt.github.io/Homey');
   await page.click('text=Kirjaudu sisään');
-  await page.locator('#fl-email').fill('sinun@email.fi');
+  await page.locator('#fl-email').fill(email);
   await page.locator('#fl-password').fill('vaara_salasana');
   await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
   await expect(page.locator('text=Väärä sähköposti tai salasana')).toBeVisible();
@@ -26,6 +29,12 @@ test('väärä salasana näyttää virheen', async ({ page }) => {
 test('vanhempi pääsee hallintanäkymään', async ({ page }) => {
   await page.goto('https://patrikfriis-alt.github.io/Homey');
   await page.click('text=Kirjaudu sisään');
-  await page.locator('#fl-email').fill('sinun@email.fi');
-  await page.locator('#fl-password').fill('sinun_salasanasi');
-  await page.locator('#view-family-login').getByRole('but
+  await page.locator('#fl-email').fill(email);
+  await page.locator('#fl-password').fill(password);
+  await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
+  await expect(page.locator('text=Kuka olet?')).toBeVisible();
+  await page.click('text=Vanhempi');
+  await page.locator('#admin-pin').fill('1987');
+  await page.getByRole('button', { name: 'Kirjaudu' }).click();
+  await expect(page.locator('text=Yleiskuva')).toBeVisible();
+});
