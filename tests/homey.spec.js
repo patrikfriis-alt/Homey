@@ -72,8 +72,8 @@ test('lapsi voi vaihtaa vapaat tehtävät välilehdelle', async ({ page }) => {
 
 test('lapsi näkee historian', async ({ page }) => {
   await loginAsChild(page);
-  await page.locator('.nav-btn', { hasText: 'Historia' }).first().click();
-  await expect(page.locator('text=Historia')).toBeVisible();
+  await page.locator('.tab-btn', { hasText: 'Historia' }).first().click();
+  await expect(page.locator('#child-tab-history')).toBeVisible();
 });
 
 test('vanhempi näkee tehtävät-välilehden', async ({ page }) => {
