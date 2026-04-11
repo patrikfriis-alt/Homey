@@ -4,6 +4,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   HOMEY_EMAIL: ${{ secrets.HOMEY_EMAIL }}
   HOMEY_PASSWORD: ${{ secrets.HOMEY_PASSWORD }}
+  HOMEY_ADMIN_PIN: ${{ secrets.HOMEY_ADMIN_PIN }}
 jobs:
   test:
     runs-on: ubuntu-latest
