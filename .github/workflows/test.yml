@@ -5,6 +5,8 @@ env:
   HOMEY_EMAIL: ${{ secrets.HOMEY_EMAIL }}
   HOMEY_PASSWORD: ${{ secrets.HOMEY_PASSWORD }}
   HOMEY_ADMIN_PIN: ${{ secrets.HOMEY_ADMIN_PIN }}
+  HOMEY_CHILD_NAME: ${{ secrets.HOMEY_CHILD_NAME }}
+  HOMEY_CHILD_PIN: ${{ secrets.HOMEY_CHILD_PIN }}
 jobs:
   test:
     runs-on: ubuntu-latest
