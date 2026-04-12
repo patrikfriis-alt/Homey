@@ -865,10 +865,182 @@
       font-size: 0.72rem;
     }
 
-    /* ===== RESPONSIVE ===== */
+    /* ===== RESPONSIVE — MOBILE+ ===== */
     @media (min-width: 600px) {
       .main-content { padding: 28px 24px 120px; }
       .child-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* ===== RESPONSIVE — TABLET / DESKTOP (768px+) ===== */
+    @media (min-width: 768px) {
+      /* --- Auth views: centered card --- */
+      #view-welcome .login-card,
+      #view-family-login .login-card,
+      #view-family-register .login-card,
+      #view-login .login-card {
+        max-width: 480px;
+      }
+      .child-grid { grid-template-columns: repeat(4, 1fr); }
+
+      /* --- Child view: 2-column layout --- */
+      #view-child .main-content {
+        display: grid;
+        grid-template-columns: 35% 1fr;
+        gap: 24px;
+        max-width: 1100px;
+        padding: 28px 28px 40px;
+        align-items: start;
+      }
+      #view-child .child-col-left,
+      #view-child .child-col-right { min-width: 0; }
+
+      /* Hide bottom padding left-col items already get mb */
+      #view-child .child-col-left .saldo-card { margin-bottom: 14px; }
+
+      /* --- Parent view: sidebar layout --- */
+      #view-parent { flex-direction: row; }
+      #view-parent > .app-header { display: none; }
+      #view-parent > .parent-nav { display: none; }
+      #view-parent > footer { display: none; }
+      .parent-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+      .parent-sidebar {
+        display: flex;
+        flex-direction: column;
+        width: 220px;
+        min-width: 220px;
+        background: var(--dark-bg);
+        color: #fff;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        overflow-y: auto;
+        flex-shrink: 0;
+        padding: 0 0 16px;
+      }
+      .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 20px 18px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .sidebar-brand-icon { font-size: 1.5rem; }
+
+      .sidebar-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 14px 10px;
+        flex: 1;
+      }
+      .sidebar-nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 11px 12px;
+        border: none;
+        background: transparent;
+        color: rgba(255,255,255,0.65);
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        text-align: left;
+        position: relative;
+      }
+      .sidebar-nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+      .sidebar-nav-btn.active { background: var(--primary); color: #fff; }
+      .sidebar-nav-btn .nav-icon { font-size: 1.15rem; flex-shrink: 0; }
+      .sidebar-nav-btn .sidebar-badge {
+        margin-left: auto;
+        background: #fff;
+        color: var(--primary-muted);
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: var(--radius-pill);
+      }
+      .sidebar-nav-btn .sidebar-badge.hidden { display: none; }
+
+      .sidebar-footer {
+        padding: 12px 10px 4px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .sidebar-family-name {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.5);
+        padding: 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .sidebar-utils {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        padding: 0 4px;
+      }
+      .sidebar-logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255,255,255,0.07);
+        border: none;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.83rem;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        width: 100%;
+        text-align: left;
+      }
+      .sidebar-logout-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+      .parent-panels {
+        flex: 1;
+        overflow-y: auto;
+        min-width: 0;
+      }
+      .parent-panels .main-content {
+        max-width: 900px;
+        padding: 28px 32px 60px;
+      }
+
+      /* Children overview: 2-per-row grid on desktop */
+      .children-overview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 16px;
+      }
+      .children-overview-grid .child-summary-card {
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* FAB: no need to clear bottom nav on desktop */
+      .fab { bottom: 28px; }
+    }
+
+    /* Tablet: sidebar visible but keep mobile-style header hidden */
+    @media (max-width: 767px) {
+      .parent-sidebar { display: none; }
+      .parent-layout { display: contents; }
+      .parent-panels { display: contents; }
+      .sidebar-nav-btn { display: none; }
     }
 
     /* ===== LANGUAGE SWITCHER ===== */
@@ -1571,7 +1743,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.1</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.2</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1633,51 +1805,57 @@
   <div id="offline-banner" data-i18n="offlineBanner">Offline-tila — muutokset synkronoidaan kun yhteys palaa</div>
 
   <div class="main-content">
-    <!-- Saldo -->
-    <div class="saldo-card">
-      <div class="saldo-label" data-i18n="openBalance">Avoin saldo</div>
-      <div class="saldo-amount" id="child-saldo">0,00 €</div>
-      <div class="saldo-name" id="child-saldo-name"></div>
-    </div>
-
-    <!-- Säästötavoite -->
-    <div id="child-goal-card" class="card" style="margin-bottom:14px;"></div>
-
-    <!-- Viikkohaaste -->
-    <div id="child-challenge-card" style="margin-bottom:0;"></div>
-
-    <!-- Streak + saavutukset -->
-    <div id="child-gamification-card" class="card" style="margin-bottom:14px;"></div>
-
-    <!-- Välilehdet -->
-    <div class="tabs" id="child-main-tabs">
-      <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
-      <button class="tab-btn" onclick="switchChildTab('history', this)" data-i18n="history">Historia</button>
-      <button class="tab-btn" onclick="switchChildTab('results', this)" data-i18n="results">Tulokset</button>
-    </div>
-
-    <!-- Tehtävät -->
-    <div id="child-tab-tasks" class="tab-content active">
-      <div class="tabs" style="margin-bottom:12px;">
-        <button class="tab-btn active" onclick="switchTaskTab('assigned', this)" data-i18n="myTasks">Omat</button>
-        <button class="tab-btn" onclick="switchTaskTab('free', this)" data-i18n="freeTasks">Vapaat</button>
+    <!-- Left column (desktop): saldo + cards -->
+    <div class="child-col-left">
+      <!-- Saldo -->
+      <div class="saldo-card">
+        <div class="saldo-label" data-i18n="openBalance">Avoin saldo</div>
+        <div class="saldo-amount" id="child-saldo">0,00 €</div>
+        <div class="saldo-name" id="child-saldo-name"></div>
       </div>
-      <div id="assigned-tasks-list" class="card"></div>
-      <div id="free-tasks-list" class="card hidden"></div>
-      <div id="expired-tasks-section"></div>
+
+      <!-- Säästötavoite -->
+      <div id="child-goal-card" class="card" style="margin-bottom:14px;"></div>
+
+      <!-- Viikkohaaste -->
+      <div id="child-challenge-card" style="margin-bottom:0;"></div>
+
+      <!-- Streak + saavutukset -->
+      <div id="child-gamification-card" class="card" style="margin-bottom:14px;"></div>
     </div>
 
-    <!-- Historia -->
-    <div id="child-tab-history" class="tab-content">
-      <div id="child-history-list"></div>
-    </div>
+    <!-- Right column (desktop): tabs + task content -->
+    <div class="child-col-right">
+      <!-- Välilehdet -->
+      <div class="tabs" id="child-main-tabs">
+        <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
+        <button class="tab-btn" onclick="switchChildTab('history', this)" data-i18n="history">Historia</button>
+        <button class="tab-btn" onclick="switchChildTab('results', this)" data-i18n="results">Tulokset</button>
+      </div>
 
-    <!-- Tulokset -->
-    <div id="child-tab-results" class="tab-content">
-      <div id="child-results-list"></div>
+      <!-- Tehtävät -->
+      <div id="child-tab-tasks" class="tab-content active">
+        <div class="tabs" style="margin-bottom:12px;">
+          <button class="tab-btn active" onclick="switchTaskTab('assigned', this)" data-i18n="myTasks">Omat</button>
+          <button class="tab-btn" onclick="switchTaskTab('free', this)" data-i18n="freeTasks">Vapaat</button>
+        </div>
+        <div id="assigned-tasks-list" class="card"></div>
+        <div id="free-tasks-list" class="card hidden"></div>
+        <div id="expired-tasks-section"></div>
+      </div>
+
+      <!-- Historia -->
+      <div id="child-tab-history" class="tab-content">
+        <div id="child-history-list"></div>
+      </div>
+
+      <!-- Tulokset -->
+      <div id="child-tab-results" class="tab-content">
+        <div id="child-results-list"></div>
+      </div>
     </div>
   </div>
-  <footer>Homey v5.1</footer>
+  <footer>Homey v5.2</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1685,6 +1863,7 @@
 
 <!-- ===== VIEW: PARENT ===== -->
 <div id="view-parent" class="view">
+  <!-- Mobile top header (hidden at 768px+) -->
   <div class="app-header">
     <div>
       <div style="font-size:1.25rem;font-weight:800;color:#fff;">Homey</div>
@@ -1699,29 +1878,71 @@
     </div>
   </div>
 
-  <!-- Parent content panels -->
-  <div id="parent-panel-overview" class="main-content"></div>
-  <div id="parent-panel-tasks" class="main-content hidden"></div>
-  <div id="parent-panel-payments" class="main-content hidden"></div>
-  <div id="parent-panel-manage" class="main-content hidden"></div>
+  <!-- Desktop sidebar + content wrapper -->
+  <div class="parent-layout">
+    <!-- Sidebar (only visible at 768px+) -->
+    <aside class="parent-sidebar" id="parent-sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-icon">🏠</span>
+        <span>Homey</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-nav-btn active" data-tab="overview" onclick="switchParentTab('overview', this)">
+          <span class="nav-icon">🏠</span>
+          <span data-i18n="overview">Yleiskuva</span>
+        </button>
+        <button class="sidebar-nav-btn" data-tab="tasks" onclick="switchParentTab('tasks', this)">
+          <span class="nav-icon">📋</span>
+          <span data-i18n="tasks">Tehtävät</span>
+          <span id="pending-badge-sidebar" class="sidebar-badge hidden"></span>
+        </button>
+        <button class="sidebar-nav-btn" data-tab="payments" onclick="switchParentTab('payments', this)">
+          <span class="nav-icon">💶</span>
+          <span data-i18n="payments">Maksut</span>
+        </button>
+        <button class="sidebar-nav-btn" data-tab="manage" onclick="switchParentTab('manage', this)">
+          <span class="nav-icon">⚙️</span>
+          <span data-i18n="management">Hallinta</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-family-name" id="sidebar-family-name"></div>
+        <div class="sidebar-utils">
+          <button class="lang-btn" data-lang="fi" onclick="switchLanguage('fi')" style="opacity:0.55;">🇫🇮</button>
+          <button class="lang-btn" data-lang="sv" onclick="switchLanguage('sv')" style="opacity:0.55;">🇸🇪</button>
+          <button class="dark-toggle" onclick="toggleDarkMode()" title="Dark mode">🌙</button>
+          <button class="notif-permission-btn hidden" id="notif-btn-sidebar" onclick="requestNotifPermission()" title="">🔔</button>
+        </div>
+        <button class="sidebar-logout-btn" onclick="logout()">🚪 <span data-i18n="logout">Kirjaudu ulos</span></button>
+      </div>
+    </aside>
 
-  <!-- Bottom nav -->
+    <!-- Panel content area -->
+    <div class="parent-panels">
+      <div id="parent-panel-overview" class="main-content"></div>
+      <div id="parent-panel-tasks" class="main-content hidden"></div>
+      <div id="parent-panel-payments" class="main-content hidden"></div>
+      <div id="parent-panel-manage" class="main-content hidden"></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav (hidden at 768px+) -->
   <nav class="parent-nav">
-    <button class="parent-nav-btn active" onclick="switchParentTab('overview', this)">
+    <button class="parent-nav-btn active" data-tab="overview" onclick="switchParentTab('overview', this)">
       <span class="nav-icon">🏠</span><span data-i18n="overview">Yleiskuva</span>
     </button>
-    <button class="parent-nav-btn" onclick="switchParentTab('tasks', this)">
+    <button class="parent-nav-btn" data-tab="tasks" onclick="switchParentTab('tasks', this)">
       <span class="nav-icon">📋</span><span data-i18n="tasks">Tehtävät</span>
       <span id="pending-badge" class="badge badge-pending hidden" style="font-size:0.65rem;padding:1px 6px;"></span>
     </button>
-    <button class="parent-nav-btn" onclick="switchParentTab('payments', this)">
+    <button class="parent-nav-btn" data-tab="payments" onclick="switchParentTab('payments', this)">
       <span class="nav-icon">💶</span><span data-i18n="payments">Maksut</span>
     </button>
-    <button class="parent-nav-btn" onclick="switchParentTab('manage', this)">
+    <button class="parent-nav-btn" data-tab="manage" onclick="switchParentTab('manage', this)">
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.1</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.2</footer>
 </div>
 
 <script>
@@ -3331,6 +3552,10 @@ function statusLabel(s) {
 
 // ===== PARENT VIEW =====
 async function initParentView() {
+  // Populate sidebar family name
+  const sidebarName = document.getElementById('sidebar-family-name');
+  if (sidebarName) sidebarName.textContent = localStorage.getItem('homey_family_name') || '';
+
   renderParentOverview();
   renderParentTasks();
   renderParentPayments();
@@ -3345,8 +3570,9 @@ async function initParentView() {
 }
 
 function switchParentTab(tab, btn) {
-  document.querySelectorAll('.parent-nav-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  // Sync both bottom nav and sidebar buttons
+  document.querySelectorAll('.parent-nav-btn, .sidebar-nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
   ['overview','tasks','payments','manage'].forEach(t => {
     document.getElementById('parent-panel-' + t).classList.toggle('hidden', t !== tab);
   });
@@ -3356,9 +3582,12 @@ function switchParentTab(tab, btn) {
 
 function updatePendingBadge() {
   const count = state.completions.filter(c => c.status === 'pending').length;
-  const badge = document.getElementById('pending-badge');
-  badge.textContent = count;
-  badge.classList.toggle('hidden', count === 0);
+  ['pending-badge', 'pending-badge-sidebar'].forEach(id => {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    badge.textContent = count;
+    badge.classList.toggle('hidden', count === 0);
+  });
 }
 
 function renderParentOverview() {
@@ -3396,10 +3625,10 @@ function renderParentOverview() {
     ${renderReminders()}
     <div class="card">
       <div class="card-title">${t('children')}</div>
-      ${childCards}
+      <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.1</footer>
+    <footer>Homey v5.2</footer>
   `;
 }
 
