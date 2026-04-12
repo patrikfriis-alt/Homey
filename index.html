@@ -1571,7 +1571,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.0</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.1</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1677,7 +1677,7 @@
       <div id="child-results-list"></div>
     </div>
   </div>
-  <footer>Homey v5.0</footer>
+  <footer>Homey v5.1</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1721,7 +1721,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.0</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.1</footer>
 </div>
 
 <script>
@@ -2434,7 +2434,21 @@ function showView(name) {
   document.getElementById('view-' + name).classList.add('active');
 }
 
-// ===== FAMILY AUTH =====
+// ===== FAMILY AUTH (Supabase Auth) =====
+
+// Store family for current session after resolving from auth user
+async function _resolveAndStoreFamily(userId) {
+  // 1. Try new-style: homey_families.auth_user_id = userId
+  const { data: fam } = await sb.from('homey_families').select('id, name').eq('auth_user_id', userId).maybeSingle();
+  if (fam) {
+    currentFamilyId = fam.id;
+    localStorage.setItem('homey_family_id', fam.id);
+    localStorage.setItem('homey_family_name', fam.name);
+    return true;
+  }
+  return false;
+}
+
 async function familyLogin(btn) {
   const email = document.getElementById('fl-email').value.trim();
   const password = document.getElementById('fl-password').value;
@@ -2445,29 +2459,47 @@ async function familyLogin(btn) {
   const origText = btn.textContent;
   try {
     btn.disabled = true; btn.textContent = t('loggingIn');
-    const { data: result, error } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
-    if (error) throw error;
-    if (!result) {
-      // Feature 5: check homey_parents table for secondary parents
-      const { data: parents2 } = await sb.from('homey_parents').select('*, homey_families(id, name)').eq('email', email);
-      const matched = (parents2 || []).find(p => p.password === password);
-      if (matched && matched.homey_families) {
-        currentFamilyId = matched.family_id;
-        localStorage.setItem('homey_family_id', matched.family_id);
-        localStorage.setItem('homey_family_name', matched.homey_families.name);
+
+    // --- Path 1: Supabase Auth (new accounts) ---
+    const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password });
+    if (!authErr && authData?.user) {
+      const ok = await _resolveAndStoreFamily(authData.user.id);
+      if (ok) {
         document.getElementById('fl-email').value = '';
         document.getElementById('fl-password').value = '';
         initLogin();
         return;
       }
-      errEl.textContent = t('wrongEmailOrPassword'); return;
+      // Signed in to Supabase Auth but no linked family — sign back out and fall through
+      await sb.auth.signOut();
     }
-    currentFamilyId = result.id;
-    localStorage.setItem('homey_family_id', result.id);
-    localStorage.setItem('homey_family_name', result.name);
-    document.getElementById('fl-email').value = '';
-    document.getElementById('fl-password').value = '';
-    initLogin();
+
+    // --- Path 2: Legacy RPC (existing families created before Supabase Auth migration) ---
+    const { data: legacy, error: legacyErr } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
+    if (!legacyErr && legacy) {
+      currentFamilyId = legacy.id;
+      localStorage.setItem('homey_family_id', legacy.id);
+      localStorage.setItem('homey_family_name', legacy.name);
+      document.getElementById('fl-email').value = '';
+      document.getElementById('fl-password').value = '';
+      initLogin();
+      return;
+    }
+
+    // --- Path 3: Secondary parent (homey_parents table) ---
+    const { data: parents2 } = await sb.from('homey_parents').select('*, homey_families(id, name)').eq('email', email);
+    const matched = (parents2 || []).find(p => p.password === password);
+    if (matched?.homey_families) {
+      currentFamilyId = matched.family_id;
+      localStorage.setItem('homey_family_id', matched.family_id);
+      localStorage.setItem('homey_family_name', matched.homey_families.name);
+      document.getElementById('fl-email').value = '';
+      document.getElementById('fl-password').value = '';
+      initLogin();
+      return;
+    }
+
+    errEl.textContent = t('wrongEmailOrPassword');
   } catch (err) {
     errEl.textContent = friendlyError(err);
   } finally {
@@ -2489,16 +2521,33 @@ async function familyRegister(btn) {
   const origText = btn.textContent;
   try {
     btn.disabled = true; btn.textContent = t('creating');
-    const { data: result, error } = await sb.rpc('create_family', { p_name: name, p_email: email, p_password: password });
-    if (error) throw error;
-    currentFamilyId = result.id;
-    localStorage.setItem('homey_family_id', result.id);
-    localStorage.setItem('homey_family_name', result.name);
-    document.getElementById('fr-name').value = '';
-    document.getElementById('fr-email').value = '';
-    document.getElementById('fr-password').value = '';
-    document.getElementById('fr-password2').value = '';
-    showNotif(t('familyCreated'), 'success', result.name);
+
+    // Create Supabase Auth user
+    const { data: authData, error: authErr } = await sb.auth.signUp({ email, password });
+    if (authErr) throw authErr;
+
+    // Supabase may require email confirmation (disable in Auth → Settings → "Confirm email")
+    if (!authData.session) {
+      errEl.textContent = 'Tarkista sähköpostisi ja vahvista rekisteröityminen, sitten kirjaudu sisään.';
+      return;
+    }
+
+    // Insert family linked to the new auth user
+    const { data: family, error: famErr } = await sb.from('homey_families')
+      .insert({ name, email, auth_user_id: authData.user.id })
+      .select('id, name')
+      .single();
+    if (famErr) {
+      // Roll back: delete the auth user if family insert fails
+      await sb.auth.signOut();
+      throw famErr;
+    }
+
+    currentFamilyId = family.id;
+    localStorage.setItem('homey_family_id', family.id);
+    localStorage.setItem('homey_family_name', family.name);
+    ['fr-name','fr-email','fr-password','fr-password2'].forEach(id => { document.getElementById(id).value = ''; });
+    showNotif(t('familyCreated'), 'success', family.name);
     initLogin();
   } catch (err) {
     errEl.textContent = err.message?.includes('unique') || err.message?.includes('duplicate')
@@ -2511,6 +2560,7 @@ async function familyRegister(btn) {
 
 function switchFamily() {
   if (!confirm(t('confirmSwitchFamily'))) return;
+  sb.auth.signOut().catch(() => {});
   localStorage.removeItem('homey_family_id');
   localStorage.removeItem('homey_family_name');
   currentFamilyId = null;
@@ -3001,17 +3051,11 @@ function renderAssignedTasks() {
   }
 
   container.innerHTML = myTasks.map(task => {
-    const today = new Date().toISOString().slice(0, 10);
-    const doneTodayComp = state.completions.find(c =>
-      c.task_id === task.id &&
-      c.child_id === childId &&
-      c.completed_at?.slice(0, 10) === today &&
-      (c.status === 'pending' || c.status === 'approved')
-    );
-    const statusBadge = doneTodayComp
-      ? `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`
+    const doneComp = isDoneInPeriod(task, childId);
+    const statusBadge = doneComp
+      ? `<span class="badge badge-${doneComp.status}">${doneComp.status === 'pending' ? t('pending') : t('approved')}</span>`
       : '';
-    const actionBtn = doneTodayComp
+    const actionBtn = doneComp
       ? `<button class="btn btn-sm" disabled style="opacity:0.4" onclick="event.stopPropagation()">${t('done')}</button>`
       : `<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openCommentModal('${task.id}')">${t('markDone')}</button>`;
     const recBadge = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
@@ -3056,18 +3100,11 @@ function renderFreeTasks() {
     const isReservedByOther = task.reserved_by && task.reserved_by !== childId;
     const reservedByChild = isReservedByOther ? state.children.find(c => c.id === task.reserved_by) : null;
 
-    // check if done today
-    const today = new Date().toISOString().slice(0, 10);
-    const doneTodayComp = state.completions.find(c =>
-      c.task_id === task.id &&
-      c.child_id === childId &&
-      c.completed_at?.slice(0, 10) === today &&
-      (c.status === 'pending' || c.status === 'approved')
-    );
+    const doneComp = isDoneInPeriod(task, childId);
 
     let actionsHtml = '';
-    if (doneTodayComp) {
-      actionsHtml = `<span class="badge badge-${doneTodayComp.status}">${doneTodayComp.status === 'pending' ? t('pending') : t('approved')}</span>`;
+    if (doneComp) {
+      actionsHtml = `<span class="badge badge-${doneComp.status}">${doneComp.status === 'pending' ? t('pending') : t('approved')}</span>`;
     } else if (isReservedByMe) {
       actionsHtml = `
         <button class="btn btn-sm btn-primary" onclick="openCommentModal('${task.id}')">${t('done')}</button>
@@ -3362,7 +3399,7 @@ function renderParentOverview() {
       ${childCards}
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.0</footer>
+    <footer>Homey v5.1</footer>
   `;
 }
 
@@ -4079,6 +4116,31 @@ function recurrenceLabel(r) {
   return '';
 }
 
+// Returns the completion record if this task is already done in the current period,
+// or undefined if it can be done again.
+//   null/daily  → once per calendar day
+//   weekly      → once per Mon-Sun week
+//   monthly     → once per calendar month
+function isDoneInPeriod(task, childId) {
+  const rec = task.recurrence;
+  const now = new Date();
+  return state.completions.find(c => {
+    if (c.task_id !== task.id || c.child_id !== childId) return false;
+    if (c.status !== 'pending' && c.status !== 'approved') return false;
+    if (!c.completed_at) return false;
+    const d = new Date(c.completed_at);
+    if (rec === 'weekly') {
+      const ws = getWeekStart();
+      return d >= ws && d < new Date(ws.getTime() + 7 * 86400000);
+    }
+    if (rec === 'monthly') {
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    }
+    // daily or null: same calendar day
+    return d.toISOString().slice(0, 10) === now.toISOString().slice(0, 10);
+  });
+}
+
 // ===== SAVINGS GOAL =====
 function renderGoal() {
   const card = document.getElementById('child-goal-card');
@@ -4295,18 +4357,13 @@ function openTaskDetail(taskId) {
   }
 
   // Mark done button
-  const today = new Date().toISOString().slice(0, 10);
-  const doneTodayComp = state.completions.find(c =>
-    c.task_id === taskId && c.child_id === childId &&
-    c.completed_at?.slice(0, 10) === today &&
-    (c.status === 'pending' || c.status === 'approved')
-  );
+  const doneComp = isDoneInPeriod(task, childId);
   const markBtn = document.getElementById('td-mark-done-btn');
-  markBtn.disabled = !!doneTodayComp;
-  markBtn.textContent = doneTodayComp ? t('done') : t('markDone');
-  markBtn.style.opacity = doneTodayComp ? '0.4' : '1';
+  markBtn.disabled = !!doneComp;
+  markBtn.textContent = doneComp ? t('done') : t('markDone');
+  markBtn.style.opacity = doneComp ? '0.4' : '1';
   markBtn.onclick = () => {
-    if (doneTodayComp) return;
+    if (doneComp) return;
     openCommentModal(taskId, true);
   };
 
@@ -4976,12 +5033,21 @@ function sendNativeNotif(title, body, icon) {
 }
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   applyDarkMode();
   applyTranslations();
   document.querySelectorAll('.tab-content').forEach(el => {
     el.style.display = el.classList.contains('active') ? 'block' : 'none';
   });
+  // Try Supabase Auth session first (new accounts)
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      const ok = await _resolveAndStoreFamily(session.user.id);
+      if (ok) { initLogin(); return; }
+    }
+  } catch (e) { /* continue to legacy path */ }
+  // Fall back to localStorage (legacy accounts)
   const savedFamilyId = localStorage.getItem('homey_family_id');
   if (savedFamilyId) {
     currentFamilyId = savedFamilyId;
