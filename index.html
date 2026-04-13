@@ -1293,6 +1293,59 @@
   </div>
 </div>
 
+<!-- ===== CREATE PARENT PIN MODAL ===== -->
+<div id="modal-create-pin" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" id="create-pin-title">Luo oma PIN-koodi</div>
+    <p id="create-pin-subtitle" style="font-size:0.85rem;color:var(--text-muted);text-align:center;margin-bottom:12px;">Syötä 4-numeroinen PIN-koodi</p>
+    <div class="pin-display" style="justify-content:center;margin-bottom:8px;">
+      <div class="pin-dot" id="cpd-0"></div>
+      <div class="pin-dot" id="cpd-1"></div>
+      <div class="pin-dot" id="cpd-2"></div>
+      <div class="pin-dot" id="cpd-3"></div>
+    </div>
+    <div id="create-pin-error" class="text-center" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:4px;"></div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="createPinPress('1')">1</button>
+      <button class="pin-key" onclick="createPinPress('2')">2</button>
+      <button class="pin-key" onclick="createPinPress('3')">3</button>
+      <button class="pin-key" onclick="createPinPress('4')">4</button>
+      <button class="pin-key" onclick="createPinPress('5')">5</button>
+      <button class="pin-key" onclick="createPinPress('6')">6</button>
+      <button class="pin-key" onclick="createPinPress('7')">7</button>
+      <button class="pin-key" onclick="createPinPress('8')">8</button>
+      <button class="pin-key" onclick="createPinPress('9')">9</button>
+      <button class="pin-key" style="visibility:hidden"></button>
+      <button class="pin-key" onclick="createPinPress('0')">0</button>
+      <button class="pin-key del" onclick="createPinDelete()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CHANGE PARENT PIN MODAL ===== -->
+<div id="modal-change-parent-pin" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">🔢 Vaihda PIN-koodi</div>
+    <div class="form-group">
+      <label class="input-label">Nykyinen PIN</label>
+      <input type="password" id="cpp-current" class="input" maxlength="4" placeholder="••••" inputmode="numeric" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Uusi PIN (4 numeroa)</label>
+      <input type="password" id="cpp-new" class="input" maxlength="4" placeholder="••••" inputmode="numeric" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Uusi PIN uudelleen</label>
+      <input type="password" id="cpp-new2" class="input" maxlength="4" placeholder="••••" inputmode="numeric" />
+    </div>
+    <div id="cpp-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="changeParentPin(this)">Tallenna</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-change-parent-pin')">Peruuta</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CHANGE PASSWORD MODAL ===== -->
 <div id="modal-change-password" class="modal-overlay hidden">
   <div class="modal">
@@ -1763,7 +1816,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.8</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.9</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1777,7 +1830,7 @@
         <button onclick="showAdminLogin()" data-i18n="parentLogin">Vanhemman kirjautuminen</button>
       </div>
     </div>
-    <!-- Step 2: syötä PIN -->
+    <!-- Step 2: syötä PIN (lapset + vanhempi PIN-kirjautuminen) -->
     <div id="login-step-2" class="hidden">
       <button onclick="backToStep1()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.875rem;margin-bottom:12px;">← Takaisin</button>
       <div class="login-step-title" id="pin-title">Syötä PIN-koodi</div>
@@ -1802,6 +1855,26 @@
         <button class="pin-key" onclick="pinPress('0')">0</button>
         <button class="pin-key del" onclick="pinDelete()">⌫</button>
       </div>
+    </div>
+    <!-- Step admin: valitse kirjautumistapa -->
+    <div id="login-step-admin" class="hidden">
+      <button onclick="backToStep1()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.875rem;margin-bottom:12px;">← Takaisin</button>
+      <div class="login-step-title" data-i18n="parentLogin">Vanhemman kirjautuminen</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+        <button class="btn btn-primary btn-full" onclick="showAdminPinLogin()">🔢 Kirjaudu PIN-koodilla</button>
+        <button class="btn btn-outline btn-full" onclick="showAdminPasswordLogin()">🔑 Kirjaudu salasanalla</button>
+      </div>
+    </div>
+    <!-- Step admin-pw: salasanakirjautuminen vanhemmalle -->
+    <div id="login-step-admin-pw" class="hidden">
+      <button onclick="backToAdminChoice()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.875rem;margin-bottom:12px;">← Takaisin</button>
+      <div class="login-step-title">Vanhemman salasana</div>
+      <div class="form-group" style="margin-top:16px;">
+        <label class="input-label">Salasana</label>
+        <input type="password" id="admin-pw-input" class="input" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div id="admin-pw-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:10px;"></div>
+      <button class="btn btn-primary btn-full" onclick="parentPasswordLogin(this)">Kirjaudu sisään</button>
     </div>
   </div>
 </div>
@@ -1875,7 +1948,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.8</footer>
+  <footer>Homey v5.9</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1962,7 +2035,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.8</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.9</footer>
 </div>
 
 <script>
@@ -2587,6 +2660,9 @@ const state = {
   selectedChildId: null, // login step
   pinInput: '',
   isAdminLogin: false,
+  adminPin: null,        // loaded from homey_families.admin_pin
+  createPinBuffer: '',   // modal-create-pin phase 1 entry
+  createPinPhase: 1,     // 1 = enter, 2 = confirm
   realtimeChannel: null,
   childTaskTab: 'assigned',
 };
@@ -2679,12 +2755,12 @@ function showView(name) {
 
 // Store family for current session after resolving from auth user
 async function _resolveAndStoreFamily(userId) {
-  // 1. Try new-style: homey_families.auth_user_id = userId
-  const { data: fam } = await sb.from('homey_families').select('id, name').eq('auth_user_id', userId).maybeSingle();
+  const { data: fam } = await sb.from('homey_families').select('id, name, admin_pin').eq('auth_user_id', userId).maybeSingle();
   if (fam) {
     currentFamilyId = fam.id;
     localStorage.setItem('homey_family_id', fam.id);
     localStorage.setItem('homey_family_name', fam.name);
+    state.adminPin = fam.admin_pin ?? null;
     return true;
   }
   return false;
@@ -3010,6 +3086,11 @@ async function initLogin() {
   const grid = document.getElementById('child-grid');
   grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   await loadAll();
+  // Refresh admin_pin from DB (catches cases where it was set elsewhere)
+  try {
+    const { data: fam } = await sb.from('homey_families').select('admin_pin').eq('id', currentFamilyId).maybeSingle();
+    if (fam) state.adminPin = fam.admin_pin ?? null;
+  } catch { /* non-fatal */ }
   renderChildGrid();
 }
 
@@ -3044,8 +3125,85 @@ function selectChild(id) {
 function showAdminLogin() {
   state.isAdminLogin = true;
   state.selectedChildId = null;
+  document.getElementById('login-step-1').classList.add('hidden');
+  document.getElementById('login-step-2').classList.add('hidden');
+  document.getElementById('login-step-admin-pw').classList.add('hidden');
+  document.getElementById('login-step-admin').classList.remove('hidden');
+}
+
+function showAdminPinLogin() {
+  if (!state.adminPin) {
+    document.getElementById('login-step-admin').classList.add('hidden');
+    // No PIN set — inform user to use password login
+    const el = document.getElementById('login-step-admin');
+    el.classList.remove('hidden');
+    // Show inline message
+    const existing = document.getElementById('admin-no-pin-msg');
+    if (!existing) {
+      const msg = document.createElement('p');
+      msg.id = 'admin-no-pin-msg';
+      msg.style.cssText = 'color:var(--danger);font-size:0.85rem;text-align:center;margin-top:8px;';
+      msg.textContent = 'PIN-koodia ei ole asetettu. Kirjaudu ensin salasanalla.';
+      el.appendChild(msg);
+    }
+    return;
+  }
+  const existing = document.getElementById('admin-no-pin-msg');
+  if (existing) existing.remove();
   document.getElementById('pin-title').textContent = t('parentPin');
+  document.getElementById('login-step-admin').classList.add('hidden');
   showPinStep();
+}
+
+function showAdminPasswordLogin() {
+  document.getElementById('login-step-admin').classList.add('hidden');
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('admin-pw-error').textContent = '';
+  document.getElementById('login-step-admin-pw').classList.remove('hidden');
+}
+
+function backToAdminChoice() {
+  document.getElementById('login-step-admin-pw').classList.add('hidden');
+  document.getElementById('login-step-admin').classList.remove('hidden');
+}
+
+async function parentPasswordLogin(btn) {
+  const password = document.getElementById('admin-pw-input').value;
+  const errEl = document.getElementById('admin-pw-error');
+  errEl.textContent = '';
+  if (!password) { errEl.textContent = t('fillAllFields'); return; }
+
+  const origText = btn.textContent;
+  try {
+    btn.disabled = true; btn.textContent = t('loggingIn');
+    // Get email from current Auth session
+    const { data: { session } } = await sb.auth.getSession();
+    const email = session?.user?.email;
+    if (!email) { errEl.textContent = 'Kirjaudu ensin perheenä sisään.'; return; }
+
+    const { error: authErr } = await sb.auth.signInWithPassword({ email, password });
+    if (authErr) { errEl.textContent = t('wrongEmailOrPassword'); return; }
+
+    document.getElementById('login-step-admin-pw').classList.add('hidden');
+    await enterParentView();
+  } catch (err) {
+    errEl.textContent = friendlyError(err);
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
+}
+
+async function enterParentView() {
+  // If no PIN is set yet, prompt to create one first
+  if (!state.adminPin) {
+    openCreatePinModal();
+    return;
+  }
+  state.userRole = 'parent';
+  state.currentUser = null;
+  setupRealtime();
+  await initParentView();
+  showView('parent');
 }
 
 function showPinStep() {
@@ -3059,6 +3217,8 @@ function showPinStep() {
 function backToStep1() {
   document.getElementById('login-step-1').classList.remove('hidden');
   document.getElementById('login-step-2').classList.add('hidden');
+  document.getElementById('login-step-admin').classList.add('hidden');
+  document.getElementById('login-step-admin-pw').classList.add('hidden');
   state.pinInput = '';
   updatePinDots();
 }
@@ -3087,7 +3247,13 @@ function updatePinDots() {
 async function checkPin() {
   const pin = state.pinInput;
   if (state.isAdminLogin) {
-    if (pin === ADMIN_PIN) {
+    if (!state.adminPin) {
+      document.getElementById('pin-error').textContent = 'PIN-koodia ei ole asetettu. Käytä salasanakirjautumista.';
+      state.pinInput = '';
+      updatePinDots();
+      return;
+    }
+    if (pin === state.adminPin) {
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
@@ -3649,7 +3815,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.8</footer>
+    <footer>Homey v5.9</footer>
   `;
 }
 
@@ -4092,6 +4258,7 @@ function renderParentManage() {
     <div class="card" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">${t('loggedInAs')} <strong>${esc(familyName)}</strong></div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-change-parent-pin')">🔢 Vaihda PIN</button>
         <button class="btn btn-outline btn-sm" onclick="openModal('modal-change-password')">🔐 Vaihda salasana</button>
         <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 ${t('changeFamily')}</button>
       </div>
@@ -4153,6 +4320,108 @@ async function changePassword(btn) {
     showNotif('Salasana vaihdettu!', 'success');
   } catch (err) {
     errEl.textContent = err.message || 'Salasanan vaihto epäonnistui.';
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
+  }
+}
+
+// ===== CREATE PARENT PIN =====
+function openCreatePinModal() {
+  state.createPinBuffer = '';
+  state.createPinPhase = 1;
+  document.getElementById('create-pin-title').textContent = 'Luo oma PIN-koodi';
+  document.getElementById('create-pin-subtitle').textContent = 'Syötä 4-numeroinen PIN-koodi';
+  document.getElementById('create-pin-error').textContent = '';
+  createPinUpdateDots();
+  openModal('modal-create-pin');
+}
+
+function createPinUpdateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('cpd-' + i).classList.toggle('filled', i < state.createPinBuffer.length);
+  }
+}
+
+function createPinPress(digit) {
+  if (state.createPinBuffer.length >= 4) return;
+  state.createPinBuffer += digit;
+  createPinUpdateDots();
+  if (state.createPinBuffer.length === 4) setTimeout(createPinNext, 150);
+}
+
+function createPinDelete() {
+  state.createPinBuffer = state.createPinBuffer.slice(0, -1);
+  createPinUpdateDots();
+  document.getElementById('create-pin-error').textContent = '';
+}
+
+async function createPinNext() {
+  if (state.createPinPhase === 1) {
+    // Store phase 1 entry and ask for confirmation
+    state._createPinFirst = state.createPinBuffer;
+    state.createPinBuffer = '';
+    state.createPinPhase = 2;
+    document.getElementById('create-pin-title').textContent = 'Vahvista PIN-koodi';
+    document.getElementById('create-pin-subtitle').textContent = 'Syötä PIN-koodi uudelleen';
+    document.getElementById('create-pin-error').textContent = '';
+    createPinUpdateDots();
+  } else {
+    // Phase 2: confirm
+    if (state.createPinBuffer !== state._createPinFirst) {
+      document.getElementById('create-pin-error').textContent = 'PIN-koodit eivät täsmää. Yritä uudelleen.';
+      state.createPinBuffer = '';
+      state.createPinPhase = 1;
+      state._createPinFirst = '';
+      document.getElementById('create-pin-title').textContent = 'Luo oma PIN-koodi';
+      document.getElementById('create-pin-subtitle').textContent = 'Syötä 4-numeroinen PIN-koodi';
+      createPinUpdateDots();
+      return;
+    }
+    // Save to DB
+    try {
+      const { error } = await sb.from('homey_families').update({ admin_pin: state.createPinBuffer }).eq('id', currentFamilyId);
+      if (error) throw error;
+      state.adminPin = state.createPinBuffer;
+      closeModal('modal-create-pin');
+      showNotif('PIN-koodi luotu!', 'success');
+      // Now proceed to parent view
+      state.userRole = 'parent';
+      state.currentUser = null;
+      setupRealtime();
+      await initParentView();
+      showView('parent');
+    } catch (err) {
+      document.getElementById('create-pin-error').textContent = err.message || 'Tallennus epäonnistui.';
+      state.createPinBuffer = '';
+      createPinUpdateDots();
+    }
+  }
+}
+
+// ===== CHANGE PARENT PIN =====
+async function changeParentPin(btn) {
+  const current = document.getElementById('cpp-current').value.trim();
+  const newPin = document.getElementById('cpp-new').value.trim();
+  const newPin2 = document.getElementById('cpp-new2').value.trim();
+  const errEl = document.getElementById('cpp-error');
+  errEl.textContent = '';
+
+  if (!current || !newPin || !newPin2) { errEl.textContent = t('fillAllFields'); return; }
+  if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN-koodin on oltava tasan 4 numeroa.'; return; }
+  if (newPin !== newPin2) { errEl.textContent = 'Uudet PIN-koodit eivät täsmää.'; return; }
+  if (state.adminPin && current !== state.adminPin) { errEl.textContent = 'Nykyinen PIN on väärä.'; return; }
+
+  const origText = btn.textContent;
+  try {
+    btn.disabled = true; btn.textContent = t('saving') || 'Tallennetaan...';
+    const { error } = await sb.from('homey_families').update({ admin_pin: newPin }).eq('id', currentFamilyId);
+    if (error) throw error;
+    state.adminPin = newPin;
+    closeModal('modal-change-parent-pin');
+    ['cpp-current','cpp-new','cpp-new2'].forEach(id => { document.getElementById(id).value = ''; });
+    showNotif('PIN-koodi vaihdettu!', 'success');
+  } catch (err) {
+    errEl.textContent = err.message || 'PIN:in vaihto epäonnistui.';
   } finally {
     btn.disabled = false; btn.textContent = origText;
   }
