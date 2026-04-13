@@ -2745,7 +2745,16 @@ async function familyRegister(btn) {
 
     // Create Supabase Auth user
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password });
-    if (authErr) throw authErr;
+    if (authErr) {
+      const msg = (authErr.message || '').toLowerCase();
+      if (authErr.status === 400 || msg.includes('already registered') || msg.includes('already exists'))
+        errEl.textContent = 'Sähköposti on jo rekisteröity — kirjaudu sisään sen sijaan.';
+      else if (msg.includes('signups') || msg.includes('sign up'))
+        errEl.textContent = 'Rekisteröityminen ei ole käytössä. Ota yhteyttä ylläpitoon.';
+      else
+        errEl.textContent = authErr.message || 'Rekisteröityminen epäonnistui.';
+      return;
+    }
 
     // Supabase may require email confirmation (disable in Auth → Settings → "Confirm email")
     if (!authData.session) {
@@ -2759,8 +2768,10 @@ async function familyRegister(btn) {
       .select('id, name')
       .single();
     if (famErr) {
-      // Roll back: delete the auth user if family insert fails
+      // Roll back: sign out the auth user if family insert fails
       await sb.auth.signOut();
+      if ((famErr.message || '').includes('auth_user_id'))
+        throw new Error('Tietokanta vaatii päivityksen — aja migrations_v5.sql Supabase SQL editorissa.');
       throw famErr;
     }
 
