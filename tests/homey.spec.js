@@ -12,7 +12,26 @@ async function loginAsFamily(page) {
   await page.locator('#fl-email').fill(email);
   await page.locator('#fl-password').fill(password);
   await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
-  await expect(page.locator('text=Kuka olet?')).toBeVisible({ timeout: 15000 });
+  
+  // Odota PIN-modaali jos ensimmäinen kirjautuminen
+  const pinModal = page.locator('text=Luo oma PIN-koodi');
+  const loginView = page.locator('#view-login');
+  
+  await Promise.race([
+    pinModal.waitFor({ state: 'visible', timeout: 10000 }).then(async () => {
+      // Syötä admin PIN jos modaali aukeaa
+      for (const digit of adminPin) {
+        await page.getByRole('button', { name: digit, exact: true }).first().click();
+      }
+      // Vahvista PIN
+      for (const digit of adminPin) {
+        await page.getByRole('button', { name: digit, exact: true }).first().click();
+      }
+    }),
+    loginView.waitFor({ state: 'visible', timeout: 10000 })
+  ]);
+  
+  await expect(page.locator('#view-login')).toBeVisible({ timeout: 15000 });
 }
 
 async function loginAsParent(page) {
