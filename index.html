@@ -1743,7 +1743,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.4</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1855,7 +1855,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.2</footer>
+  <footer>Homey v5.4</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1942,7 +1942,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.4</footer>
 </div>
 
 <script>
@@ -2744,10 +2744,13 @@ async function familyRegister(btn) {
     btn.disabled = true; btn.textContent = t('creating');
 
     // Create Supabase Auth user
-    const { data: authData, error: authErr } = await sb.auth.signUp({ email, password });
+    console.log('signup payload:', email, password.length);
+    const { data: authData, error: authErr } = await sb.auth.signUp({ email: email, password: password });
     if (authErr) {
       const msg = (authErr.message || '').toLowerCase();
-      if (authErr.status === 400 || msg.includes('already registered') || msg.includes('already exists'))
+      if (authErr.status === 422 || msg.includes('password') || msg.includes('weak'))
+        errEl.textContent = 'Salasanan on oltava vähintään 6 merkkiä pitkä.';
+      else if (authErr.status === 400 || msg.includes('already registered') || msg.includes('already exists'))
         errEl.textContent = 'Sähköposti on jo rekisteröity — kirjaudu sisään sen sijaan.';
       else if (msg.includes('signups') || msg.includes('sign up'))
         errEl.textContent = 'Rekisteröityminen ei ole käytössä. Ota yhteyttä ylläpitoon.';
@@ -3639,7 +3642,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.2</footer>
+    <footer>Homey v5.4</footer>
   `;
 }
 
