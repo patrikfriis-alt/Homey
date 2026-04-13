@@ -1293,6 +1293,26 @@
   </div>
 </div>
 
+<!-- ===== CHANGE PASSWORD MODAL ===== -->
+<div id="modal-change-password" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">🔐 Vaihda salasana</div>
+    <div class="form-group">
+      <label class="input-label">Uusi salasana</label>
+      <input type="password" id="cp-new" class="input" placeholder="••••••••" autocomplete="new-password" />
+    </div>
+    <div class="form-group">
+      <label class="input-label">Uusi salasana uudelleen</label>
+      <input type="password" id="cp-new2" class="input" placeholder="••••••••" autocomplete="new-password" />
+    </div>
+    <div id="cp-error" style="color:var(--danger);font-size:0.85rem;min-height:18px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="changePassword(this)">Tallenna</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-change-password')">Peruuta</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== ADD CHILD MODAL ===== -->
 <div id="modal-add-child" class="modal-overlay hidden">
   <div class="modal">
@@ -1743,7 +1763,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.7</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.8</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1855,7 +1875,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.7</footer>
+  <footer>Homey v5.8</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1942,7 +1962,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.7</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.8</footer>
 </div>
 
 <script>
@@ -3629,7 +3649,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.7</footer>
+    <footer>Homey v5.8</footer>
   `;
 }
 
@@ -4071,7 +4091,10 @@ function renderParentManage() {
     </div>
     <div class="card" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">${t('loggedInAs')} <strong>${esc(familyName)}</strong></div>
-      <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 ${t('changeFamily')}</button>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-change-password')">🔐 Vaihda salasana</button>
+        <button class="btn btn-outline btn-sm" onclick="switchFamily()">🔄 ${t('changeFamily')}</button>
+      </div>
     </div>
   `;
 }
@@ -4106,6 +4129,32 @@ async function deleteTask(id) {
     showNotif(friendlyError(err), 'error', err.message);
     await loadAll().catch(() => {});
     renderParentManage();
+  }
+}
+
+// ===== CHANGE PASSWORD =====
+async function changePassword(btn) {
+  const newPw = document.getElementById('cp-new').value;
+  const newPw2 = document.getElementById('cp-new2').value;
+  const errEl = document.getElementById('cp-error');
+  errEl.textContent = '';
+  if (!newPw || !newPw2) { errEl.textContent = t('fillAllFields'); return; }
+  if (newPw.length < 6) { errEl.textContent = 'Salasanan on oltava vähintään 6 merkkiä pitkä.'; return; }
+  if (newPw !== newPw2) { errEl.textContent = t('passwordsMismatch'); return; }
+
+  const origText = btn.textContent;
+  try {
+    btn.disabled = true; btn.textContent = t('saving') || 'Tallennetaan...';
+    const { error } = await sb.auth.updateUser({ password: newPw });
+    if (error) throw error;
+    closeModal('modal-change-password');
+    document.getElementById('cp-new').value = '';
+    document.getElementById('cp-new2').value = '';
+    showNotif('Salasana vaihdettu!', 'success');
+  } catch (err) {
+    errEl.textContent = err.message || 'Salasanan vaihto epäonnistui.';
+  } finally {
+    btn.disabled = false; btn.textContent = origText;
   }
 }
 
