@@ -10,8 +10,12 @@ async function loginAsFamily(page) {
   await page.click('text=Kirjaudu sisään');
   await page.locator('#fl-email').fill(email);
   await page.locator('#fl-password').fill(password);
-  await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
-  await expect(page.locator('text=Kuka olet?')).toBeVisible();
+  // Wait for Supabase Auth network response before asserting UI
+  const [response] = await Promise.all([
+    page.waitForResponse(r => r.url().includes('/auth/v1/token') && r.status() === 200),
+    page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click(),
+  ]);
+  await expect(page.locator('text=Kuka olet?')).toBeVisible({ timeout: 10000 });
 }
 
 async function loginAsParent(page) {
@@ -46,8 +50,11 @@ test('väärä salasana näyttää virheen', async ({ page }) => {
   await page.click('text=Kirjaudu sisään');
   await page.locator('#fl-email').fill(email);
   await page.locator('#fl-password').fill('vaara_salasana');
-  await page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click();
-  await expect(page.locator('text=Väärä sähköposti tai salasana')).toBeVisible();
+  const [_res] = await Promise.all([
+    page.waitForResponse(r => r.url().includes('/auth/v1/token')),
+    page.locator('#view-family-login').getByRole('button', { name: 'Kirjaudu sisään' }).click(),
+  ]);
+  await expect(page.locator('text=Väärä sähköposti tai salasana')).toBeVisible({ timeout: 10000 });
 });
 
 test('vanhempi pääsee hallintanäkymään', async ({ page }) => {
