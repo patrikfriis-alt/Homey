@@ -1816,7 +1816,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.9</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.10</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1948,7 +1948,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.9</footer>
+  <footer>Homey v5.10</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2035,7 +2035,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.9</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.10</footer>
 </div>
 
 <script>
@@ -3815,7 +3815,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.9</footer>
+    <footer>Homey v5.10</footer>
   `;
 }
 
@@ -5587,22 +5587,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.tab-content').forEach(el => {
     el.style.display = el.classList.contains('active') ? 'block' : 'none';
   });
-  // Try Supabase Auth session first (new accounts)
+  // Check Supabase Auth session — required to proceed
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (session?.user) {
       const ok = await _resolveAndStoreFamily(session.user.id);
       if (ok) { initLogin(); return; }
     }
-  } catch (e) { /* continue to legacy path */ }
-  // Fall back to localStorage (legacy accounts)
-  const savedFamilyId = localStorage.getItem('homey_family_id');
-  if (savedFamilyId) {
-    currentFamilyId = savedFamilyId;
-    initLogin();
-  } else {
-    showView('welcome');
-  }
+  } catch (e) { /* fall through to welcome */ }
+  // No valid session — clear stale localStorage and show family login
+  localStorage.removeItem('homey_family_id');
+  localStorage.removeItem('homey_family_name');
+  showView('welcome');
 });
 </script>
 
