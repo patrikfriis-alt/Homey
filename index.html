@@ -1743,7 +1743,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.5</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.6</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1855,7 +1855,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.5</footer>
+  <footer>Homey v5.6</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -1942,7 +1942,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.5</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.6</footer>
 </div>
 
 <script>
@@ -2681,48 +2681,33 @@ async function familyLogin(btn) {
   try {
     btn.disabled = true; btn.textContent = t('loggingIn');
 
-    // --- Path 1: Supabase Auth (new accounts) ---
     const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password });
-    if (!authErr && authData?.user) {
-      const { data: { session: _dbgSession } } = await sb.auth.getSession();
-      console.log('session after login:', _dbgSession?.user?.id);
-      const ok = await _resolveAndStoreFamily(authData.user.id);
-      if (ok) {
-        document.getElementById('fl-email').value = '';
-        document.getElementById('fl-password').value = '';
-        initLogin();
-        return;
-      }
-      // Signed in to Supabase Auth but no linked family — sign back out and fall through
+    if (authErr) {
+      errEl.textContent = t('wrongEmailOrPassword');
+      return;
+    }
+
+    const { data: { session } } = await sb.auth.getSession();
+    console.log('session after login:', session?.user?.id);
+
+    const { data: familyData, error: famErr } = await sb
+      .from('homey_families')
+      .select('id, name')
+      .eq('auth_user_id', authData.user.id)
+      .single();
+
+    if (famErr || !familyData) {
       await sb.auth.signOut();
-    }
-
-    // --- Path 2: Legacy RPC (existing families created before Supabase Auth migration) ---
-    const { data: legacy, error: legacyErr } = await sb.rpc('verify_family_password', { p_email: email, p_password: password });
-    if (!legacyErr && legacy) {
-      currentFamilyId = legacy.id;
-      localStorage.setItem('homey_family_id', legacy.id);
-      localStorage.setItem('homey_family_name', legacy.name);
-      document.getElementById('fl-email').value = '';
-      document.getElementById('fl-password').value = '';
-      initLogin();
+      errEl.textContent = 'Perhettä ei löydy. Ota yhteyttä ylläpitoon.';
       return;
     }
 
-    // --- Path 3: Secondary parent (homey_parents table) ---
-    const { data: parents2 } = await sb.from('homey_parents').select('*, homey_families(id, name)').eq('email', email);
-    const matched = (parents2 || []).find(p => p.password === password);
-    if (matched?.homey_families) {
-      currentFamilyId = matched.family_id;
-      localStorage.setItem('homey_family_id', matched.family_id);
-      localStorage.setItem('homey_family_name', matched.homey_families.name);
-      document.getElementById('fl-email').value = '';
-      document.getElementById('fl-password').value = '';
-      initLogin();
-      return;
-    }
-
-    errEl.textContent = t('wrongEmailOrPassword');
+    currentFamilyId = familyData.id;
+    localStorage.setItem('homey_family_id', familyData.id);
+    localStorage.setItem('homey_family_name', familyData.name);
+    document.getElementById('fl-email').value = '';
+    document.getElementById('fl-password').value = '';
+    initLogin();
   } catch (err) {
     errEl.textContent = friendlyError(err);
   } finally {
@@ -3644,7 +3629,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.5</footer>
+    <footer>Homey v5.6</footer>
   `;
 }
 
