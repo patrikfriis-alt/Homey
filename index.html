@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.17</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.18</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.17</footer>
+  <footer>Homey v5.18</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.17</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.18</footer>
 </div>
 
 <script>
@@ -3893,7 +3893,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.17</footer>
+    <footer>Homey v5.18</footer>
   `;
 }
 
@@ -5332,7 +5332,7 @@ async function checkAndGiveChallengeBonus(challenge, childId) {
       await loadAll();
       renderChildSaldo();
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.error('Virhe checkAndGiveChallengeBonus:', e); }
 }
 
 async function saveChallenge(btn) {
@@ -5614,7 +5614,7 @@ async function syncOfflineQueue() {
           tx2.objectStore('pending').delete(localId);
           synced++;
         }
-      } catch (e) { /* keep in queue */ }
+      } catch (e) { console.error('Virhe syncOfflineQueue (item):', e); }
     }
     if (synced > 0) {
       showNotif(t('offlineSynced'), 'success', `${synced} tehtävää synkronoitu`);
@@ -5671,7 +5671,7 @@ function sendNativeNotif(title, body, icon) {
   if (document.visibilityState === 'visible') return; // in-app notifs handle this
   try {
     new Notification(title, { body, icon: icon || '/Homey/icon-192.png', badge: '/Homey/icon-192.png' });
-  } catch (e) { /* silently ignore */ }
+  } catch (e) { console.error('Virhe sendNativeNotif:', e); }
 }
 
 // ===== INIT =====
@@ -5688,7 +5688,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const ok = await _resolveAndStoreFamily(session.user.id);
       if (ok) { initLogin(); return; }
     }
-  } catch (e) { /* fall through to welcome */ }
+  } catch (e) { console.error('Virhe getSession (init):', e); }
   // No valid session — clear stale localStorage and show family login
   localStorage.removeItem('homey_family_id');
   localStorage.removeItem('homey_family_name');
