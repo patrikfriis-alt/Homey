@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.11</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.12</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.11</footer>
+  <footer>Homey v5.12</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.11</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.12</footer>
 </div>
 
 <script>
@@ -2668,6 +2668,8 @@ const state = {
   selectedChildId: null, // login step
   pinInput: '',
   isAdminLogin: false,
+  pinFailCount: 0,
+  pinLockUntil: null,
   adminPin: null,        // loaded from homey_families.admin_pin
   createPinBuffer: '',   // modal-create-pin phase 1 entry
   createPinPhase: 1,     // 1 = enter, 2 = confirm
@@ -3253,6 +3255,13 @@ function updatePinDots() {
 }
 
 async function checkPin() {
+  if (state.pinLockUntil && Date.now() < state.pinLockUntil) {
+    const secs = Math.ceil((state.pinLockUntil - Date.now()) / 1000);
+    document.getElementById('pin-error').textContent = `Liian monta yritystä. Odota ${secs} s.`;
+    state.pinInput = '';
+    updatePinDots();
+    return;
+  }
   const pin = state.pinInput;
   if (state.isAdminLogin) {
     if (!state.adminPin) {
@@ -3266,12 +3275,14 @@ async function checkPin() {
       // Plain text match → migrate to hash
       await sb.from('homey_families').update({ admin_pin: hashedAdmin }).eq('id', currentFamilyId);
       state.adminPin = hashedAdmin;
+      state.pinFailCount = 0; state.pinLockUntil = null;
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
       await initParentView();
       showView('parent');
     } else if (hashedAdmin === state.adminPin) {
+      state.pinFailCount = 0; state.pinLockUntil = null;
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
@@ -3288,12 +3299,14 @@ async function checkPin() {
         // Plain text match → migrate to hash
         await sb.from('homey_children').update({ pin: hashedChild }).eq('id', child.id);
         child.pin = hashedChild;
+        state.pinFailCount = 0; state.pinLockUntil = null;
         state.userRole = 'child';
         state.currentUser = child;
         setupRealtime();
         await initChildView();
         showView('child');
       } else if (String(child.pin) === hashedChild) {
+        state.pinFailCount = 0; state.pinLockUntil = null;
         state.userRole = 'child';
         state.currentUser = child;
         setupRealtime();
@@ -3309,7 +3322,14 @@ async function checkPin() {
 }
 
 function wrongPin() {
-  document.getElementById('pin-error').textContent = t('wrongPin');
+  state.pinFailCount += 1;
+  if (state.pinFailCount >= 3) {
+    state.pinLockUntil = Date.now() + 60000;
+    state.pinFailCount = 0;
+    document.getElementById('pin-error').textContent = 'Liian monta yritystä. Odota 60 s.';
+  } else {
+    document.getElementById('pin-error').textContent = t('wrongPin');
+  }
   state.pinInput = '';
   updatePinDots();
   // shake animation
@@ -3847,7 +3867,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.11</footer>
+    <footer>Homey v5.12</footer>
   `;
 }
 
