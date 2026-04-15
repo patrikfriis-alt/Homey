@@ -1426,8 +1426,29 @@
     <!-- Yhteiset kentät -->
     <div class="divider"></div>
     <div class="form-group">
+      <label class="input-label">Palkkiotyyppi</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label style="flex:1;min-width:80px;display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="reward-type" value="cash" checked onchange="onRewardTypeChange()" style="accent-color:var(--primary);width:16px;height:16px;" />
+          <span style="font-weight:600;font-size:0.85rem;">💵 Euroja</span>
+        </label>
+        <label style="flex:1;min-width:80px;display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="reward-type" value="points" onchange="onRewardTypeChange()" style="accent-color:var(--primary);width:16px;height:16px;" />
+          <span style="font-weight:600;font-size:0.85rem;">⭐ Pisteitä</span>
+        </label>
+        <label style="flex:1;min-width:80px;display:flex;align-items:center;gap:6px;padding:10px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
+          <input type="radio" name="reward-type" value="child_choice" onchange="onRewardTypeChange()" style="accent-color:var(--primary);width:16px;height:16px;" />
+          <span style="font-weight:600;font-size:0.85rem;">👶 Lapsen valinta</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
       <label class="input-label" data-i18n="price">Hinta (€)</label>
-      <input type="number" id="new-task-price" class="input" placeholder="Syötä hinta" min="0" step="0.10" />
+      <input type="number" id="new-task-price" class="input" placeholder="Syötä hinta" min="0" step="0.10" oninput="onTaskPriceInput()" />
+    </div>
+    <div class="form-group" id="task-points-group" style="display:none;">
+      <label class="input-label">Pisteet (⭐)</label>
+      <input type="number" id="new-task-points" class="input" placeholder="Pisteet" min="0" step="1" />
     </div>
     <div class="form-group">
       <label class="input-label" data-i18n="recurrence">Toistuvuus</label>
@@ -1620,6 +1641,21 @@
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(false)" data-i18n="sendWithoutComment">Ilman kommenttia</button>
       <button class="btn btn-primary w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(true)" data-i18n="sendWithComment">Lähetä kommentilla</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REWARD CHOICE MODAL ===== -->
+<div id="modal-reward-choice" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Mitä palkkiota haluat?</div>
+    <div id="reward-choice-task-name" style="text-align:center;color:var(--text-muted);margin-bottom:16px;font-size:0.95rem;"></div>
+    <div style="display:flex;gap:12px;margin-top:6px;">
+      <button class="btn btn-primary w-full" style="font-size:1rem;" onclick="submitRewardChoice('cash')"></button>
+      <button class="btn btn-outline w-full" style="font-size:1rem;" onclick="submitRewardChoice('points')"></button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-reward-choice')">Peruuta</button>
     </div>
   </div>
 </div>
@@ -1817,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.18</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.1</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1985,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.18</footer>
+  <footer>Homey v6.1</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2072,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.18</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.1</footer>
 </div>
 
 <script>
@@ -3629,6 +3665,8 @@ function renderFreeTasks() {
 // Feature 2: pending task id for comment modal
 let _commentTaskId = null;
 let _commentFromDetail = false;
+let _pendingRewardTaskId = null;
+let _pendingRewardComment = '';
 
 function openCommentModal(taskId, fromDetail = false) {
   _commentTaskId = taskId;
@@ -3642,12 +3680,41 @@ async function submitMarkDoneFromModal(withComment) {
   const comment = withComment ? document.getElementById('comment-text').value.trim() : '';
   closeModal('modal-comment');
   _commentTaskId = null;
-  await markDone(taskId, null, comment);
-  if (_commentFromDetail) closeModal('modal-task-detail');
+  const fromDetail = _commentFromDetail;
   _commentFromDetail = false;
+
+  // Check reward_type before proceeding
+  const task = state.allTasks.find(t => t.id === taskId);
+  const rt = task?.reward_type || 'cash';
+  if (rt === 'child_choice') {
+    _pendingRewardTaskId = taskId;
+    _pendingRewardComment = comment;
+    // Populate modal
+    const taskName = translateTaskTitle(task?.title || '');
+    document.getElementById('reward-choice-task-name').textContent = taskName;
+    const cashBtn = document.querySelector('#modal-reward-choice .btn-primary');
+    const pointsBtn = document.querySelector('#modal-reward-choice .btn-outline');
+    cashBtn.textContent = `💵 ${fmt(task?.amount ?? 0)}`;
+    pointsBtn.textContent = `⭐ ${task?.points ?? Math.round((task?.amount ?? 0) * 10)} p`;
+    openModal('modal-reward-choice');
+    if (fromDetail) closeModal('modal-task-detail');
+    return;
+  }
+  const chosen_reward_type = rt === 'points' ? 'points' : 'cash';
+  await markDone(taskId, null, comment, chosen_reward_type);
+  if (fromDetail) closeModal('modal-task-detail');
 }
 
-async function markDone(taskId, btn, comment = '') {
+async function submitRewardChoice(choice) {
+  closeModal('modal-reward-choice');
+  const taskId = _pendingRewardTaskId;
+  const comment = _pendingRewardComment;
+  _pendingRewardTaskId = null;
+  _pendingRewardComment = '';
+  await markDone(taskId, null, comment, choice);
+}
+
+async function markDone(taskId, btn, comment = '', chosen_reward_type = 'cash') {
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
@@ -3655,12 +3722,12 @@ async function markDone(taskId, btn, comment = '') {
 
     // Feature 8: offline support
     if (state.isOffline) {
-      await queueOfflineCompletion({ task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString(), _comment: comment });
+      await queueOfflineCompletion({ task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString(), chosen_reward_type, _comment: comment });
       showNotif(t('offlineBanner'), 'info');
       return;
     }
 
-    const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString() };
+    const payload = { task_id: taskId, child_id: childId, status: 'pending', completed_at: new Date().toISOString(), chosen_reward_type };
     const { data: inserted, error } = await sb.from('homey_completions').insert(payload).select().single();
     if (error) throw error;
 
@@ -3893,7 +3960,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.18</footer>
+    <footer>Homey v6.1</footer>
   `;
 }
 
@@ -4002,6 +4069,7 @@ function renderParentTasks() {
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <div style="font-weight:700;color:var(--success);font-size:1rem;">${fmt(amount)}</div>
+            ${comp.chosen_reward_type === 'points' ? `<div style="font-size:0.78rem;color:var(--primary);">⭐ haluaa pisteitä</div>` : comp.chosen_reward_type === 'cash' && task?.reward_type !== 'cash' ? `<div style="font-size:0.78rem;color:var(--success);">💵 haluaa euroja</div>` : ''}
             <div class="pending-date">${dateStr}</div>
             <span class="badge badge-${comp.status}" style="font-size:0.7rem;margin-top:4px;display:inline-block;">${statusLabel(comp.status)}</span>
           </div>
@@ -4044,6 +4112,17 @@ async function approveComp(id, btn) {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const { error } = await sb.from('homey_completions').update({ status: 'approved' }).eq('id', id);
     if (error) throw error;
+
+    // If child chose points, add to points_balance
+    const comp = state.completions.find(c => c.id === id);
+    if (comp?.chosen_reward_type === 'points') {
+      const task = state.allTasks.find(t => t.id === comp.task_id);
+      const pts = task?.points ?? Math.round((task?.amount ?? 0) * 10);
+      const child = state.children.find(c => c.id === comp.child_id);
+      const currentPts = child?.points_balance ?? 0;
+      await sb.from('homey_children').update({ points_balance: currentPts + pts }).eq('id', comp.child_id);
+    }
+
     showToast(t('taskApproved'), 'success');
     await loadAll();
     renderParentPending();
@@ -4560,8 +4639,11 @@ function openAddTaskModal() {
   document.getElementById('new-task-custom-name').value = '';
   document.getElementById('new-task-recurrence').value = '';
   document.getElementById('new-task-deadline').value = '';
+  document.getElementById('new-task-points').value = '';
+  document.getElementById('task-points-group').style.display = 'none';
   document.getElementById('assigned-to-group').style.display = 'none';
   document.querySelectorAll('input[name="task-type"]').forEach(r => { r.checked = r.value === 'free'; });
+  document.querySelectorAll('input[name="reward-type"]').forEach(r => { r.checked = r.value === 'cash'; });
   selectedTemplateName = null;
   taskModalTab = 'template';
   renderTaskTemplateGrid();
@@ -4594,6 +4676,25 @@ function switchTaskModalTab(tab, btn) {
   if (tab === 'template') { selectedTemplateName = null; renderTaskTemplateGrid(); }
 }
 
+function onRewardTypeChange() {
+  const rt = document.querySelector('input[name="reward-type"]:checked')?.value || 'cash';
+  const showPoints = rt === 'points' || rt === 'child_choice';
+  document.getElementById('task-points-group').style.display = showPoints ? 'block' : 'none';
+  if (showPoints) {
+    const price = parseFloat(document.getElementById('new-task-price').value) || 0;
+    const pointsEl = document.getElementById('new-task-points');
+    if (!pointsEl.value) pointsEl.value = Math.round(price * 10);
+  }
+}
+
+function onTaskPriceInput() {
+  const rt = document.querySelector('input[name="reward-type"]:checked')?.value || 'cash';
+  if (rt === 'points' || rt === 'child_choice') {
+    const price = parseFloat(document.getElementById('new-task-price').value) || 0;
+    document.getElementById('new-task-points').value = Math.round(price * 10);
+  }
+}
+
 function toggleAssignedTo() {
   const type = document.querySelector('input[name="task-type"]:checked')?.value;
   document.getElementById('assigned-to-group').style.display = type === 'assigned' ? 'block' : 'none';
@@ -4620,8 +4721,11 @@ async function saveTask() {
   const recurrence = document.getElementById('new-task-recurrence').value || null;
   const deadlineRaw = document.getElementById('new-task-deadline').value;
   const deadline = deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
+  const reward_type = document.querySelector('input[name="reward-type"]:checked')?.value || 'cash';
+  const pointsRaw = document.getElementById('new-task-points').value;
+  const points = (reward_type !== 'cash' && pointsRaw !== '') ? parseInt(pointsRaw, 10) : null;
 
-  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, deadline, active: true, family_id: currentFamilyId };
+  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, deadline, active: true, family_id: currentFamilyId, reward_type, points };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   try {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
