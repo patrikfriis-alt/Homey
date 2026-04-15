@@ -1853,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.1</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.2</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1940,7 +1940,10 @@
       <!-- Saldo -->
       <div class="saldo-card">
         <div class="saldo-label" data-i18n="openBalance">Avoin saldo</div>
-        <div class="saldo-amount" id="child-saldo">0,00 €</div>
+        <div style="display:flex;align-items:baseline;gap:14px;justify-content:center;flex-wrap:wrap;">
+          <div class="saldo-amount" id="child-saldo">0,00 €</div>
+          <div class="saldo-amount" id="child-points-balance" style="font-size:1.4rem;color:var(--text-muted);">⭐ 0 p</div>
+        </div>
         <div class="saldo-name" id="child-saldo-name"></div>
       </div>
 
@@ -1985,7 +1988,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v6.1</footer>
+  <footer>Homey v6.2</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2072,7 +2075,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.1</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.2</footer>
 </div>
 
 <script>
@@ -3535,6 +3538,8 @@ async function initChildView() {
 function renderChildSaldo() {
   const saldo = calcOpenSaldo(state.currentUser.id);
   document.getElementById('child-saldo').textContent = fmt(saldo);
+  const pts = state.currentUser.points_balance ?? 0;
+  document.getElementById('child-points-balance').textContent = '⭐ ' + pts + ' p';
   renderGoal();
 }
 
@@ -3960,7 +3965,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v6.1</footer>
+    <footer>Homey v6.2</footer>
   `;
 }
 
