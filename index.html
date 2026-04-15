@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.12</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.14</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.12</footer>
+  <footer>Homey v5.14</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.12</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.14</footer>
 </div>
 
 <script>
@@ -2670,11 +2670,13 @@ const state = {
   isAdminLogin: false,
   pinFailCount: 0,
   pinLockUntil: null,
+  pinLockInterval: null,
   adminPin: null,        // loaded from homey_families.admin_pin
   createPinBuffer: '',   // modal-create-pin phase 1 entry
   createPinPhase: 1,     // 1 = enter, 2 = confirm
   realtimeChannel: null,
   childTaskTab: 'assigned',
+  _loading: false,
 };
 
 // ===== NOTIFICATIONS =====
@@ -2992,6 +2994,8 @@ function renderAvatar(child, size = 58) {
 
 // ===== LOAD DATA =====
 async function loadAll() {
+  if (state._loading) return;
+  state._loading = true;
   try {
     // Load children and tasks in parallel first
     const [c, t] = await Promise.all([
@@ -3060,6 +3064,8 @@ async function loadAll() {
     }
   } catch (err) {
     console.error('loadAll error:', err);
+  } finally {
+    state._loading = false;
   }
 }
 
@@ -3256,8 +3262,6 @@ function updatePinDots() {
 
 async function checkPin() {
   if (state.pinLockUntil && Date.now() < state.pinLockUntil) {
-    const secs = Math.ceil((state.pinLockUntil - Date.now()) / 1000);
-    document.getElementById('pin-error').textContent = `Liian monta yritystä. Odota ${secs} s.`;
     state.pinInput = '';
     updatePinDots();
     return;
@@ -3275,14 +3279,14 @@ async function checkPin() {
       // Plain text match → migrate to hash
       await sb.from('homey_families').update({ admin_pin: hashedAdmin }).eq('id', currentFamilyId);
       state.adminPin = hashedAdmin;
-      state.pinFailCount = 0; state.pinLockUntil = null;
+      state.pinFailCount = 0; state.pinLockUntil = null; if (state.pinLockInterval) { clearInterval(state.pinLockInterval); state.pinLockInterval = null; }
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
       await initParentView();
       showView('parent');
     } else if (hashedAdmin === state.adminPin) {
-      state.pinFailCount = 0; state.pinLockUntil = null;
+      state.pinFailCount = 0; state.pinLockUntil = null; if (state.pinLockInterval) { clearInterval(state.pinLockInterval); state.pinLockInterval = null; }
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
@@ -3299,14 +3303,14 @@ async function checkPin() {
         // Plain text match → migrate to hash
         await sb.from('homey_children').update({ pin: hashedChild }).eq('id', child.id);
         child.pin = hashedChild;
-        state.pinFailCount = 0; state.pinLockUntil = null;
+        state.pinFailCount = 0; state.pinLockUntil = null; if (state.pinLockInterval) { clearInterval(state.pinLockInterval); state.pinLockInterval = null; }
         state.userRole = 'child';
         state.currentUser = child;
         setupRealtime();
         await initChildView();
         showView('child');
       } else if (String(child.pin) === hashedChild) {
-        state.pinFailCount = 0; state.pinLockUntil = null;
+        state.pinFailCount = 0; state.pinLockUntil = null; if (state.pinLockInterval) { clearInterval(state.pinLockInterval); state.pinLockInterval = null; }
         state.userRole = 'child';
         state.currentUser = child;
         setupRealtime();
@@ -3326,7 +3330,20 @@ function wrongPin() {
   if (state.pinFailCount >= 3) {
     state.pinLockUntil = Date.now() + 60000;
     state.pinFailCount = 0;
-    document.getElementById('pin-error').textContent = 'Liian monta yritystä. Odota 60 s.';
+    const errEl = document.getElementById('pin-error');
+    const tick = () => {
+      const remaining = Math.ceil((state.pinLockUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(state.pinLockInterval);
+        state.pinLockInterval = null;
+        state.pinLockUntil = null;
+        errEl.textContent = '';
+      } else {
+        errEl.textContent = `Liian monta yritystä. Yritä uudelleen ${remaining} sekunnin kuluttua.`;
+      }
+    };
+    tick();
+    state.pinLockInterval = setInterval(tick, 1000);
   } else {
     document.getElementById('pin-error').textContent = t('wrongPin');
   }
@@ -3867,7 +3884,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.12</footer>
+    <footer>Homey v5.14</footer>
   `;
 }
 
