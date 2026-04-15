@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.14</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.15</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.14</footer>
+  <footer>Homey v5.15</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.14</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.15</footer>
 </div>
 
 <script>
@@ -3391,33 +3391,37 @@ function setupRealtime() {
         schema: 'public',
         table: 'homey_payments',
       }, async (payload) => {
-        if (payload.new.child_id !== childId) return;
-        await loadAll();
-        showPaymentPopup(payload.new);
-        renderChildSaldo();
-        showNotif(t('paymentReceived'), 'payment', fmt(payload.new.amount), true);
-        sendNativeNotif(t('notifPayment'), fmt(payload.new.amount));
+        try {
+          if (payload.new.child_id !== childId) return;
+          await loadAll();
+          showPaymentPopup(payload.new);
+          renderChildSaldo();
+          showNotif(t('paymentReceived'), 'payment', fmt(payload.new.amount), true);
+          sendNativeNotif(t('notifPayment'), fmt(payload.new.amount));
+        } catch (err) { console.error('Realtime callback error:', err); }
       })
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'homey_completions',
       }, async (payload) => {
-        if (payload.new.child_id !== childId) return;
-        await loadAll();
-        renderChildSaldo();
-        renderAssignedTasks();
-        renderFreeTasks();
-        renderChildHistory();
-        const task = state.allTasks.find(t => t.id === payload.new.task_id);
-        if (payload.new.status === 'approved') {
-          showNotif(t('taskApproved'), 'success', '+' + fmt(task?.amount ?? 0));
-          sendNativeNotif(t('notifApproved'), translateTaskTitle(task?.title || '') + ' +' + fmt(task?.amount ?? 0));
-          renderGamification();
-        } else if (payload.new.status === 'rejected') {
-          showNotif(t('taskRejected'), 'error', translateTaskTitle(task?.title || ''));
-          sendNativeNotif(t('notifRejected'), translateTaskTitle(task?.title || '') + (payload.new.rejection_reason ? ': ' + payload.new.rejection_reason : ''));
-        }
+        try {
+          if (payload.new.child_id !== childId) return;
+          await loadAll();
+          renderChildSaldo();
+          renderAssignedTasks();
+          renderFreeTasks();
+          renderChildHistory();
+          const task = state.allTasks.find(t => t.id === payload.new.task_id);
+          if (payload.new.status === 'approved') {
+            showNotif(t('taskApproved'), 'success', '+' + fmt(task?.amount ?? 0));
+            sendNativeNotif(t('notifApproved'), translateTaskTitle(task?.title || '') + ' +' + fmt(task?.amount ?? 0));
+            renderGamification();
+          } else if (payload.new.status === 'rejected') {
+            showNotif(t('taskRejected'), 'error', translateTaskTitle(task?.title || ''));
+            sendNativeNotif(t('notifRejected'), translateTaskTitle(task?.title || '') + (payload.new.rejection_reason ? ': ' + payload.new.rejection_reason : ''));
+          }
+        } catch (err) { console.error('Realtime callback error:', err); }
       })
       .subscribe();
   } else {
@@ -3428,14 +3432,16 @@ function setupRealtime() {
         schema: 'public',
         table: 'homey_completions',
       }, async (payload) => {
-        await loadAll();
-        renderParentPending();
-        renderParentOverview();
-        updatePendingBadge();
-        const child = state.children.find(c => c.id === payload.new.child_id);
-        const task = state.allTasks.find(t => t.id === payload.new.task_id);
-        showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', translateTaskTitle(task?.title || ''));
-        sendNativeNotif(t('notifNewTask'), (child?.name || '') + ': ' + translateTaskTitle(task?.title || ''));
+        try {
+          await loadAll();
+          renderParentPending();
+          renderParentOverview();
+          updatePendingBadge();
+          const child = state.children.find(c => c.id === payload.new.child_id);
+          const task = state.allTasks.find(t => t.id === payload.new.task_id);
+          showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', translateTaskTitle(task?.title || ''));
+          sendNativeNotif(t('notifNewTask'), (child?.name || '') + ': ' + translateTaskTitle(task?.title || ''));
+        } catch (err) { console.error('Realtime callback error:', err); }
       })
       .subscribe();
   }
@@ -3884,7 +3890,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.14</footer>
+    <footer>Homey v5.15</footer>
   `;
 }
 
