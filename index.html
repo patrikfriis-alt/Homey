@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.15</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.16</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.15</footer>
+  <footer>Homey v5.16</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.15</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.16</footer>
 </div>
 
 <script>
@@ -2996,6 +2996,7 @@ function renderAvatar(child, size = 58) {
 async function loadAll() {
   if (state._loading) return;
   state._loading = true;
+  state.challengeBonusGiven.clear();
   try {
     // Load children and tasks in parallel first
     const [c, t] = await Promise.all([
@@ -3890,7 +3891,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.15</footer>
+    <footer>Homey v5.16</footer>
   `;
 }
 
@@ -5289,6 +5290,7 @@ function renderChallenge() {
 
   // Auto-bonus: if completed and not yet given in this session
   if (completed && !state.challengeBonusGiven.has(challenge.id)) {
+    state.challengeBonusGiven.add(challenge.id); // lock synchronously before async call
     checkAndGiveChallengeBonus(challenge, childId);
   }
 
