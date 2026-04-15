@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.16</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.17</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.16</footer>
+  <footer>Homey v5.17</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.16</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.17</footer>
 </div>
 
 <script>
@@ -2053,6 +2053,8 @@ try {
 }
 
 // ===== HASH HELPER =====
+function padPin(pin) { return String(pin).padStart(4, '0'); }
+
 async function hashPin(input, salt) {
   const data = new TextEncoder().encode(String(input) + String(salt));
   const buf = await crypto.subtle.digest('SHA-256', data);
@@ -3267,7 +3269,7 @@ async function checkPin() {
     updatePinDots();
     return;
   }
-  const pin = state.pinInput;
+  const pin = padPin(state.pinInput);
   if (state.isAdminLogin) {
     if (!state.adminPin) {
       document.getElementById('pin-error').textContent = 'PIN-koodia ei ole asetettu. Käytä salasanakirjautumista.';
@@ -3276,7 +3278,7 @@ async function checkPin() {
       return;
     }
     const hashedAdmin = await hashPin(pin, currentFamilyId);
-    if (pin === state.adminPin) {
+    if (pin === padPin(state.adminPin)) {
       // Plain text match → migrate to hash
       await sb.from('homey_families').update({ admin_pin: hashedAdmin }).eq('id', currentFamilyId);
       state.adminPin = hashedAdmin;
@@ -3300,7 +3302,7 @@ async function checkPin() {
     const child = state.children.find(c => c.id === state.selectedChildId);
     if (child) {
       const hashedChild = await hashPin(pin, child.id);
-      if (String(child.pin) === pin) {
+      if (padPin(child.pin) === pin) {
         // Plain text match → migrate to hash
         await sb.from('homey_children').update({ pin: hashedChild }).eq('id', child.id);
         child.pin = hashedChild;
@@ -3310,7 +3312,7 @@ async function checkPin() {
         setupRealtime();
         await initChildView();
         showView('child');
-      } else if (String(child.pin) === hashedChild) {
+      } else if (child.pin === hashedChild) {
         state.pinFailCount = 0; state.pinLockUntil = null; if (state.pinLockInterval) { clearInterval(state.pinLockInterval); state.pinLockInterval = null; }
         state.userRole = 'child';
         state.currentUser = child;
@@ -3891,7 +3893,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.16</footer>
+    <footer>Homey v5.17</footer>
   `;
 }
 
@@ -4455,7 +4457,7 @@ async function createPinNext() {
     }
     // Save to DB (hashed)
     try {
-      const hashed = await hashPin(state.createPinBuffer, currentFamilyId);
+      const hashed = await hashPin(padPin(state.createPinBuffer), currentFamilyId);
       const { error } = await sb.from('homey_families').update({ admin_pin: hashed }).eq('id', currentFamilyId);
       if (error) throw error;
       state.adminPin = hashed;
@@ -4487,15 +4489,15 @@ async function changeParentPin(btn) {
   if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN-koodin on oltava tasan 4 numeroa.'; return; }
   if (newPin !== newPin2) { errEl.textContent = 'Uudet PIN-koodit eivät täsmää.'; return; }
   if (state.adminPin) {
-    const hashedCurrent = await hashPin(current, currentFamilyId);
-    const currentOk = (current === state.adminPin) || (hashedCurrent === state.adminPin);
+    const hashedCurrent = await hashPin(padPin(current), currentFamilyId);
+    const currentOk = (padPin(current) === padPin(state.adminPin)) || (hashedCurrent === state.adminPin);
     if (!currentOk) { errEl.textContent = 'Nykyinen PIN on väärä.'; return; }
   }
 
   const origText = btn.textContent;
   try {
     btn.disabled = true; btn.textContent = t('saving') || 'Tallennetaan...';
-    const hashed = await hashPin(newPin, currentFamilyId);
+    const hashed = await hashPin(padPin(newPin), currentFamilyId);
     const { error } = await sb.from('homey_families').update({ admin_pin: hashed }).eq('id', currentFamilyId);
     if (error) throw error;
     state.adminPin = hashed;
@@ -4530,7 +4532,7 @@ async function saveChild() {
       .insert({ name, pin, color: selectedColor, family_id: currentFamilyId })
       .select('id').single();
     if (error) throw error;
-    const hashedPin = await hashPin(pin, inserted.id);
+    const hashedPin = await hashPin(padPin(pin), inserted.id);
     await sb.from('homey_children').update({ pin: hashedPin }).eq('id', inserted.id);
     showToast(t('childAdded'), 'success');
     document.getElementById('new-child-name').value = '';
@@ -5168,7 +5170,7 @@ async function saveChangePin(btn) {
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
-    const hashedPin = await hashPin(pin, _changePinChildId);
+    const hashedPin = await hashPin(padPin(pin), _changePinChildId);
     const { error } = await sb.from('homey_children').update({ pin: hashedPin }).eq('id', _changePinChildId);
     if (error) throw error;
     showToast(t('pinChanged'), 'success');
