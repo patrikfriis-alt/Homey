@@ -1817,7 +1817,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.10</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v5.11</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1949,7 +1949,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v5.10</footer>
+  <footer>Homey v5.11</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2036,7 +2036,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.10</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v5.11</footer>
 </div>
 
 <script>
@@ -2050,6 +2050,13 @@ try {
 } catch (e) {
   console.error('Supabase init failed:', e);
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column;gap:12px;"><div style="font-size:2rem;">⚠️</div><div style="font-weight:700;">Yhteysvirhe</div><div style="color:#636e72;font-size:0.9rem;">Tarkista internetyhteys ja päivitä sivu.</div></div>';
+}
+
+// ===== HASH HELPER =====
+async function hashPin(input, salt) {
+  const data = new TextEncoder().encode(String(input) + String(salt));
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // ===== TRANSLATIONS =====
@@ -3254,7 +3261,17 @@ async function checkPin() {
       updatePinDots();
       return;
     }
+    const hashedAdmin = await hashPin(pin, currentFamilyId);
     if (pin === state.adminPin) {
+      // Plain text match → migrate to hash
+      await sb.from('homey_families').update({ admin_pin: hashedAdmin }).eq('id', currentFamilyId);
+      state.adminPin = hashedAdmin;
+      state.userRole = 'parent';
+      state.currentUser = null;
+      setupRealtime();
+      await initParentView();
+      showView('parent');
+    } else if (hashedAdmin === state.adminPin) {
       state.userRole = 'parent';
       state.currentUser = null;
       setupRealtime();
@@ -3265,12 +3282,26 @@ async function checkPin() {
     }
   } else {
     const child = state.children.find(c => c.id === state.selectedChildId);
-    if (child && String(child.pin) === pin) {
-      state.userRole = 'child';
-      state.currentUser = child;
-      setupRealtime();
-      await initChildView();
-      showView('child');
+    if (child) {
+      const hashedChild = await hashPin(pin, child.id);
+      if (String(child.pin) === pin) {
+        // Plain text match → migrate to hash
+        await sb.from('homey_children').update({ pin: hashedChild }).eq('id', child.id);
+        child.pin = hashedChild;
+        state.userRole = 'child';
+        state.currentUser = child;
+        setupRealtime();
+        await initChildView();
+        showView('child');
+      } else if (String(child.pin) === hashedChild) {
+        state.userRole = 'child';
+        state.currentUser = child;
+        setupRealtime();
+        await initChildView();
+        showView('child');
+      } else {
+        wrongPin();
+      }
     } else {
       wrongPin();
     }
@@ -3816,7 +3847,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v5.10</footer>
+    <footer>Homey v5.11</footer>
   `;
 }
 
@@ -4378,11 +4409,12 @@ async function createPinNext() {
       createPinUpdateDots();
       return;
     }
-    // Save to DB
+    // Save to DB (hashed)
     try {
-      const { error } = await sb.from('homey_families').update({ admin_pin: state.createPinBuffer }).eq('id', currentFamilyId);
+      const hashed = await hashPin(state.createPinBuffer, currentFamilyId);
+      const { error } = await sb.from('homey_families').update({ admin_pin: hashed }).eq('id', currentFamilyId);
       if (error) throw error;
-      state.adminPin = state.createPinBuffer;
+      state.adminPin = hashed;
       closeModal('modal-create-pin');
       showNotif('PIN-koodi luotu!', 'success');
       // Now proceed to parent view
@@ -4410,14 +4442,19 @@ async function changeParentPin(btn) {
   if (!current || !newPin || !newPin2) { errEl.textContent = t('fillAllFields'); return; }
   if (!/^\d{4}$/.test(newPin)) { errEl.textContent = 'PIN-koodin on oltava tasan 4 numeroa.'; return; }
   if (newPin !== newPin2) { errEl.textContent = 'Uudet PIN-koodit eivät täsmää.'; return; }
-  if (state.adminPin && current !== state.adminPin) { errEl.textContent = 'Nykyinen PIN on väärä.'; return; }
+  if (state.adminPin) {
+    const hashedCurrent = await hashPin(current, currentFamilyId);
+    const currentOk = (current === state.adminPin) || (hashedCurrent === state.adminPin);
+    if (!currentOk) { errEl.textContent = 'Nykyinen PIN on väärä.'; return; }
+  }
 
   const origText = btn.textContent;
   try {
     btn.disabled = true; btn.textContent = t('saving') || 'Tallennetaan...';
-    const { error } = await sb.from('homey_families').update({ admin_pin: newPin }).eq('id', currentFamilyId);
+    const hashed = await hashPin(newPin, currentFamilyId);
+    const { error } = await sb.from('homey_families').update({ admin_pin: hashed }).eq('id', currentFamilyId);
     if (error) throw error;
-    state.adminPin = newPin;
+    state.adminPin = hashed;
     closeModal('modal-change-parent-pin');
     ['cpp-current','cpp-new','cpp-new2'].forEach(id => { document.getElementById(id).value = ''; });
     showNotif('PIN-koodi vaihdettu!', 'success');
@@ -4445,8 +4482,12 @@ async function saveChild() {
   const saveBtn = document.querySelector('#modal-add-child .btn-primary');
   try {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
-    const { error } = await sb.from('homey_children').insert({ name, pin, color: selectedColor, family_id: currentFamilyId });
+    const { data: inserted, error } = await sb.from('homey_children')
+      .insert({ name, pin, color: selectedColor, family_id: currentFamilyId })
+      .select('id').single();
     if (error) throw error;
+    const hashedPin = await hashPin(pin, inserted.id);
+    await sb.from('homey_children').update({ pin: hashedPin }).eq('id', inserted.id);
     showToast(t('childAdded'), 'success');
     document.getElementById('new-child-name').value = '';
     document.getElementById('new-child-pin').value = '';
@@ -5083,7 +5124,8 @@ async function saveChangePin(btn) {
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
-    const { error } = await sb.from('homey_children').update({ pin }).eq('id', _changePinChildId);
+    const hashedPin = await hashPin(pin, _changePinChildId);
+    const { error } = await sb.from('homey_children').update({ pin: hashedPin }).eq('id', _changePinChildId);
     if (error) throw error;
     showToast(t('pinChanged'), 'success');
     closeModal('modal-change-pin');
@@ -5334,8 +5376,12 @@ async function saveParent(btn) {
   const origText = btn?.textContent;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
-    const { error } = await sb.from('homey_parents').insert({ family_id: currentFamilyId, name, email, password, role });
+    const { data: insertedParent, error } = await sb.from('homey_parents')
+      .insert({ family_id: currentFamilyId, name, email, password, role })
+      .select('id').single();
     if (error) throw error;
+    const hashedPw = await hashPin(password, insertedParent.id);
+    await sb.from('homey_parents').update({ password: hashedPw }).eq('id', insertedParent.id);
     showToast(t('parentAdded'), 'success');
     closeModal('modal-add-parent');
     document.getElementById('ap-name-input').value = '';
