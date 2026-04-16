@@ -1853,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.4</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1964,6 +1964,7 @@
         <button class="tab-btn active" onclick="switchChildTab('tasks', this)" data-i18n="tasks">Tehtävät</button>
         <button class="tab-btn" onclick="switchChildTab('history', this)" data-i18n="history">Historia</button>
         <button class="tab-btn" onclick="switchChildTab('results', this)" data-i18n="results">Tulokset</button>
+        <button class="tab-btn" onclick="switchChildTab('shop', this)">🛍️ Kauppa</button>
       </div>
 
       <!-- Tehtävät -->
@@ -1986,9 +1987,14 @@
       <div id="child-tab-results" class="tab-content">
         <div id="child-results-list"></div>
       </div>
+
+      <!-- Kauppa -->
+      <div id="child-tab-shop" class="tab-content">
+        <div id="child-shop-list"></div>
+      </div>
     </div>
   </div>
-  <footer>Homey v6.2</footer>
+  <footer>Homey v6.4</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2075,7 +2081,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.4</footer>
 </div>
 
 <script>
@@ -2703,6 +2709,8 @@ const state = {
   challenges: [],        // Feature 3
   parents: [],           // Feature 5
   templates: [],         // Feature 6
+  rewards: [],           // homey_rewards
+  pendingClaims: [],     // homey_reward_claims pending for current child
   challengeBonusGiven: new Set(), // Feature 3: track given bonuses in session
   dismissedReminders: new Set(),  // Feature 7
   isOffline: !navigator.onLine,   // Feature 8
@@ -3058,7 +3066,7 @@ async function loadAll() {
       return;
     }
 
-    const [co, p, b, ch, par, tmpl] = await Promise.all([
+    const [co, p, b, ch, par, tmpl, rw] = await Promise.all([
       sb.from('homey_completions')
         .select('*, homey_children(id, name, avatar, color), homey_tasks(id, title, amount)')
         .in('child_id', childIds)
@@ -3084,16 +3092,35 @@ async function loadAll() {
         .select('*')
         .eq('family_id', currentFamilyId)
         .order('created_at'),
+      sb.from('homey_rewards')
+        .select('*')
+        .eq('family_id', currentFamilyId)
+        .order('created_at'),
     ]);
     if (co.error) console.error('homey_completions:', co.error.message);
     if (p.error) console.error('homey_payments:', p.error.message);
     if (b.error) console.error('homey_bonuses:', b.error.message);
+    if (rw.error) console.error('homey_rewards:', rw.error.message);
     state.completions = co.data || [];
     state.payments = p.data || [];
     state.bonuses = b.data || [];
     state.challenges = ch.data || [];
     state.parents = par.data || [];
     state.templates = tmpl.data || [];
+    state.rewards = rw.data || [];
+
+    // Load pending reward claims (child sees own; parent sees all for family)
+    {
+      const clQuery = sb.from('homey_reward_claims').select('*').eq('status', 'pending');
+      if (state.userRole === 'child' && state.currentUser?.id) {
+        clQuery.eq('child_id', state.currentUser.id);
+      } else {
+        clQuery.eq('family_id', currentFamilyId);
+      }
+      const { data: clData, error: clErr } = await clQuery;
+      if (clErr) console.error('homey_reward_claims:', clErr.message);
+      state.pendingClaims = clData || [];
+    }
 
     // Load comments for loaded completions
     const compIds = state.completions.map(c => c.id);
@@ -3546,12 +3573,67 @@ function renderChildSaldo() {
 function switchChildTab(tab, btn) {
   document.querySelectorAll('#child-main-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  ['tasks','history','results'].forEach(tabName => {
+  ['tasks','history','results','shop'].forEach(tabName => {
     const el = document.getElementById('child-tab-' + tabName);
     if (el) { el.classList.toggle('active', tab === tabName); el.style.display = tab === tabName ? 'block' : 'none'; }
   });
   if (tab === 'history') renderChildHistory();
   if (tab === 'results') renderRanking();
+  if (tab === 'shop') renderChildShop();
+}
+
+function renderChildShop() {
+  const el = document.getElementById('child-shop-list');
+  if (!el) return;
+  const rewards = state.rewards;
+  if (rewards.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">Ei eduja saatavilla.</div>';
+    return;
+  }
+  const pts = state.currentUser?.points_balance ?? 0;
+  el.innerHTML = rewards.map(r => {
+    const hasPending = state.pendingClaims.some(c => c.reward_id === r.id);
+    const canAfford = pts >= r.points_cost;
+    let btnHtml;
+    if (hasPending) {
+      btnHtml = `<button class="btn btn-outline" disabled style="font-size:0.85rem;">Odottaa hyväksyntää</button>`;
+    } else if (!canAfford) {
+      btnHtml = `<button class="btn btn-outline" disabled style="font-size:0.85rem;">Ei tarpeeksi pisteitä</button>`;
+    } else {
+      btnHtml = `<button class="btn btn-primary" onclick="claimReward('${escapeHtml(String(r.id))}', this)" style="font-size:0.85rem;">Lunasta (${r.points_cost} p)</button>`;
+    }
+    return `<div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:10px;padding:12px 14px;">
+      <div style="font-size:2rem;flex-shrink:0;">${escapeHtml(r.icon || '🎁')}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:1rem;">${escapeHtml(r.name || '')}</div>
+        ${r.description ? `<div style="color:var(--text-muted);font-size:0.85rem;margin-top:2px;">${escapeHtml(r.description)}</div>` : ''}
+        <div style="color:var(--primary);font-size:0.85rem;margin-top:4px;">⭐ ${r.points_cost} p</div>
+      </div>
+      <div style="flex-shrink:0;">${btnHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+async function claimReward(rewardId, btn) {
+  try {
+    if (btn) { btn.disabled = true; }
+    const childId = state.currentUser?.id;
+    const { error } = await sb.from('homey_reward_claims').insert({
+      reward_id: rewardId,
+      child_id: childId,
+      family_id: currentFamilyId,
+      status: 'pending',
+      claimed_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    showToast('Lunastuspyyntö lähetetty!', 'success');
+    await loadAll();
+    renderChildShop();
+    renderChildSaldo();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+    if (btn) { btn.disabled = false; }
+  }
 }
 
 function switchTaskTab(tab, btn) {
@@ -3965,7 +4047,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v6.2</footer>
+    <footer>Homey v6.4</footer>
   `;
 }
 
@@ -4417,6 +4499,47 @@ function renderParentManage() {
       </div>
       ${parentItems}
     </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0">🛍️ Palkinnot</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('⏱️','Ruutuaika','',50)">⏱️ Ruutuaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎮','Peliaika','',50)">🎮 Peliaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🍕','Ruoan valinta','',100)">🍕 Ruoan valinta</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎉','Aktiviteetti','',150)">🎉 Aktiviteetti</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🌙','Myöhäisempi nukkumaanmeno','',75)">🌙 Myöhempi nukkumaanmeno</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;" id="reward-add-form">
+        <div style="display:flex;gap:8px;">
+          <input id="reward-form-icon" class="input" style="width:60px;text-align:center;font-size:1.2rem;" placeholder="🎁" maxlength="4" value="🎁">
+          <input id="reward-form-name" class="input" style="flex:1;" placeholder="Nimi" type="text">
+        </div>
+        <input id="reward-form-desc" class="input" placeholder="Kuvaus (valinnainen)" type="text">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="reward-form-points" class="input" style="width:120px;" placeholder="Pistehinta" type="number" min="1">
+          <button class="btn btn-primary btn-sm" onclick="saveReward()">Lisää etu</button>
+        </div>
+      </div>
+      <div id="reward-list">
+        ${state.rewards.length === 0
+          ? '<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">Ei palkintoja vielä.</div>'
+          : state.rewards.map(r => {
+              const pendingCount = state.pendingClaims.filter(c => c.reward_id === r.id).length;
+              return `<div class="task-item" style="cursor:default;">
+                <div style="font-size:1.6rem;flex-shrink:0;">${esc(r.icon || '🎁')}</div>
+                <div class="task-info" style="flex:1;">
+                  <div class="task-name">${esc(r.name)}</div>
+                  <div style="color:var(--text-muted);font-size:0.8rem;">⭐ ${r.points_cost} p${r.description ? ' · ' + esc(r.description) : ''}${pendingCount > 0 ? ` · <span style="color:var(--warning);">⏳ ${pendingCount} odottaa</span>` : ''}</div>
+                </div>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn btn-sm btn-danger" onclick="deleteReward('${esc(String(r.id))}', ${pendingCount})">✕</button>
+                </div>
+              </div>`;
+            }).join('')
+        }
+      </div>
+    </div>
     <div class="card" style="text-align:center;">
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">${t('loggedInAs')} <strong>${esc(familyName)}</strong></div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -4426,6 +4549,59 @@ function renderParentManage() {
       </div>
     </div>
   `;
+}
+
+function prefillReward(icon, name, desc, points) {
+  document.getElementById('reward-form-icon').value = icon;
+  document.getElementById('reward-form-name').value = name;
+  document.getElementById('reward-form-desc').value = desc;
+  document.getElementById('reward-form-points').value = points;
+  document.getElementById('reward-form-name').focus();
+}
+
+async function saveReward() {
+  const icon = document.getElementById('reward-form-icon').value.trim() || '🎁';
+  const name = document.getElementById('reward-form-name').value.trim();
+  const desc = document.getElementById('reward-form-desc').value.trim();
+  const points = parseInt(document.getElementById('reward-form-points').value, 10);
+  if (!name) { showToast(t('enterName'), 'error'); return; }
+  if (isNaN(points) || points < 1) { showToast(t('enterValidPrice'), 'error'); return; }
+  try {
+    const { error } = await sb.from('homey_rewards').insert({
+      family_id: currentFamilyId,
+      icon,
+      name,
+      description: desc || null,
+      points_cost: points,
+    });
+    if (error) throw error;
+    document.getElementById('reward-form-icon').value = '🎁';
+    document.getElementById('reward-form-name').value = '';
+    document.getElementById('reward-form-desc').value = '';
+    document.getElementById('reward-form-points').value = '';
+    showToast('Etu lisätty!', 'success');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  }
+}
+
+async function deleteReward(id, pendingCount) {
+  if (pendingCount > 0) {
+    if (!confirm(`Tällä edulla on ${pendingCount} odottava lunastuspyyntö. Haluatko silti poistaa edun?`)) return;
+  } else {
+    if (!confirm('Poistetaanko etu?')) return;
+  }
+  try {
+    const { error } = await sb.from('homey_rewards').delete().eq('id', id);
+    if (error) throw error;
+    showToast('Etu poistettu.', 'success');
+    await loadAll();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  }
 }
 
 async function deleteChild(id) {
