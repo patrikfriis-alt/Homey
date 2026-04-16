@@ -1853,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.6</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.7</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1994,7 +1994,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v6.6</footer>
+  <footer>Homey v6.7</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2081,7 +2081,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.6</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.7</footer>
 </div>
 
 <script>
@@ -4082,7 +4082,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v6.6</footer>
+    <footer>Homey v6.7</footer>
   `;
 }
 
@@ -4620,11 +4620,11 @@ function renderParentManage() {
         <div class="card-title" style="margin-bottom:0">🛍️ Palkinnot</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('⏱️','Ruutuaika','',50,30)">⏱️ Ruutuaika</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎮','Peliaika','',50,30)">🎮 Peliaika</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🍕','Ruoan valinta','',100,0)">🍕 Ruoan valinta</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎉','Aktiviteetti','',150,0)">🎉 Aktiviteetti</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🌙','Myöhäisempi nukkumaanmeno','',75,0)">🌙 Myöhempi nukkumaanmeno</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('⏱️','Ruutuaika','',50,30,'duration')">⏱️ Ruutuaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎮','Peliaika','',50,30,'duration')">🎮 Peliaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🍕','Ruoan valinta','',100,0,'none')">🍕 Ruoan valinta</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎉','Aktiviteetti','',150,0,'none')">🎉 Aktiviteetti</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🌙','Myöhäisempi nukkumaanmeno','',75,0,'time')">🌙 Myöhempi nukkumaanmeno</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;" id="reward-add-form">
         <div>
@@ -4636,11 +4636,21 @@ function renderParentManage() {
         </div>
         <div>
           <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kuvaus (valinnainen)</div>
-          <input id="reward-form-desc" class="input" style="width:100%;" placeholder="Esim. Netflix, YouTube..." type="text">
+          <input id="reward-form-desc" class="input" style="width:100%;" placeholder="Lisätietoja (valinnainen)" type="text">
         </div>
-        <div>
-          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kesto (min) — vain aikapohjaisille eduille</div>
+        <div id="reward-form-duration-group" style="display:none;">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kesto (min)</div>
           <input id="reward-form-duration" class="input" style="width:120px;" placeholder="esim. 30" type="number" min="1">
+        </div>
+        <div id="reward-form-time-group" style="display:none;">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Nukkumaanmenoaika</div>
+          <input id="reward-form-time" class="input" style="width:120px;" type="time" value="21:00">
+        </div>
+        <div id="reward-form-duration-checkbox-group">
+          <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;cursor:pointer;">
+            <input type="checkbox" id="reward-form-duration-toggle" onchange="toggleRewardDuration(this.checked)">
+            ⏱️ Lisää kesto
+          </label>
         </div>
         <div>
           <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Hinta pisteinä</div>
@@ -4680,26 +4690,58 @@ function renderParentManage() {
   `;
 }
 
-function prefillReward(icon, name, desc, points, duration) {
+function prefillReward(icon, name, desc, points, duration, mode) {
   document.getElementById('reward-form-icon').value = icon;
   document.getElementById('reward-form-name').value = name;
   document.getElementById('reward-form-desc').value = desc;
   document.getElementById('reward-form-points').value = points;
-  document.getElementById('reward-form-duration').value = duration > 0 ? duration : '';
+
+  const durationGroup = document.getElementById('reward-form-duration-group');
+  const timeGroup = document.getElementById('reward-form-time-group');
+  const checkboxGroup = document.getElementById('reward-form-duration-checkbox-group');
+  const toggle = document.getElementById('reward-form-duration-toggle');
+
+  if (mode === 'duration') {
+    durationGroup.style.display = 'block';
+    timeGroup.style.display = 'none';
+    checkboxGroup.style.display = 'none';
+    document.getElementById('reward-form-duration').value = duration > 0 ? duration : '';
+    toggle.checked = false;
+  } else if (mode === 'time') {
+    durationGroup.style.display = 'none';
+    timeGroup.style.display = 'block';
+    checkboxGroup.style.display = 'none';
+    document.getElementById('reward-form-time').value = '21:00';
+    toggle.checked = false;
+  } else {
+    durationGroup.style.display = 'none';
+    timeGroup.style.display = 'none';
+    checkboxGroup.style.display = 'block';
+    document.getElementById('reward-form-duration').value = '';
+    toggle.checked = false;
+  }
   document.getElementById('reward-form-name').focus();
+}
+
+function toggleRewardDuration(checked) {
+  document.getElementById('reward-form-duration-group').style.display = checked ? 'block' : 'none';
+  if (!checked) document.getElementById('reward-form-duration').value = '';
 }
 
 async function saveReward() {
   const icon = document.getElementById('reward-form-icon').value.trim() || '🎁';
   const name = document.getElementById('reward-form-name').value.trim();
   const desc = document.getElementById('reward-form-desc').value.trim();
+  const durationGroup = document.getElementById('reward-form-duration-group');
+  const timeGroup = document.getElementById('reward-form-time-group');
   const durationRaw = parseInt(document.getElementById('reward-form-duration').value, 10);
-  const duration = isNaN(durationRaw) || durationRaw < 1 ? null : durationRaw;
+  const duration = (!isNaN(durationRaw) && durationRaw >= 1 && durationGroup.style.display !== 'none') ? durationRaw : null;
+  const timeVal = timeGroup.style.display !== 'none' ? document.getElementById('reward-form-time').value.trim() : '';
   const points = parseInt(document.getElementById('reward-form-points').value, 10);
   if (!name) { showToast(t('enterName'), 'error'); return; }
   if (isNaN(points) || points < 1) { showToast(t('enterValidPrice'), 'error'); return; }
-  // If duration given and no manual description, use "X min" as description
-  const finalDesc = desc || (duration ? duration + ' min' : null);
+  // Build description: explicit desc wins; else time "klo HH:MM"; else duration "X min"
+  const finalDesc = desc || (timeVal ? 'klo ' + timeVal : null) || (duration ? duration + ' min' : null);
   try {
     const { error } = await sb.from('homey_rewards').insert({
       family_id: currentFamilyId,
@@ -4713,7 +4755,12 @@ async function saveReward() {
     document.getElementById('reward-form-name').value = '';
     document.getElementById('reward-form-desc').value = '';
     document.getElementById('reward-form-duration').value = '';
+    document.getElementById('reward-form-time').value = '21:00';
     document.getElementById('reward-form-points').value = '';
+    document.getElementById('reward-form-duration-toggle').checked = false;
+    durationGroup.style.display = 'none';
+    timeGroup.style.display = 'none';
+    document.getElementById('reward-form-duration-checkbox-group').style.display = 'block';
     showToast('Etu lisätty!', 'success');
     await loadAll();
     renderParentManage();
