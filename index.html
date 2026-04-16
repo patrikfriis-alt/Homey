@@ -1853,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.5</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.6</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1994,7 +1994,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v6.5</footer>
+  <footer>Homey v6.6</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2081,7 +2081,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.5</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.6</footer>
 </div>
 
 <script>
@@ -4082,7 +4082,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v6.5</footer>
+    <footer>Homey v6.6</footer>
   `;
 }
 
@@ -4620,21 +4620,34 @@ function renderParentManage() {
         <div class="card-title" style="margin-bottom:0">🛍️ Palkinnot</div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('⏱️','Ruutuaika','',50)">⏱️ Ruutuaika</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎮','Peliaika','',50)">🎮 Peliaika</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🍕','Ruoan valinta','',100)">🍕 Ruoan valinta</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎉','Aktiviteetti','',150)">🎉 Aktiviteetti</button>
-        <button class="btn btn-sm btn-outline" onclick="prefillReward('🌙','Myöhäisempi nukkumaanmeno','',75)">🌙 Myöhempi nukkumaanmeno</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('⏱️','Ruutuaika','',50,30)">⏱️ Ruutuaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎮','Peliaika','',50,30)">🎮 Peliaika</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🍕','Ruoan valinta','',100,0)">🍕 Ruoan valinta</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🎉','Aktiviteetti','',150,0)">🎉 Aktiviteetti</button>
+        <button class="btn btn-sm btn-outline" onclick="prefillReward('🌙','Myöhäisempi nukkumaanmeno','',75,0)">🌙 Myöhempi nukkumaanmeno</button>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;" id="reward-add-form">
-        <div style="display:flex;gap:8px;">
-          <input id="reward-form-icon" class="input" style="width:60px;text-align:center;font-size:1.2rem;" placeholder="🎁" maxlength="4" value="🎁">
-          <input id="reward-form-name" class="input" style="flex:1;" placeholder="Nimi" type="text">
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;" id="reward-add-form">
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kuvake ja nimi</div>
+          <div style="display:flex;gap:8px;">
+            <input id="reward-form-icon" class="input" style="width:60px;text-align:center;font-size:1.2rem;" placeholder="🎁" maxlength="4" value="🎁">
+            <input id="reward-form-name" class="input" style="flex:1;" placeholder="Nimi" type="text">
+          </div>
         </div>
-        <input id="reward-form-desc" class="input" placeholder="Kuvaus (valinnainen)" type="text">
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input id="reward-form-points" class="input" style="width:120px;" placeholder="Pistehinta" type="number" min="1">
-          <button class="btn btn-primary btn-sm" onclick="saveReward()">Lisää etu</button>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kuvaus (valinnainen)</div>
+          <input id="reward-form-desc" class="input" style="width:100%;" placeholder="Esim. Netflix, YouTube..." type="text">
+        </div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Kesto (min) — vain aikapohjaisille eduille</div>
+          <input id="reward-form-duration" class="input" style="width:120px;" placeholder="esim. 30" type="number" min="1">
+        </div>
+        <div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;">Hinta pisteinä</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="reward-form-points" class="input" style="width:120px;" placeholder="esim. 50" type="number" min="1">
+            <button class="btn btn-primary btn-sm" onclick="saveReward()">Lisää etu</button>
+          </div>
         </div>
       </div>
       <div id="reward-list">
@@ -4667,11 +4680,12 @@ function renderParentManage() {
   `;
 }
 
-function prefillReward(icon, name, desc, points) {
+function prefillReward(icon, name, desc, points, duration) {
   document.getElementById('reward-form-icon').value = icon;
   document.getElementById('reward-form-name').value = name;
   document.getElementById('reward-form-desc').value = desc;
   document.getElementById('reward-form-points').value = points;
+  document.getElementById('reward-form-duration').value = duration > 0 ? duration : '';
   document.getElementById('reward-form-name').focus();
 }
 
@@ -4679,21 +4693,26 @@ async function saveReward() {
   const icon = document.getElementById('reward-form-icon').value.trim() || '🎁';
   const name = document.getElementById('reward-form-name').value.trim();
   const desc = document.getElementById('reward-form-desc').value.trim();
+  const durationRaw = parseInt(document.getElementById('reward-form-duration').value, 10);
+  const duration = isNaN(durationRaw) || durationRaw < 1 ? null : durationRaw;
   const points = parseInt(document.getElementById('reward-form-points').value, 10);
   if (!name) { showToast(t('enterName'), 'error'); return; }
   if (isNaN(points) || points < 1) { showToast(t('enterValidPrice'), 'error'); return; }
+  // If duration given and no manual description, use "X min" as description
+  const finalDesc = desc || (duration ? duration + ' min' : null);
   try {
     const { error } = await sb.from('homey_rewards').insert({
       family_id: currentFamilyId,
       icon,
       name,
-      description: desc || null,
+      description: finalDesc,
       points_cost: points,
     });
     if (error) throw error;
     document.getElementById('reward-form-icon').value = '🎁';
     document.getElementById('reward-form-name').value = '';
     document.getElementById('reward-form-desc').value = '';
+    document.getElementById('reward-form-duration').value = '';
     document.getElementById('reward-form-points').value = '';
     showToast('Etu lisätty!', 'success');
     await loadAll();
