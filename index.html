@@ -1853,7 +1853,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.4</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v6.5</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -1994,7 +1994,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v6.4</footer>
+  <footer>Homey v6.5</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2081,7 +2081,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.4</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v6.5</footer>
 </div>
 
 <script>
@@ -3109,13 +3109,13 @@ async function loadAll() {
     state.templates = tmpl.data || [];
     state.rewards = rw.data || [];
 
-    // Load pending reward claims (child sees own; parent sees all for family)
+    // Load pending reward claims (child sees own; parent sees all via child_id IN childIds)
     {
       const clQuery = sb.from('homey_reward_claims').select('*').eq('status', 'pending');
       if (state.userRole === 'child' && state.currentUser?.id) {
         clQuery.eq('child_id', state.currentUser.id);
       } else {
-        clQuery.eq('family_id', currentFamilyId);
+        clQuery.in('child_id', childIds);
       }
       const { data: clData, error: clErr } = await clQuery;
       if (clErr) console.error('homey_reward_claims:', clErr.message);
@@ -3492,6 +3492,25 @@ function setupRealtime() {
           }
         } catch (err) { console.error('Realtime callback error:', err); }
       })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'homey_reward_claims',
+      }, async (payload) => {
+        try {
+          if (payload.new.child_id !== childId) return;
+          await loadAll();
+          renderChildSaldo();
+          renderChildShop();
+          const reward = state.rewards.find(r => r.id === payload.new.reward_id);
+          const rewardName = reward?.name || 'etu';
+          if (payload.new.status === 'approved') {
+            showNotif('✅ Lunastus hyväksytty: ' + rewardName, 'success');
+          } else if (payload.new.status === 'rejected') {
+            showNotif('❌ Lunastus hylätty: ' + rewardName, 'error');
+          }
+        } catch (err) { console.error('Realtime callback error:', err); }
+      })
       .subscribe();
   } else {
     state.realtimeChannel = sb
@@ -3510,6 +3529,20 @@ function setupRealtime() {
           const task = state.allTasks.find(t => t.id === payload.new.task_id);
           showNotif((child?.name || '') + ' ' + t('markedDone'), 'info', translateTaskTitle(task?.title || ''));
           sendNativeNotif(t('notifNewTask'), (child?.name || '') + ': ' + translateTaskTitle(task?.title || ''));
+        } catch (err) { console.error('Realtime callback error:', err); }
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'homey_reward_claims',
+      }, async (payload) => {
+        try {
+          await loadAll();
+          renderParentPending();
+          updatePendingBadge();
+          const child = state.children.find(c => c.id === payload.new.child_id);
+          const reward = state.rewards.find(r => r.id === payload.new.reward_id);
+          showNotif((child?.name || '') + ' haluaa lunastaa: ' + (reward?.name || 'edun'), 'info');
         } catch (err) { console.error('Realtime callback error:', err); }
       })
       .subscribe();
@@ -4000,7 +4033,9 @@ function switchParentTab(tab, btn) {
 }
 
 function updatePendingBadge() {
-  const count = state.completions.filter(c => c.status === 'pending').length;
+  const taskCount = state.completions.filter(c => c.status === 'pending').length;
+  const claimCount = state.pendingClaims.length;
+  const count = taskCount + claimCount;
   ['pending-badge', 'pending-badge-sidebar'].forEach(id => {
     const badge = document.getElementById(id);
     if (!badge) return;
@@ -4047,7 +4082,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v6.4</footer>
+    <footer>Homey v6.5</footer>
   `;
 }
 
@@ -4166,11 +4201,47 @@ function renderParentTasks() {
     `;
   }).join('') : `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noCompletions')}</p></div>`;
 
+  // ---- OSIO 3: Odottavat lunastukset ----
+  const claimItems = state.pendingClaims.length ? state.pendingClaims.map(claim => {
+    const child = state.children.find(c => c.id === claim.child_id);
+    const reward = state.rewards.find(r => r.id === claim.reward_id);
+    const d = claim.claimed_at ? new Date(claim.claimed_at) : null;
+    const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
+    return `<div class="pending-item">
+      <div class="pending-item-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${renderAvatar(child, 38)}
+          <div>
+            <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
+            <div class="pending-task-name">${esc(reward?.icon || '🎁')} ${esc(reward?.name || '?')}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:700;color:var(--primary);font-size:1rem;">⭐ ${reward?.points_cost ?? '?'} p</div>
+          <div class="pending-date">${dateStr}</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;">
+        <input id="claim-comment-${esc(String(claim.id))}" class="input" style="font-size:0.85rem;margin-bottom:6px;" placeholder="Kommentti vanhemmalta (valinnainen)" type="text">
+        <div class="pending-actions">
+          <button class="btn btn-success btn-sm" onclick="approveRewardClaim('${esc(String(claim.id))}', this)">✅ Hyväksy</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectRewardClaim('${esc(String(claim.id))}', this)">❌ Hylkää</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') : '';
+
+  const claimSection = `<div class="card" style="margin-bottom:10px;">
+    <div class="card-title">🛍️ Odottavat lunastukset${state.pendingClaims.length > 0 ? ` <span class="badge badge-pending">${state.pendingClaims.length}</span>` : ''}</div>
+    ${state.pendingClaims.length ? claimItems : '<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">Ei odottavia lunastuksia.</div>'}
+  </div>`;
+
   panel.innerHTML = `
     <div class="card">
       <div class="card-title">${t('openTasks')} (${state.tasks.length})</div>
       ${openTaskItems}
     </div>
+    ${claimSection}
     <div class="card" style="margin-bottom:10px;">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${statusBtns}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">${childBtns}</div>
@@ -4252,6 +4323,51 @@ async function confirmReject(confirmBtn) {
     if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = t('rejectAction'); }
     _rejectCompId = null;
     _rejectCompBtn = null;
+  }
+}
+
+async function approveRewardClaim(claimId, btn) {
+  const comment = document.getElementById('claim-comment-' + claimId)?.value.trim() || null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const { error } = await sb.rpc('approve_reward_claim', { p_claim_id: claimId, p_parent_comment: comment });
+    if (error) {
+      if (error.message?.includes('Insufficient points balance')) {
+        showNotif('Lapsella ei ole tarpeeksi pisteitä', 'error');
+      } else {
+        throw error;
+      }
+      return;
+    }
+    showToast('Lunastus hyväksytty!', 'success');
+    await loadAll();
+    renderParentPending();
+    renderParentOverview();
+    updatePendingBadge();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✅ Hyväksy'; }
+  }
+}
+
+async function rejectRewardClaim(claimId, btn) {
+  const comment = document.getElementById('claim-comment-' + claimId)?.value.trim() || null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const update = { status: 'rejected', resolved_at: new Date().toISOString() };
+    if (comment) update.parent_comment = comment;
+    const { error } = await sb.from('homey_reward_claims').update(update).eq('id', claimId);
+    if (error) throw error;
+    showToast('Lunastus hylätty.', 'success');
+    await loadAll();
+    renderParentPending();
+    renderParentOverview();
+    updatePendingBadge();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '❌ Hylkää'; }
   }
 }
 
