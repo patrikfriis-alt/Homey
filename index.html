@@ -550,6 +550,8 @@
       padding: 28px 24px;
       width: 100%;
       max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: var(--shadow-lg);
       animation: slideUp 0.25s ease;
     }
@@ -597,6 +599,9 @@
     }
     .completion-item:last-child { border-bottom: none; }
     .completion-date { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+    .completion-thumb { max-height: 72px; border-radius: 8px; margin-top: 6px; cursor: pointer; object-fit: cover; display: block; }
+    #image-viewer-overlay { background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    #image-viewer-overlay img { max-width: 95vw; max-height: 90vh; border-radius: 10px; }
 
     /* ===== NOTIFICATIONS ===== */
     #notif-container {
@@ -1443,6 +1448,10 @@
 
     <!-- TAB 1: Valmis lista -->
     <div id="task-tab-template">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:600;font-size:0.88rem;color:var(--text-muted);">Tehtäväkirjasto</span>
+        <button id="library-edit-btn" class="btn btn-sm btn-outline" onclick="toggleLibraryEditMode()">✏️ Muokkaa listaa</button>
+      </div>
       <div class="task-template-grid" id="task-template-grid"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <input type="text" id="library-new-title" class="input" style="flex:1;font-size:0.85rem;" placeholder="Uusi tehtävä kirjastoon..." />
@@ -1718,11 +1727,20 @@
       <label class="input-label" data-i18n="yourComment">Kommenttisi (vapaaehtoinen)</label>
       <textarea id="comment-text" class="input" rows="3" style="resize:vertical;" placeholder="Esim. Tein tämän hyvin!"></textarea>
     </div>
+    <div class="form-group" style="margin-top:8px;">
+      <label class="input-label">📷 Kuva (vapaaehtoinen)</label>
+      <input type="file" id="completion-image" accept="image/*" capture="environment" class="input" style="padding:8px;">
+    </div>
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(false)" data-i18n="sendWithoutComment">Ilman kommenttia</button>
       <button class="btn btn-primary w-full" style="font-size:0.82rem;" onclick="submitMarkDoneFromModal(true)" data-i18n="sendWithComment">Lähetä kommentilla</button>
     </div>
   </div>
+</div>
+
+<!-- ===== IMAGE VIEWER OVERLAY ===== -->
+<div id="image-viewer-overlay" class="modal-overlay hidden" onclick="closeImageViewer()">
+  <img id="image-viewer-img" src="" alt="">
 </div>
 
 <!-- ===== REWARD CHOICE MODAL ===== -->
@@ -1942,7 +1960,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v7.1.2</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v7.1.4</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -2083,7 +2101,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v7.1.2</footer>
+  <footer>Homey v7.1.4</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2170,7 +2188,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v7.1.2</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v7.1.4</footer>
 </div>
 
 <script>
@@ -3949,17 +3967,20 @@ let _commentTaskId = null;
 let _commentFromDetail = false;
 let _pendingRewardTaskId = null;
 let _pendingRewardComment = '';
+let _pendingRewardImage = null;
 
 function openCommentModal(taskId, fromDetail = false) {
   _commentTaskId = taskId;
   _commentFromDetail = fromDetail;
   document.getElementById('comment-text').value = '';
+  document.getElementById('completion-image').value = '';
   openModal('modal-comment');
 }
 
 async function submitMarkDoneFromModal(withComment) {
   const taskId = _commentTaskId;
   const comment = withComment ? document.getElementById('comment-text').value.trim() : '';
+  const imageFile = document.getElementById('completion-image').files[0] || null;
   closeModal('modal-comment');
   _commentTaskId = null;
   const fromDetail = _commentFromDetail;
@@ -3971,6 +3992,7 @@ async function submitMarkDoneFromModal(withComment) {
   if (rt === 'child_choice') {
     _pendingRewardTaskId = taskId;
     _pendingRewardComment = comment;
+    _pendingRewardImage = imageFile;
     // Populate modal
     const taskName = translateTaskTitle(task?.title || '');
     document.getElementById('reward-choice-task-name').textContent = taskName;
@@ -3983,7 +4005,7 @@ async function submitMarkDoneFromModal(withComment) {
     return;
   }
   const chosen_reward_type = rt === 'points' ? 'points' : 'cash';
-  await markDone(taskId, null, comment, chosen_reward_type);
+  await markDone(taskId, null, comment, chosen_reward_type, imageFile);
   if (fromDetail) closeModal('modal-task-detail');
 }
 
@@ -3992,15 +4014,17 @@ async function submitRewardChoice(choice) {
   closeModal('modal-reward-choice');
   const taskId = _pendingRewardTaskId;
   const comment = _pendingRewardComment;
+  const imageFile = _pendingRewardImage;
   try {
-    await markDone(taskId, null, comment, choice);
+    await markDone(taskId, null, comment, choice, imageFile);
   } finally {
     _pendingRewardTaskId = null;
     _pendingRewardComment = '';
+    _pendingRewardImage = null;
   }
 }
 
-async function markDone(taskId, btn, comment = '', chosen_reward_type = 'cash') {
+async function markDone(taskId, btn, comment = '', chosen_reward_type = 'cash', imageFile = null) {
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
@@ -4022,6 +4046,18 @@ async function markDone(taskId, btn, comment = '', chosen_reward_type = 'cash') 
       await sb.from('homey_comments').insert({ completion_id: inserted.id, child_comment: comment, family_id: currentFamilyId });
     }
 
+    // Upload image if provided
+    if (imageFile && inserted?.id) {
+      showNotif('Ladataan kuvaa... ⏳', 'info');
+      const ext = imageFile.name.split('.').pop() || 'jpg';
+      const path = `completions/${inserted.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await sb.storage.from('homey-uploads').upload(path, imageFile);
+      if (!uploadError) {
+        const { data: urlData } = sb.storage.from('homey-uploads').getPublicUrl(path);
+        await sb.from('homey_completions').update({ image_url: urlData.publicUrl }).eq('id', inserted.id);
+      }
+    }
+
     showToast(t('taskDone'), 'success');
     await loadAll();
     renderAssignedTasks();
@@ -4033,6 +4069,15 @@ async function markDone(taskId, btn, comment = '', chosen_reward_type = 'cash') 
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
   }
+}
+
+function openImageViewer(url) {
+  document.getElementById('image-viewer-img').src = url;
+  document.getElementById('image-viewer-overlay').classList.remove('hidden');
+}
+function closeImageViewer() {
+  document.getElementById('image-viewer-overlay').classList.add('hidden');
+  document.getElementById('image-viewer-img').src = '';
 }
 
 async function reserveTask(taskId, btn) {
@@ -4122,12 +4167,15 @@ async function renderChildHistory() {
         : compComment?.child_comment
           ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:3px;">⏳ Odottaa vastausta</div>`
           : '';
+      const histThumbHtml = c.image_url
+        ? `<img class="completion-thumb" src="${esc(c.image_url)}" onclick="openImageViewer('${esc(c.image_url)}')" alt="">`
+        : '';
       return `
         <div class="completion-item">
           <div style="flex:1;min-width:0;">
             <div>${task ? esc(translateTaskTitle(task.title || '')) : '<em style="color:var(--text-muted)">Poistettu tehtävä</em>'}</div>
             <div class="completion-date">${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}</div>
-            ${reasonHtml}${commentHtml}
+            ${reasonHtml}${commentHtml}${histThumbHtml}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span style="font-weight:700;color:var(--success)">${fmt(task?.amount || c.task_price || 0)}</span>
@@ -4254,7 +4302,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v7.1.2</footer>
+    <footer>Homey v7.1.4</footer>
   `;
 }
 
@@ -4314,6 +4362,9 @@ function renderParentTasks() {
     const parentReplyHtml = compComment?.parent_comment
       ? `<div class="parent-reply-box">👩‍💼 ${esc(compComment.parent_comment)}</div>`
       : '';
+    const imageHtml = comp.image_url
+      ? `<div style="margin-bottom:8px;"><img class="completion-thumb" src="${esc(comp.image_url)}" onclick="openImageViewer('${esc(comp.image_url)}')" alt=""></div>`
+      : '';
     const replyBtn = compComment && !compComment.parent_comment
       ? `<button class="btn btn-outline btn-sm" data-cid="${esc(compComment.id)}" data-ctxt="${esc(compComment.child_comment || '')}" onclick="openParentReplyModal(this.dataset.cid,this.dataset.ctxt)">💬 ${t('addParentReply')}</button>`
       : '';
@@ -4325,7 +4376,7 @@ function renderParentTasks() {
       </div>` : (replyBtn ? `<div style="margin-top:8px;">${replyBtn}</div>` : '');
     return `
       <div class="pending-item">
-        ${commentHtml}${parentReplyHtml}
+        ${imageHtml}${commentHtml}${parentReplyHtml}
         <div class="pending-item-header">
           <div style="display:flex;align-items:center;gap:10px;">
             ${renderAvatar(child, 38)}
@@ -5223,6 +5274,15 @@ function openAddTaskModal() {
   openModal('modal-add-task');
 }
 
+let _libraryEditMode = false;
+
+function toggleLibraryEditMode() {
+  _libraryEditMode = !_libraryEditMode;
+  const btn = document.getElementById('library-edit-btn');
+  if (btn) btn.textContent = _libraryEditMode ? '✅ Valmis' : '✏️ Muokkaa listaa';
+  renderTaskTemplateGrid();
+}
+
 function renderTaskTemplateGrid() {
   const grid = document.getElementById('task-template-grid');
   if (!state.taskLibrary.length) {
@@ -5232,9 +5292,11 @@ function renderTaskTemplateGrid() {
   grid.innerHTML = state.taskLibrary.map(item => {
     const sel = selectedTemplateName === item.title ? ' selected' : '';
     const escaped = esc(item.title);
+    const deleteBtn = _libraryEditMode
+      ? `<button onclick="removeFromTaskLibrary('${esc(String(item.id))}')" style="padding:4px 8px;border:none;background:none;cursor:pointer;font-size:1rem;flex-shrink:0;" title="Poista kirjastosta">❌</button>`
+      : '';
     return `<div style="display:flex;align-items:stretch;gap:4px;">
-      <button class="task-template-btn${sel}" style="flex:1;" data-name="${escaped}" onclick="selectTemplate(this.dataset.name)">${escaped}</button>
-      <button onclick="removeFromTaskLibrary('${esc(String(item.id))}')" style="padding:4px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:0.85rem;" title="Poista kirjastosta">❌</button>
+      ${deleteBtn}<button class="task-template-btn${sel}" style="flex:1;" data-name="${escaped}" onclick="selectTemplate(this.dataset.name)">${escaped}</button>
     </div>`;
   }).join('');
 }
