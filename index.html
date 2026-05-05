@@ -1495,6 +1495,10 @@
       <input type="number" id="new-task-points" class="input" placeholder="Pisteet" min="0" step="1" />
     </div>
     <div class="form-group">
+      <label class="input-label">Ohjeistus lapselle (valinnainen)</label>
+      <textarea id="new-task-description" class="input" rows="2" placeholder="Esim. Muista laittaa likaiset vaatteet pesukoneeseen" style="resize:vertical;min-height:60px;"></textarea>
+    </div>
+    <div class="form-group">
       <label class="input-label" data-i18n="recurrence">Toistuvuus</label>
       <select id="new-task-recurrence" class="input" onchange="onNewTaskRecurrenceChange()">
         <option value="" data-i18n="recurrenceNone">Ei toistu</option>
@@ -1613,6 +1617,10 @@
       <input type="number" id="edit-task-points" class="input" placeholder="Pisteet" min="0" step="1" />
     </div>
     <div class="form-group">
+      <label class="input-label">Ohjeistus lapselle (valinnainen)</label>
+      <textarea id="edit-task-description" class="input" rows="2" placeholder="Esim. Muista laittaa likaiset vaatteet pesukoneeseen" style="resize:vertical;min-height:60px;"></textarea>
+    </div>
+    <div class="form-group">
       <label class="input-label" data-i18n="recurrence">Toistuvuus</label>
       <select id="edit-task-recurrence" class="input" onchange="onEditTaskRecurrenceChange()">
         <option value="" data-i18n="recurrenceNone">Ei toistu</option>
@@ -1657,6 +1665,34 @@
     <div style="display:flex;gap:10px;margin-top:6px;">
       <button class="btn btn-outline w-full" onclick="closeModal('modal-edit-task')" data-i18n="cancel">Peruuta</button>
       <button class="btn btn-primary w-full" onclick="saveEditTask(this)" data-i18n="save">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK ACTIONS SHEET ===== -->
+<div id="modal-task-actions" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title" id="task-actions-title" style="margin-bottom:16px;"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-outline w-full" onclick="editTaskFromSheet()">✏️ Muokkaa</button>
+      <button class="btn btn-outline w-full" onclick="markDoneForChildFromSheet()">✅ Merkitse tehdyksi lapsen puolesta</button>
+      <button class="btn btn-danger w-full" onclick="deleteTaskFromSheet()">🗑️ Poista</button>
+    </div>
+    <button class="btn btn-outline w-full" style="margin-top:12px;" onclick="closeModal('modal-task-actions')">Peruuta</button>
+  </div>
+</div>
+
+<!-- ===== PARENT MARK DONE FOR CHILD MODAL ===== -->
+<div id="modal-parent-mark-done" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Merkitse tehdyksi lapsen puolesta</div>
+    <div class="form-group">
+      <label class="input-label">Valitse lapsi</label>
+      <select id="parent-mark-done-child-select" class="input"></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-outline w-full" onclick="closeModal('modal-parent-mark-done')">Peruuta</button>
+      <button class="btn btn-primary w-full" onclick="confirmParentMarkDone(this)">✅ Merkitse tehdyksi</button>
     </div>
   </div>
 </div>
@@ -1960,7 +1996,7 @@
     <div class="logo-icon">🏠</div>
     <h1>Homey</h1>
     <p>Kotitöiden seuranta</p>
-    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v7.1.4</p>
+    <p style="opacity:0.5;font-size:0.75rem;margin-top:6px;">Homey v7.3.0</p>
   </div>
   <div class="login-card">
     <!-- Step 1: valitse lapsi -->
@@ -2101,7 +2137,7 @@
       </div>
     </div>
   </div>
-  <footer>Homey v7.1.4</footer>
+  <footer>Homey v7.3.0</footer>
 </div>
 
 <!-- ===== FAB ===== -->
@@ -2137,10 +2173,14 @@
           <span class="nav-icon">🏠</span>
           <span data-i18n="overview">Yleiskuva</span>
         </button>
+        <button class="sidebar-nav-btn" data-tab="pending" onclick="switchParentTab('pending', this)">
+          <span class="nav-icon">⏳</span>
+          <span>Odottaa</span>
+          <span id="pending-badge-sidebar" class="sidebar-badge hidden"></span>
+        </button>
         <button class="sidebar-nav-btn" data-tab="tasks" onclick="switchParentTab('tasks', this)">
           <span class="nav-icon">📋</span>
           <span data-i18n="tasks">Tehtävät</span>
-          <span id="pending-badge-sidebar" class="sidebar-badge hidden"></span>
         </button>
         <button class="sidebar-nav-btn" data-tab="payments" onclick="switchParentTab('payments', this)">
           <span class="nav-icon">💶</span>
@@ -2166,6 +2206,7 @@
     <!-- Panel content area -->
     <div class="parent-panels">
       <div id="parent-panel-overview" class="main-content"></div>
+      <div id="parent-panel-pending" class="main-content hidden"></div>
       <div id="parent-panel-tasks" class="main-content hidden"></div>
       <div id="parent-panel-payments" class="main-content hidden"></div>
       <div id="parent-panel-manage" class="main-content hidden"></div>
@@ -2177,9 +2218,12 @@
     <button class="parent-nav-btn active" data-tab="overview" onclick="switchParentTab('overview', this)">
       <span class="nav-icon">🏠</span><span data-i18n="overview">Yleiskuva</span>
     </button>
+    <button class="parent-nav-btn" data-tab="pending" onclick="switchParentTab('pending', this)">
+      <span class="nav-icon">⏳</span><span>Odottaa</span>
+      <span id="pending-badge" class="badge badge-pending hidden" style="font-size:0.65rem;padding:1px 6px;"></span>
+    </button>
     <button class="parent-nav-btn" data-tab="tasks" onclick="switchParentTab('tasks', this)">
       <span class="nav-icon">📋</span><span data-i18n="tasks">Tehtävät</span>
-      <span id="pending-badge" class="badge badge-pending hidden" style="font-size:0.65rem;padding:1px 6px;"></span>
     </button>
     <button class="parent-nav-btn" data-tab="payments" onclick="switchParentTab('payments', this)">
       <span class="nav-icon">💶</span><span data-i18n="payments">Maksut</span>
@@ -2188,7 +2232,7 @@
       <span class="nav-icon">⚙️</span><span data-i18n="management">Hallinta</span>
     </button>
   </nav>
-  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v7.1.4</footer>
+  <footer style="background:#fff;border-top:1px solid var(--border);">Homey v7.3.0</footer>
 </div>
 
 <script>
@@ -2792,6 +2836,7 @@ function renderCurrentView() {
     renderRanking();
   } else if (id === 'view-parent') {
     renderParentOverview();
+    renderParentPending();
     renderParentTasks();
     renderParentPayments();
     renderParentManage();
@@ -3882,12 +3927,14 @@ function renderAssignedTasks() {
     const recBadge = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     const dlBadge = deadlineBadgeHtml(task.deadline);
     const typeBadge = `<span class="badge badge-pending" style="font-size:0.68rem;">📌 ${t('child')}</span>`;
+    const descHtml = task.description ? `<div style="font-size:0.78rem;color:var(--text-muted);padding:3px 0 2px;">📋 ${esc(task.description)}</div>` : '';
     return `
       <div class="task-item" onclick="openTaskDetail('${task.id}')">
         <div class="task-row1">
           <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
           ${recBadge}${dlBadge}
         </div>
+        ${descHtml}
         <div class="task-row2">
           <div class="task-row2-left">
             <span class="task-price">${fmt(task.amount)}</span>
@@ -3944,12 +3991,14 @@ function renderFreeTasks() {
     const recBadgeF = task.recurrence ? `<span class="task-rec-badge">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     const dlBadgeF = deadlineBadgeHtml(task.deadline);
     const typeBadge = `<span class="badge badge-unpaid" style="font-size:0.68rem;">🔓 ${t('free')}</span>`;
+    const descHtmlF = task.description ? `<div style="font-size:0.78rem;color:var(--text-muted);padding:3px 0 2px;">📋 ${esc(task.description)}</div>` : '';
     return `
       <div class="task-item" onclick="openTaskDetail('${task.id}')">
         <div class="task-row1">
           <span class="task-name">${esc(translateTaskTitle(task.title))}</span>
           ${recBadgeF}${dlBadgeF}
         </div>
+        ${descHtmlF}
         <div class="task-row2">
           <div class="task-row2-left">
             <span class="task-price">${fmt(task.amount)}</span>
@@ -4229,6 +4278,7 @@ async function initParentView() {
   if (sidebarName) sidebarName.textContent = localStorage.getItem('homey_family_name') || '';
 
   renderParentOverview();
+  renderParentPending();
   renderParentTasks();
   renderParentPayments();
   renderParentManage();
@@ -4245,7 +4295,7 @@ function switchParentTab(tab, btn) {
   // Sync both bottom nav and sidebar buttons
   document.querySelectorAll('.parent-nav-btn, .sidebar-nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
-  ['overview','tasks','payments','manage'].forEach(t => {
+  ['overview','pending','tasks','payments','manage'].forEach(t => {
     document.getElementById('parent-panel-' + t).classList.toggle('hidden', t !== tab);
   });
   const fab = document.getElementById('fab-add-task');
@@ -4302,7 +4352,7 @@ function renderParentOverview() {
       <div class="children-overview-grid">${childCards}</div>
     </div>
     ${renderAnalytics(panel)}
-    <footer>Homey v7.1.4</footer>
+    <footer>Homey v7.3.0</footer>
   `;
 }
 
@@ -4320,10 +4370,9 @@ function renderParentTasks() {
   const _freeOpen = _free.filter(tk => !tk.reserved_by);
   const _freeReserved = _free.filter(tk => tk.reserved_by);
 
-  // ---- OSIO 2: Suoritukset filtterit ----
+  // ---- OSIO 2: Suoritushistoria filtterit (approved/rejected) ----
   const statusBtns = [
     { key: 'all', label: t('all') },
-    { key: 'pending', label: t('pendingPlural') },
     { key: 'approved', label: t('approvedPlural') },
     { key: 'rejected', label: t('rejectedPlural') },
   ].map(s => {
@@ -4339,13 +4388,11 @@ function renderParentTasks() {
     })
   ].join('');
 
-  // Apply filters to completions
-  let comps = [...state.completions];
+  // Apply filters to completions — exclude pending (pending is on its own tab)
+  let comps = state.completions.filter(c => c.status !== 'pending');
   if (tasksFilter.status !== 'all') comps = comps.filter(c => c.status === tasksFilter.status);
   if (tasksFilter.childId !== 'all') comps = comps.filter(c => c.child_id === tasksFilter.childId);
   comps.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
-
-  const pendingCount = state.completions.filter(c => c.status === 'pending').length;
 
   const compItems = comps.length ? comps.map(comp => {
     // Use joined data if available, fall back to state lookup
@@ -4368,12 +4415,6 @@ function renderParentTasks() {
     const replyBtn = compComment && !compComment.parent_comment
       ? `<button class="btn btn-outline btn-sm" data-cid="${esc(compComment.id)}" data-ctxt="${esc(compComment.child_comment || '')}" onclick="openParentReplyModal(this.dataset.cid,this.dataset.ctxt)">💬 ${t('addParentReply')}</button>`
       : '';
-    const actions = comp.status === 'pending' ? `
-      <div class="pending-actions">
-        <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">${t('approveAction')}</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">${t('rejectAction')}</button>
-        ${replyBtn}
-      </div>` : (replyBtn ? `<div style="margin-top:8px;">${replyBtn}</div>` : '');
     return `
       <div class="pending-item">
         ${imageHtml}${commentHtml}${parentReplyHtml}
@@ -4392,50 +4433,10 @@ function renderParentTasks() {
             <span class="badge badge-${comp.status}" style="font-size:0.7rem;margin-top:4px;display:inline-block;">${statusLabel(comp.status)}</span>
           </div>
         </div>
-        ${actions}
+        ${replyBtn ? `<div style="margin-top:8px;">${replyBtn}</div>` : ''}
       </div>
     `;
   }).join('') : `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noCompletions')}</p></div>`;
-
-  // ---- OSIO 3: Odottavat lunastukset ----
-  const claimItems = state.pendingClaims.length ? state.pendingClaims.map(claim => {
-    const child = state.children.find(c => c.id === claim.child_id);
-    const reward = state.rewards.find(r => r.id === claim.reward_id);
-    const d = claim.claimed_at ? new Date(claim.claimed_at) : null;
-    const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
-    return `<div class="pending-item">
-      <div class="pending-item-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          ${renderAvatar(child, 38)}
-          <div>
-            <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
-            <div class="pending-task-name">${esc(reward?.icon || '🎁')} ${esc(reward?.name || '?')}</div>
-          </div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;">
-          <div style="font-weight:700;color:var(--primary);font-size:1rem;">⭐ ${reward?.points_cost ?? '?'} p</div>
-          <div class="pending-date">${dateStr}</div>
-        </div>
-      </div>
-      <div style="margin-top:6px;">
-        <input id="claim-comment-${esc(String(claim.id))}" class="input" style="font-size:0.85rem;margin-bottom:6px;" placeholder="Kommentti vanhemmalta (valinnainen)" type="text">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <label style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">Hyväksy</label>
-          <input id="claim-override-cost-${esc(String(claim.id))}" class="input" type="number" min="0" value="${reward?.points_cost ?? ''}" style="font-size:0.85rem;width:80px;padding:4px 8px;">
-          <label style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">pistettä</label>
-        </div>
-        <div class="pending-actions">
-          <button class="btn btn-success btn-sm" onclick="approveRewardClaim('${esc(String(claim.id))}', this)">✅ Hyväksy</button>
-          <button class="btn btn-danger btn-sm" onclick="rejectRewardClaim('${esc(String(claim.id))}', this)">❌ Hylkää</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('') : '';
-
-  const claimSection = `<div class="card" style="margin-bottom:10px;">
-    <div class="card-title">🛍️ Odottavat lunastukset${state.pendingClaims.length > 0 ? ` <span class="badge badge-pending">${state.pendingClaims.length}</span>` : ''}</div>
-    ${state.pendingClaims.length ? claimItems : '<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">Ei odottavia lunastuksia.</div>'}
-  </div>`;
 
   panel.innerHTML = `
     <div class="card">
@@ -4447,13 +4448,12 @@ function renderParentTasks() {
       </div>
       <button class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="switchParentTab('manage', null)">Hallinnoi tehtäviä</button>
     </div>
-    ${claimSection}
     <div class="card" style="margin-bottom:10px;">
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${statusBtns}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">${childBtns}</div>
     </div>
     <div class="card">
-      <div class="card-title">${t('completions')}${pendingCount > 0 ? ` <span class="badge badge-pending">${pendingCount} ${t('pending')}</span>` : ''}</div>
+      <div class="card-title">${t('completions')}</div>
       ${compItems}
       ${!state.completionsLoadedAll ? `<div style="text-align:center;margin-top:12px;"><button class="btn btn-outline btn-sm" onclick="loadAllCompletions(this)">Lataa vanhemmat suoritukset</button></div>` : ''}
     </div>
@@ -4488,7 +4488,100 @@ function setTasksFilter(key, value, btn) {
   renderParentTasks();
 }
 
-function renderParentPending() { renderParentTasks(); }
+function renderParentPending() {
+  const panel = document.getElementById('parent-panel-pending');
+
+  // Pending completions
+  const pendingComps = state.completions.filter(c => c.status === 'pending');
+  pendingComps.sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+  const compItems = pendingComps.length ? pendingComps.map(comp => {
+    const child = comp.homey_children || state.children.find(c => c.id === comp.child_id);
+    const task = comp.homey_tasks || state.allTasks.find(t => t.id === comp.task_id);
+    const d = comp.completed_at ? new Date(comp.completed_at) : null;
+    const amount = task?.amount ?? 0;
+    const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
+    const compComment = state.comments.find(c => c.completion_id === comp.id);
+    const commentHtml = compComment?.child_comment
+      ? `<div class="child-comment-box">💬 ${esc(compComment.child_comment)}</div>` : '';
+    const parentReplyHtml = compComment?.parent_comment
+      ? `<div class="parent-reply-box">👩‍💼 ${esc(compComment.parent_comment)}</div>` : '';
+    const imageHtml = comp.image_url
+      ? `<div style="margin-bottom:8px;"><img class="completion-thumb" src="${esc(comp.image_url)}" onclick="openImageViewer('${esc(comp.image_url)}')" alt=""></div>` : '';
+    const replyBtn = compComment && !compComment.parent_comment
+      ? `<button class="btn btn-outline btn-sm" data-cid="${esc(compComment.id)}" data-ctxt="${esc(compComment.child_comment || '')}" onclick="openParentReplyModal(this.dataset.cid,this.dataset.ctxt)">💬 ${t('addParentReply')}</button>` : '';
+    return `
+      <div class="pending-item">
+        ${imageHtml}${commentHtml}${parentReplyHtml}
+        <div class="pending-item-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            ${renderAvatar(child, 38)}
+            <div>
+              <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
+              <div class="pending-task-name">${esc(translateTaskTitle(task?.title || ''))}</div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-weight:700;color:var(--success);font-size:1rem;">${fmt(amount)}</div>
+            ${comp.chosen_reward_type === 'points' ? `<div style="font-size:0.78rem;color:var(--primary);">⭐ haluaa pisteitä</div>` : comp.chosen_reward_type === 'cash' && task?.reward_type !== 'cash' ? `<div style="font-size:0.78rem;color:var(--success);">💵 haluaa euroja</div>` : ''}
+            <div class="pending-date">${dateStr}</div>
+          </div>
+        </div>
+        <div class="pending-actions">
+          <button class="btn btn-success btn-sm" onclick="approveComp('${comp.id}', this)">${t('approveAction')}</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectComp('${comp.id}', this)">${t('rejectAction')}</button>
+          ${replyBtn}
+        </div>
+      </div>
+    `;
+  }).join('') : `<div class="empty-state"><div class="empty-icon">✅</div><p>Ei odottavia suorituksia.</p></div>`;
+
+  // Pending reward claims
+  const claimItems = state.pendingClaims.length ? state.pendingClaims.map(claim => {
+    const child = state.children.find(c => c.id === claim.child_id);
+    const reward = state.rewards.find(r => r.id === claim.reward_id);
+    const d = claim.claimed_at ? new Date(claim.claimed_at) : null;
+    const dateStr = d ? `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}` : '—';
+    return `<div class="pending-item">
+      <div class="pending-item-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${renderAvatar(child, 38)}
+          <div>
+            <div class="pending-child-name" style="color:${childColor(child)}">${esc(child?.name || '?')}</div>
+            <div class="pending-task-name">${esc(reward?.icon || '🎁')} ${esc(reward?.name || '?')}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:700;color:var(--primary);font-size:1rem;">⭐ ${reward?.points_cost ?? '?'} p</div>
+          <div class="pending-date">${dateStr}</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;">
+        <input id="claim-comment-${esc(String(claim.id))}" class="input" style="font-size:0.85rem;margin-bottom:6px;" placeholder="Kommentti vanhemmalta (valinnainen)" type="text">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <label style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">Hyväksy</label>
+          <input id="claim-override-cost-${esc(String(claim.id))}" class="input" type="number" min="0" value="${reward?.points_cost ?? ''}" style="font-size:0.85rem;width:80px;padding:4px 8px;">
+          <label style="font-size:0.82rem;color:var(--text-muted);white-space:nowrap;">pistettä</label>
+        </div>
+        <div class="pending-actions">
+          <button class="btn btn-success btn-sm" onclick="approveRewardClaim('${esc(String(claim.id))}', this)">✅ Hyväksy</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectRewardClaim('${esc(String(claim.id))}', this)">❌ Hylkää</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') : '';
+
+  panel.innerHTML = `
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title">⏳ Odottavat suoritukset${pendingComps.length > 0 ? ` <span class="badge badge-pending">${pendingComps.length}</span>` : ''}</div>
+      ${compItems}
+    </div>
+    <div class="card">
+      <div class="card-title">🛍️ Odottavat lunastukset${state.pendingClaims.length > 0 ? ` <span class="badge badge-pending">${state.pendingClaims.length}</span>` : ''}</div>
+      ${state.pendingClaims.length ? claimItems : '<div class="text-muted" style="font-size:0.875rem;padding:8px 0;">Ei odottavia lunastuksia.</div>'}
+    </div>
+  `;
+}
 
 async function approveComp(id, btn) {
   try {
@@ -4780,7 +4873,7 @@ function renderParentManage() {
     const assignedTo = task.assigned_to ? state.children.find(c => c.id === task.assigned_to) : null;
     const recBadge = task.recurrence ? `<span style="font-size:0.7rem;background:var(--primary-light);color:var(--primary-muted);border-radius:6px;padding:1px 6px;margin-left:4px;">🔁 ${recurrenceLabel(task.recurrence)}</span>` : '';
     return `
-      <div class="task-item">
+      <div class="task-item" style="cursor:pointer;" onclick="openTaskActionsSheet('${task.id}')">
         <div class="task-icon">${task.type === 'free' ? '🔓' : '📌'}</div>
         <div class="task-info">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">
@@ -4788,10 +4881,7 @@ function renderParentManage() {
           </div>
           <div style="color:var(--text-muted);font-size:0.8rem;">${fmt(task.amount)} · ${task.type === 'free' ? t('free') : t('child')}${assignedTo ? ' · ' + esc(assignedTo.name) : ''}</div>
         </div>
-        <div style="display:flex;gap:4px;">
-          <button class="btn btn-sm btn-outline" onclick="openEditTaskModal('${task.id}')">✏️</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteTask('${task.id}')">✕</button>
-        </div>
+        <div style="color:var(--text-muted);font-size:1.2rem;padding-left:4px;">›</div>
       </div>
     `;
   }).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><p>${t('noTasks')}</p></div>`;
@@ -5075,6 +5165,70 @@ async function deleteTask(id) {
   }
 }
 
+// ===== TASK ACTIONS SHEET =====
+let _taskActionsSheetId = null;
+let _parentMarkDoneTaskId = null;
+
+function openTaskActionsSheet(taskId) {
+  _taskActionsSheetId = taskId;
+  const task = state.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  document.getElementById('task-actions-title').textContent = translateTaskTitle(task.title);
+  openModal('modal-task-actions');
+}
+
+function editTaskFromSheet() {
+  closeModal('modal-task-actions');
+  openEditTaskModal(_taskActionsSheetId);
+}
+
+function deleteTaskFromSheet() {
+  closeModal('modal-task-actions');
+  deleteTask(_taskActionsSheetId);
+}
+
+function markDoneForChildFromSheet() {
+  const task = state.tasks.find(t => t.id === _taskActionsSheetId);
+  if (!task) return;
+  if (task.type === 'assigned' && task.assigned_to) {
+    closeModal('modal-task-actions');
+    parentMarkDoneForChild(_taskActionsSheetId, task.assigned_to);
+  } else {
+    _parentMarkDoneTaskId = _taskActionsSheetId;
+    const sel = document.getElementById('parent-mark-done-child-select');
+    sel.innerHTML = state.children.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    closeModal('modal-task-actions');
+    openModal('modal-parent-mark-done');
+  }
+}
+
+async function confirmParentMarkDone(btn) {
+  const childId = document.getElementById('parent-mark-done-child-select').value;
+  if (!childId || !_parentMarkDoneTaskId) return;
+  closeModal('modal-parent-mark-done');
+  await parentMarkDoneForChild(_parentMarkDoneTaskId, childId, btn);
+  _parentMarkDoneTaskId = null;
+}
+
+async function parentMarkDoneForChild(taskId, childId, btn) {
+  const origText = btn ? btn.textContent : null;
+  try {
+    if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
+    const task = state.tasks.find(t => t.id === taskId);
+    const payload = { task_id: taskId, child_id: childId, status: 'approved', completed_at: new Date().toISOString(), chosen_reward_type: 'cash', task_price: task?.amount ?? 0 };
+    const { error } = await sb.from('homey_completions').insert(payload);
+    if (error) throw error;
+    showToast('Merkitty tehdyksi! ✅', 'success');
+    await loadAll();
+    renderParentTasks();
+    renderParentManage();
+  } catch (err) {
+    showNotif(friendlyError(err), 'error', err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
+}
+
 // ===== CHANGE PASSWORD =====
 async function changePassword(btn) {
   const newPw = document.getElementById('cp-new').value;
@@ -5261,6 +5415,7 @@ function openAddTaskModal() {
   document.getElementById('new-task-days-group').style.display = 'none';
   document.querySelectorAll('#new-task-days-group .day-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('new-task-points').value = '';
+  document.getElementById('new-task-description').value = '';
   document.getElementById('task-price-group').style.display = 'block';
   document.getElementById('new-task-price').required = true;
   document.getElementById('task-points-group').style.display = 'none';
@@ -5400,8 +5555,9 @@ async function saveTask() {
   const pointsRaw = document.getElementById('new-task-points').value;
   const points = (reward_type !== 'cash' && pointsRaw !== '') ? parseInt(pointsRaw, 10) : null;
   const active_days = recurrence === 'weekly' ? getSelectedDays('new') : null;
+  const description = document.getElementById('new-task-description').value.trim() || null;
 
-  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, deadline, active: true, family_id: currentFamilyId, reward_type, points, active_days };
+  const payload = { title: name, amount: Number(price), type, assigned_to, recurrence, deadline, active: true, family_id: currentFamilyId, reward_type, points, active_days, description };
   const saveBtn = document.querySelector('#modal-add-task .btn-primary');
   try {
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('saving'); }
@@ -5651,6 +5807,7 @@ function openEditTaskModal(taskId) {
     b.classList.toggle('active', Array.isArray(task.active_days) && task.active_days.includes(parseInt(b.dataset.day)));
   });
   onEditTaskRecurrenceChange();
+  document.getElementById('edit-task-description').value = task.description || '';
 
   openModal('modal-edit-task');
 }
@@ -5720,12 +5877,13 @@ async function saveEditTask(btn) {
   const pointsRaw = document.getElementById('edit-task-points').value;
   const points = (reward_type !== 'cash' && pointsRaw !== '') ? parseInt(pointsRaw, 10) : null;
   const active_days = recurrence === 'weekly' ? getSelectedDays('edit') : null;
+  const description = document.getElementById('edit-task-description').value.trim() || null;
 
   const origText = btn ? btn.textContent : null;
   try {
     if (btn) { btn.disabled = true; btn.textContent = t('saving'); }
     const { error } = await sb.from('homey_tasks')
-      .update({ title: name, amount: Number(price), type, assigned_to, recurrence, deadline, reward_type, points, active_days })
+      .update({ title: name, amount: Number(price), type, assigned_to, recurrence, deadline, reward_type, points, active_days, description })
       .eq('id', _editTaskId);
     if (error) throw error;
     showToast(t('taskUpdated'), 'success');
